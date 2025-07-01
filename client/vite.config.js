@@ -21,7 +21,11 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['pdfjs-dist/build/pdf.worker.min.js']
+      // Remove external configuration for PDF worker
     }
+  },
+  // Ensure proper MIME types for PDF worker files
+  define: {
+    global: 'globalThis',
   }
 })

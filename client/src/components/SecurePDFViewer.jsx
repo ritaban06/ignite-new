@@ -4,8 +4,9 @@ import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, X, RotateCw } fro
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
 
-// Configure PDF.js worker - Use a more reliable CDN
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF.js worker - Use local worker file to avoid CORS issues
+// This serves the worker from your own domain, preventing CORS issues
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
 
 const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [numPages, setNumPages] = useState(null);
@@ -68,8 +69,18 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const onDocumentLoadError = (error) => {
     console.error('PDF loading error:', error);
     console.error('PDF URL that failed:', pdfUrl);
-    setError('Failed to load PDF document. The file might be corrupted or inaccessible.');
-    toast.error('Failed to load PDF document');
+    
+    // Check if it's a CORS error
+    if (error.message && error.message.includes('CORS')) {
+      setError('PDF loading failed due to CORS restrictions. Please try refreshing the page.');
+      toast.error('PDF loading failed due to CORS restrictions');
+    } else if (error.message && error.message.includes('worker')) {
+      setError('PDF worker failed to load. Please check your internet connection and try again.');
+      toast.error('PDF worker failed to load');
+    } else {
+      setError('Failed to load PDF document. The file might be corrupted or inaccessible.');
+      toast.error('Failed to load PDF document');
+    }
   };
 
   const changePage = (offset) => {

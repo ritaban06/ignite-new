@@ -10,6 +10,16 @@ const googleSheetsService = require('../services/googleSheetsService');
 
 const router = express.Router();
 
+// Handle preflight requests for all auth routes
+router.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.get('Origin') || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
+  res.sendStatus(200);
+});
+
 // Initialize Google OAuth2 client
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -487,6 +497,10 @@ router.post('/google-verify', [
   authRateLimit,
   body('credential').notEmpty().withMessage('Google credential token is required')
 ], async (req, res) => {
+  // Set CORS headers explicitly
+  res.header('Access-Control-Allow-Origin', req.get('Origin') || 'https://ignite-client.ritaban.me');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

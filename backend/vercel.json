@@ -2,13 +2,24 @@
   "version": 2,
   "name": "ignite-backend",
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "VERCEL": "1"
   },
   "functions": {
     "api/index.js": {
       "maxDuration": 30
     }
   },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.js"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",

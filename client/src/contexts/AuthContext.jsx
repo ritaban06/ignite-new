@@ -136,6 +136,43 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const googleSignIn = async (userData, googleToken) => {
+    try {
+      setIsLoading(true);
+      
+      // Create user object for local storage (since we're not using traditional backend auth)
+      const user = {
+        id: userData.googleId,
+        email: userData.email,
+        name: userData.name,
+        picture: userData.picture,
+        year: userData.year,
+        department: userData.department,
+        loginMethod: 'google',
+        approvedAt: userData.approvedAt,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Save to localStorage
+      localStorage.setItem('authToken', googleToken);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Update state
+      setUser(user);
+      setIsAuthenticated(true);
+      
+      toast.success(`Welcome, ${user.name}!`);
+      return { success: true, user };
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      const errorMessage = error.message || 'Google sign-in failed';
+      toast.error(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     isAuthenticated,
@@ -144,6 +181,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateUser,
+    googleSignIn,
   };
 
   return (

@@ -31,12 +31,25 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration - Allow all origins
+// CORS configuration - Allow specific origins
+const allowedOrigins = [
+  'https://ignite-client.ritaban.me',
+  'https://ignite-admin.ritaban.me', 
+  'http://localhost:3000',
+  'http://localhost:3001',
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow all origins (including no origin for mobile apps, curl, etc.)
-    callback(null, true);
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true,
   optionsSuccessStatus: 200,
@@ -58,11 +71,12 @@ app.use(cors(corsOptions));
 app.use((req, res, next) => {
   const origin = req.get('Origin');
   
-  // Allow all origins
-  if (origin) {
+  // Only set CORS headers if origin is allowed
+  if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
-  } else {
+  } else if (!origin) {
+    // For requests without origin (server-to-server, mobile apps, etc.)
     res.header('Access-Control-Allow-Origin', '*');
   }
   

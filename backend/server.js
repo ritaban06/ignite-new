@@ -132,19 +132,6 @@ app.get('/api/cors-debug', (req, res) => {
   });
 });
 
-// Test endpoint for admin upload CORS
-app.get('/api/admin/test', (req, res) => {
-  res.json({ 
-    message: 'Admin endpoint accessible',
-    origin: req.get('Origin'),
-    timestamp: new Date().toISOString(),
-    corsHeaders: {
-      'Access-Control-Allow-Origin': res.get('Access-Control-Allow-Origin'),
-      'Access-Control-Allow-Credentials': res.get('Access-Control-Allow-Credentials')
-    }
-  });
-});
-
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 

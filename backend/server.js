@@ -42,24 +42,31 @@ const allowedOrigins = [
 app.use((req, res, next) => {
   const origin = req.get('Origin');
   
-  console.log('CORS Debug - Origin:', origin);
-  console.log('CORS Debug - Method:', req.method);
-  console.log('CORS Debug - Allowed Origins:', allowedOrigins);
+  console.log('Global CORS Debug - Origin:', origin);
+  console.log('Global CORS Debug - Method:', req.method);
+  console.log('Global CORS Debug - Path:', req.path);
+  console.log('Global CORS Debug - Allowed Origins:', allowedOrigins);
   
   // Set CORS headers for all requests
   if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
-    console.log('CORS: Origin allowed with credentials');
+    console.log('Global CORS: Origin allowed with credentials');
   } else if (!origin) {
     // For requests without origin (Postman, server-to-server)
     res.header('Access-Control-Allow-Origin', '*');
-    console.log('CORS: No origin, allowing all');
+    console.log('Global CORS: No origin, allowing all');
   } else {
-    // Block unknown origins when credentials are involved
-    console.log('CORS: Origin blocked:', origin);
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
+    // For admin routes, be more permissive
+    if (req.path.startsWith('/api/admin/')) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      console.log('Global CORS: Admin route - allowing origin with credentials');
+    } else {
+      console.log('Global CORS: Origin blocked:', origin);
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
@@ -70,7 +77,7 @@ app.use((req, res, next) => {
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('CORS: Handling preflight request');
+    console.log('Global CORS: Handling preflight request for', req.path);
     return res.status(200).end();
   }
   

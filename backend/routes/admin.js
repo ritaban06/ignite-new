@@ -14,7 +14,7 @@ const {
 
 const router = express.Router();
 
-// Set CORS headers for all admin routes BEFORE authentication
+// Enhanced CORS handling for admin routes
 router.use((req, res, next) => {
   const origin = req.get('Origin');
   const allowedOrigins = [
@@ -28,7 +28,7 @@ router.use((req, res, next) => {
   console.log('Admin route CORS - Method:', req.method);
   console.log('Admin route CORS - Path:', req.path);
 
-  // Set CORS headers for all admin requests
+  // Always set CORS headers, regardless of origin
   if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -37,16 +37,16 @@ router.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     console.log('Admin CORS: No origin, allowing all');
   } else {
+    // Still allow but without credentials for unknown origins
     res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    console.log('Admin CORS: Unknown origin, setting anyway');
+    console.log('Admin CORS: Unknown origin allowed without credentials');
   }
 
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
   res.header('Access-Control-Max-Age', '86400');
 
-  // Handle preflight requests
+  // Handle preflight requests immediately
   if (req.method === 'OPTIONS') {
     console.log('Admin CORS: Handling preflight request');
     return res.status(200).end();
@@ -61,15 +61,6 @@ router.use('*', (req, res, next) => {
   console.log('Headers:', Object.keys(req.headers));
   console.log('Authorization header present:', !!req.headers.authorization);
   next();
-});
-
-// Test route without auth for CORS debugging
-router.get('/test-cors', (req, res) => {
-  res.json({ 
-    message: 'Admin CORS test successful',
-    origin: req.get('Origin'),
-    timestamp: new Date().toISOString()
-  });
 });
 
 // Configure multer for admin uploads
@@ -87,9 +78,33 @@ const upload = multer({
   }
 });
 
-// Apply authentication and admin requirement to all routes
-router.use(authenticate);
-router.use(requireAdmin);
+// Public test routes (no auth required)
+// Test route without auth for CORS debugging
+router.get('/test-cors', (req, res) => {
+  res.json({ 
+    message: 'Admin CORS test successful',
+    origin: req.get('Origin'),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Test preflight handling specifically
+router.options('/upload', (req, res) => {
+  console.log('Upload preflight request received');
+  console.log('Origin:', req.get('Origin'));
+  console.log('Headers:', req.headers);
+  res.status(200).end();
+});
+
+// Simple upload test endpoint for debugging
+router.post('/upload-test', authenticate, requireAdmin, (req, res) => {
+  res.json({ 
+    message: 'Upload route accessible',
+    user: req.user.username,
+    origin: req.get('Origin'),
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Test authenticated route for debugging
 router.post('/test-auth', authenticate, requireAdmin, (req, res) => {
@@ -105,8 +120,13 @@ router.post('/test-auth', authenticate, requireAdmin, (req, res) => {
   });
 });
 
+// Apply authentication and admin requirement to protected routes only
+// Note: We don't apply this globally to avoid interfering with CORS preflight
+
 // Upload PDF
 router.post('/upload', [
+  authenticate,
+  requireAdmin,
   uploadRateLimit,
   (req, res, next) => {
     upload.single('pdf')(req, res, (err) => {
@@ -248,6 +268,8 @@ router.post('/upload', [
 
 // Get all PDFs (admin view)
 router.get('/pdfs', [
+  authenticate,
+  requireAdmin,
   query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('subject').optional().trim(),
@@ -322,6 +344,8 @@ router.get('/pdfs', [
 
 // Update PDF
 router.put('/pdfs/:pdfId', [
+  authenticate,
+  requireAdmin,
   body('title').optional().trim().isLength({ min: 1, max: 200 }),
   body('description').optional().trim().isLength({ max: 1000 }),
   body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
@@ -385,7 +409,7 @@ router.put('/pdfs/:pdfId', [
 });
 
 // Delete PDF
-router.delete('/pdfs/:pdfId', async (req, res) => {
+router.delete('/pdfs/:pdfId', authenticate, requireAdmin, async (req, res) => {
   try {
     const pdf = await PDF.findById(req.params.pdfId);
     if (!pdf) {
@@ -440,6 +464,8 @@ router.delete('/pdfs/:pdfId', async (req, res) => {
 
 // Get all users (admin view)
 router.get('/users', [
+  authenticate,
+  requireAdmin,
   query('role').optional().isIn(['client', 'admin']),
   query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   query('year').optional().isInt({ min: 1, max: 4 }),
@@ -505,6 +531,8 @@ router.get('/users', [
 
 // Update user
 router.put('/users/:userId', [
+  authenticate,
+  requireAdmin,
   body('isActive').optional().isBoolean(),
   body('name').optional().trim().isLength({ min: 2, max: 50 }),
   body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
@@ -574,7 +602,7 @@ router.put('/users/:userId', [
 });
 
 // Get analytics dashboard data
-router.get('/analytics', async (req, res) => {
+router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
   try {
     const [
       totalUsers,
@@ -631,7 +659,7 @@ router.get('/analytics', async (req, res) => {
 });
 
 // Test R2 connection
-router.get('/test-r2', async (req, res) => {
+router.get('/test-r2', authenticate, requireAdmin, async (req, res) => {
   try {
     const result = await r2Service.testConnection();
     res.json(result);

@@ -6,12 +6,30 @@ const AccessLog = require('../models/AccessLog');
 // Special ObjectId for system admin
 const ADMIN_OBJECT_ID = new mongoose.Types.ObjectId('000000000000000000000001');
 
+// Helper function to ensure CORS headers are set
+const ensureCORS = (req, res) => {
+  const origin = req.get('Origin');
+  const allowedOrigins = [
+    'https://ignite-client.ritaban.me',
+    'https://ignite-admin.ritaban.me',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ];
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+};
+
 // Verify JWT token
 const authenticate = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
+      // Ensure CORS headers are preserved even on auth failure
+      ensureCORS(req, res);
       return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
     
@@ -22,6 +40,7 @@ const authenticate = async (req, res, next) => {
       const adminUsername = process.env.ADMIN_USERNAME;
       
       if (!adminUsername || decoded.username !== adminUsername) {
+        ensureCORS(req, res);
         return res.status(401).json({ error: 'Invalid admin token.' });
       }
       
@@ -43,14 +62,17 @@ const authenticate = async (req, res, next) => {
     const user = await User.findById(decoded.userId).select('+deviceId');
     
     if (!user) {
+      ensureCORS(req, res);
       return res.status(401).json({ error: 'Invalid token. User not found.' });
     }
     
     if (!user.isActive) {
+      ensureCORS(req, res);
       return res.status(401).json({ error: 'Account is deactivated.' });
     }
     
     if (user.isLocked) {
+      ensureCORS(req, res);
       return res.status(423).json({ 
         error: 'Account is temporarily locked due to multiple failed login attempts.' 
       });
@@ -58,6 +80,7 @@ const authenticate = async (req, res, next) => {
     
     // Check device restriction for clients
     if (user.role === 'client' && user.deviceId && user.deviceId !== decoded.deviceId) {
+      ensureCORS(req, res);
       return res.status(403).json({ 
         error: 'This account is already logged in on another device.' 
       });
@@ -67,6 +90,7 @@ const authenticate = async (req, res, next) => {
     req.deviceId = decoded.deviceId;
     next();
   } catch (error) {
+    ensureCORS(req, res);
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ error: 'Invalid token.' });
     }
@@ -81,10 +105,12 @@ const authenticate = async (req, res, next) => {
 // Check if user has admin role
 const requireAdmin = (req, res, next) => {
   if (!req.user) {
+    ensureCORS(req, res);
     return res.status(401).json({ error: 'Authentication required.' });
   }
   
   if (req.user.role !== 'admin') {
+    ensureCORS(req, res);
     return res.status(403).json({ error: 'Admin access required.' });
   }
   
@@ -92,6 +118,7 @@ const requireAdmin = (req, res, next) => {
   if (req.user.isEnvAdmin) {
     const adminUsername = process.env.ADMIN_USERNAME;
     if (!adminUsername || req.user.username !== adminUsername) {
+      ensureCORS(req, res);
       return res.status(403).json({ error: 'Invalid admin session.' });
     }
   }

@@ -4,8 +4,12 @@ import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, X, RotateCw } fro
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF.js worker - Use a more reliable CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
+// Add styles for react-pdf
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [numPages, setNumPages] = useState(null);
@@ -36,15 +40,20 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       setIsLoading(true);
       setError(null);
       
+      console.log('Fetching PDF URL for ID:', pdfId);
       const response = await pdfAPI.getViewURL(pdfId);
+      console.log('PDF URL response:', response.data);
+      
       if (response.data.viewUrl) {
         setPdfUrl(response.data.viewUrl);
         setPdfInfo(response.data.pdf);
+        console.log('PDF URL set to:', response.data.viewUrl);
       } else {
         throw new Error('Failed to get PDF view URL');
       }
     } catch (error) {
       console.error('Error fetching PDF URL:', error);
+      console.error('Error details:', error.response?.data);
       setError(error.response?.data?.error || 'Failed to load PDF');
       toast.error('Failed to load PDF');
     } finally {
@@ -53,6 +62,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
+    console.log('PDF loaded successfully with', numPages, 'pages');
     setNumPages(numPages);
     setPageNumber(1);
     setScale(1.0);
@@ -61,7 +71,8 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
   const onDocumentLoadError = (error) => {
     console.error('PDF loading error:', error);
-    setError('Failed to load PDF document');
+    console.error('PDF URL that failed:', pdfUrl);
+    setError('Failed to load PDF document. The file might be corrupted or inaccessible.');
     toast.error('Failed to load PDF document');
   };
 

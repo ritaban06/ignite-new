@@ -80,15 +80,6 @@ ignite-new/
 3. **Cloudflare Worker**: For R2 access
 4. **Node.js**: v18+ recommended
 
-## 🔐 Environment Setup
-
-Copy `.env.example` to `.env` and configure:
-
-- MongoDB connection string
-- Cloudflare R2 credentials
-- JWT secrets
-- Worker URL
-
 ## 🚦 Development Workflow
 
 Each package (admin, backend, client) has its own:

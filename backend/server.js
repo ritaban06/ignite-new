@@ -96,46 +96,43 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Only start server if not in Vercel environment
-if (process.env.VERCEL !== '1' && require.main === module) {
-  const server = app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
-    
-    // Check admin environment variables
-    if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
-      console.warn('⚠️  Admin credentials not configured in environment variables');
-      console.warn('   Please set ADMIN_USERNAME and ADMIN_PASSWORD in your .env file');
-      console.warn('   Admin functionality will not be available until configured');
-    } else {
-      console.log('✅ Admin authentication configured');
-      console.log(`👤 Admin login endpoint: http://localhost:${PORT}/api/auth/admin-login`);
-    }
-    
-    // Start scheduled tasks in production
-    if (process.env.NODE_ENV === 'production') {
-      startScheduledTasks();
-    }
-  });
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+  
+  // Check admin environment variables
+  if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+    console.warn('⚠️  Admin credentials not configured in environment variables');
+    console.warn('   Please set ADMIN_USERNAME and ADMIN_PASSWORD in your .env file');
+    console.warn('   Admin functionality will not be available until configured');
+  } else {
+    console.log('✅ Admin authentication configured');
+    console.log(`👤 Admin login endpoint: http://localhost:${PORT}/api/auth/admin-login`);
+  }
+  
+  // Start scheduled tasks in production
+  if (process.env.NODE_ENV === 'production') {
+    startScheduledTasks();
+  }
+});
 
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('📴 SIGTERM received, shutting down gracefully');
-    stopScheduledTasks();
-    server.close(() => {
-      console.log('🔚 Process terminated');
-    });
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('📴 SIGTERM received, shutting down gracefully');
+  stopScheduledTasks();
+  server.close(() => {
+    console.log('🔚 Process terminated');
   });
+});
 
-  process.on('SIGINT', () => {
-    console.log('📴 SIGINT received, shutting down gracefully');
-    stopScheduledTasks();
-    server.close(() => {
-      console.log('🔚 Process terminated');
-    });
+process.on('SIGINT', () => {
+  console.log('📴 SIGINT received, shutting down gracefully');
+  stopScheduledTasks();
+  server.close(() => {
+    console.log('🔚 Process terminated');
   });
-}
+});
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

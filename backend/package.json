@@ -6,8 +6,6 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "build": "echo 'Build completed'",
-    "vercel-build": "echo 'Vercel build completed'",
     "test": "jest",
     "lint": "eslint . --ext .js",
     "clean": "rm -rf node_modules"

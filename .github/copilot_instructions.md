@@ -30,3 +30,11 @@ ignite-new/
     File picker (.pdf only)
 ### If the user is studing in 2nd year AIML department he/she can access only 2nd year AIML department pdfs
 ### Tag-based organization (like "DSA", "Java", etc.).
+### The client side should be easy to understand and easy to navigate
+### Use Email-based Login with JWT (or Sessions)
+### PDFs are tied to the client's email address
+### If the client tries to login through 2 devices resrict to only 1 device
+### Generate short-lived signed URLs for Cloudflare R2 in the backend
+### When user clicks a "View PDF" button, fetch the signed URL from backend
+### Log who accessed what and when (for analytics/tracking)
+### As I have cloudflare free account the R2 storage has to accessed through a cloudflare worker

@@ -14,6 +14,55 @@ const {
 
 const router = express.Router();
 
+// Set CORS headers for all admin routes BEFORE authentication
+router.use((req, res, next) => {
+  const origin = req.get('Origin');
+  const allowedOrigins = [
+    'https://ignite-client.ritaban.me',
+    'https://ignite-admin.ritaban.me',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ];
+
+  console.log('Admin route CORS - Origin:', origin);
+  console.log('Admin route CORS - Method:', req.method);
+  console.log('Admin route CORS - Path:', req.path);
+
+  // Set CORS headers for all admin requests
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    console.log('Admin CORS: Origin allowed with credentials');
+  } else if (!origin) {
+    res.header('Access-Control-Allow-Origin', '*');
+    console.log('Admin CORS: No origin, allowing all');
+  } else {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    console.log('Admin CORS: Unknown origin, setting anyway');
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+  res.header('Access-Control-Max-Age', '86400');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Admin CORS: Handling preflight request');
+    return res.status(200).end();
+  }
+
+  next();
+});
+
+// Debug middleware to log all requests to admin routes
+router.use('*', (req, res, next) => {
+  console.log(`Admin route accessed: ${req.method} ${req.originalUrl}`);
+  console.log('Headers:', Object.keys(req.headers));
+  console.log('Authorization header present:', !!req.headers.authorization);
+  next();
+});
+
 // Test route without auth for CORS debugging
 router.get('/test-cors', (req, res) => {
   res.json({ 
@@ -41,6 +90,20 @@ const upload = multer({
 // Apply authentication and admin requirement to all routes
 router.use(authenticate);
 router.use(requireAdmin);
+
+// Test authenticated route for debugging
+router.post('/test-auth', authenticate, requireAdmin, (req, res) => {
+  res.json({ 
+    message: 'Admin auth test successful',
+    user: {
+      id: req.user._id,
+      username: req.user.username,
+      role: req.user.role
+    },
+    origin: req.get('Origin'),
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Upload PDF
 router.post('/upload', [

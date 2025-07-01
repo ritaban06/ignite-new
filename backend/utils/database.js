@@ -30,16 +30,4 @@ const connectDB = async () => {
   }
 };
 
-// Graceful shutdown
-const gracefulShutdown = () => {
-  mongoose.connection.close(() => {
-    console.log('📴 MongoDB connection closed through app termination');
-    process.exit(0);
-  });
-};
-
-// Handle process termination
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);
-
 module.exports = connectDB;

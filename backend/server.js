@@ -31,7 +31,9 @@ app.use(limiter);
 const corsOptions = {
   origin: [
     process.env.CLIENT_URL || 'http://localhost:3000',
-    process.env.ADMIN_URL || 'http://localhost:3001'
+    process.env.ADMIN_URL || 'http://localhost:3001',
+    'https://ignite-client.ritaban.me',
+    'https://ignite-admin.ritaban.me'
   ],
   credentials: true,
   optionsSuccessStatus: 200

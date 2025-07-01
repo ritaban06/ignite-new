@@ -33,8 +33,7 @@ const allowedOrigins = [
   process.env.ADMIN_URL || 'http://localhost:3001',
   'https://ignite-client.ritaban.me',
   'https://ignite-admin.ritaban.me',
-  'http://localhost:3000',
-  'http://localhost:3001'
+  'http://localhost:5000',
 ];
 
 const corsOptions = {

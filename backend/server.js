@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
@@ -39,60 +38,42 @@ const allowedOrigins = [
   'http://localhost:3001',
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers'
-  ],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  // Ensure we never send wildcard when credentials are true
-  preflightContinue: false
-};
-app.use(cors(corsOptions));
-
-// Additional CORS middleware for all responses
+// Simplified CORS middleware
 app.use((req, res, next) => {
   const origin = req.get('Origin');
   
-  // Only set CORS headers if origin is allowed
+  console.log('CORS Debug - Origin:', origin);
+  console.log('CORS Debug - Method:', req.method);
+  console.log('CORS Debug - Allowed Origins:', allowedOrigins);
+  
+  // Set CORS headers for all requests
   if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
+    console.log('CORS: Origin allowed with credentials');
   } else if (!origin) {
-    // For requests without origin (like from Postman), don't set credentials
+    // For requests without origin (Postman, server-to-server)
     res.header('Access-Control-Allow-Origin', '*');
-    // Don't set credentials header for requests without origin
+    console.log('CORS: No origin, allowing all');
+  } else {
+    // Block unknown origins when credentials are involved
+    console.log('CORS: Origin blocked:', origin);
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
   }
   
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+  res.header('Access-Control-Max-Age', '86400');
   res.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
-    res.header('Access-Control-Max-Age', '86400');
+    console.log('CORS: Handling preflight request');
     return res.status(200).end();
   }
+  
   next();
 });
 
@@ -141,13 +122,26 @@ app.get('/api/cors-debug', (req, res) => {
   res.json({ 
     origin: req.get('Origin'),
     corsEnabled: true,
-    allowAllOrigins: true,
+    allowedOrigins: allowedOrigins,
     clientUrl: process.env.CLIENT_URL,
     adminUrl: process.env.ADMIN_URL,
     referer: req.get('Referer'),
     userAgent: req.get('User-Agent'),
     headers: req.headers,
     timestamp: new Date().toISOString()
+  });
+});
+
+// Test endpoint for admin upload CORS
+app.get('/api/admin/test', (req, res) => {
+  res.json({ 
+    message: 'Admin endpoint accessible',
+    origin: req.get('Origin'),
+    timestamp: new Date().toISOString(),
+    corsHeaders: {
+      'Access-Control-Allow-Origin': res.get('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Credentials': res.get('Access-Control-Allow-Credentials')
+    }
   });
 });
 

@@ -572,4 +572,13 @@ router.get('/test-r2', async (req, res) => {
   }
 });
 
+// Test route without auth for CORS debugging
+router.get('/test-cors', (req, res) => {
+  res.json({ 
+    message: 'Admin CORS test successful',
+    origin: req.get('Origin'),
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router;

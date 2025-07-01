@@ -14,6 +14,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       }
+    },
+    // Configure proper MIME types for PDF worker
+    middlewareMode: false,
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
     }
   },
   optimizeDeps: {

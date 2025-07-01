@@ -4,9 +4,7 @@ import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, X, RotateCw } fro
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
 
-// Configure PDF.js worker - Use local worker file to avoid CORS issues
-// This serves the worker from your own domain, preventing CORS issues
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
+// The PDF worker is configured globally in main.jsx with CORS-friendly CDN
 
 // Also set it via the version-specific approach for better compatibility
 if (typeof window !== 'undefined') {
@@ -74,14 +72,22 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const onDocumentLoadError = (error) => {
     console.error('PDF loading error:', error);
     console.error('PDF URL that failed:', pdfUrl);
+    console.error('Current worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
     
-    // Check if it's a CORS error
-    if (error.message && error.message.includes('CORS')) {
+    // Check if it's a worker-related error
+    if (error.message && (error.message.includes('worker') || error.message.includes('fake worker'))) {
+      setError('PDF worker failed to load. Trying to reconfigure...');
+      toast.error('PDF worker failed to load');
+      
+      // Try to reconfigure worker and retry
+      pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
+      console.log('Reconfigured worker to local file, please try opening the PDF again');
+    } else if (error.message && error.message.includes('CORS')) {
       setError('PDF loading failed due to CORS restrictions. Please try refreshing the page.');
       toast.error('PDF loading failed due to CORS restrictions');
-    } else if (error.message && error.message.includes('worker')) {
-      setError('PDF worker failed to load. Please check your internet connection and try again.');
-      toast.error('PDF worker failed to load');
+    } else if (error.message && error.message.includes('Unexpected token')) {
+      setError('PDF worker file is corrupted or invalid. Please contact support.');
+      toast.error('PDF worker file is corrupted');
     } else {
       setError('Failed to load PDF document. The file might be corrupted or inaccessible.');
       toast.error('Failed to load PDF document');

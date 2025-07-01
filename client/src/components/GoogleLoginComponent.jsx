@@ -14,14 +14,8 @@ const GoogleLoginComponent = () => {
     setError('');
 
     try {
-      // Extract user info from Google response
-      const userInfo = GoogleAuthService.extractUserInfo(credentialResponse);
-      
-      // Validate Google user
-      GoogleAuthService.validateGoogleUser(userInfo);
-
-      // Send to backend for verification and approval check
-      await googleSignIn(userInfo, credentialResponse.credential);
+      // Send credential directly to backend for verification and approval check
+      await googleSignIn(credentialResponse);
 
     } catch (error) {
       console.error('Google sign-in error:', error);

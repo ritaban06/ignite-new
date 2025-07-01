@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const AccessLog = require('../models/AccessLog');
@@ -8,6 +9,9 @@ const { authRateLimit, authenticate, requireAdmin } = require('../middleware/aut
 const googleSheetsService = require('../services/googleSheetsService');
 
 const router = express.Router();
+
+// Initialize Google OAuth2 client
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate device ID from user agent and other factors
 const generateDeviceId = (req) => {
@@ -511,10 +515,7 @@ router.get('/admin/me', authenticate, requireAdmin, async (req, res) => {
 // Google OAuth verification endpoint
 router.post('/google-verify', [
   authRateLimit,
-  body('email').isEmail().normalizeEmail(),
-  body('name').trim().isLength({ min: 1, max: 100 }),
-  body('googleId').trim().isLength({ min: 1 }),
-  body('picture').optional().isURL()
+  body('credential').notEmpty().withMessage('Google credential token is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -525,7 +526,33 @@ router.post('/google-verify', [
       });
     }
 
-    const { email, name, googleId, picture } = req.body;
+    const { credential } = req.body;
+
+    // Verify the Google token
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+    } catch (error) {
+      console.error('Google token verification failed:', error);
+      return res.status(401).json({
+        error: 'Invalid Google token',
+        message: 'Failed to verify Google authentication token'
+      });
+    }
+
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId, picture, email_verified } = payload;
+
+    // Check if email is verified
+    if (!email_verified) {
+      return res.status(400).json({
+        error: 'Email not verified',
+        message: 'Please verify your email address with Google before signing in'
+      });
+    }
 
     // Check if user is in approved list
     const approvalResult = await googleSheetsService.isUserApproved(email);

@@ -136,16 +136,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
-  const googleSignIn = async (userData, googleToken) => {
+  const googleSignIn = async (credentialResponse) => {
     try {
       setIsLoading(true);
       
-      // Send to backend for verification
+      // Send the credential token to backend for verification
       const response = await authAPI.googleVerify({
-        email: userData.email,
-        name: userData.name,
-        googleId: userData.googleId,
-        picture: userData.picture
+        credential: credentialResponse.credential
       });
       
       if (response.data.token && response.data.user) {

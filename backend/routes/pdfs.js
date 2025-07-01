@@ -359,4 +359,88 @@ router.post('/:pdfId/report-attempt', [
   }
 });
 
+// Get all PDFs from R2 bucket
+router.get('/r2/list', [
+  authenticate
+], async (req, res) => {
+  try {
+    // List all files in the R2 bucket
+    const r2Result = await r2Service.listFiles();
+    
+    if (!r2Result.success) {
+      return res.status(500).json({
+        error: 'Failed to list files from R2',
+        message: r2Result.error
+      });
+    }
+
+    // Get corresponding PDF documents from database with user access control
+    const r2Files = r2Result.files || [];
+    const pdfsWithDetails = [];
+
+    for (const fileKey of r2Files) {
+      try {
+        // Find PDF in database by cloudflareKey
+        const pdf = await PDF.findOne({ cloudflareKey: fileKey });
+        
+        if (pdf) {
+          // Check if user can access this PDF (year and department filtering)
+          if (pdf.canUserAccess(req.user)) {
+            pdfsWithDetails.push({
+              id: pdf._id,
+              title: pdf.title,
+              subject: pdf.subject,
+              department: pdf.department,
+              year: pdf.year,
+              fileKey: fileKey,
+              viewUrl: r2Service.getViewUrl(fileKey).url,
+              createdAt: pdf.createdAt,
+              fileSize: pdf.fileSize,
+              viewCount: pdf.viewCount
+            });
+          }
+        } else {
+          // For orphaned files, only show to admin users
+          if (req.user.role === 'admin') {
+            pdfsWithDetails.push({
+              id: null,
+              title: 'Unknown',
+              subject: 'Unknown',
+              department: 'Unknown',
+              year: 'Unknown',
+              fileKey: fileKey,
+              viewUrl: r2Service.getViewUrl(fileKey).url,
+              createdAt: null,
+              fileSize: null,
+              viewCount: 0,
+              isOrphaned: true
+            });
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing file ${fileKey}:`, error);
+      }
+    }
+
+    res.json({
+      message: 'R2 files retrieved successfully',
+      totalFiles: r2Files.length,
+      accessibleFiles: pdfsWithDetails.length,
+      userAccess: {
+        department: req.user.department,
+        year: req.user.year,
+        role: req.user.role
+      },
+      pdfs: pdfsWithDetails
+    });
+
+  } catch (error) {
+    console.error('List R2 files error:', error);
+    res.status(500).json({
+      error: 'Failed to list R2 files',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

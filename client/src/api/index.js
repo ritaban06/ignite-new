@@ -67,6 +67,9 @@ export const pdfAPI = {
   
   // Get PDF statistics (for tracking)
   getPDFStats: (pdfId) => api.get(`/pdfs/${pdfId}/stats`),
+  
+  // Get all PDFs from R2 bucket
+  getAllPDFsFromR2: () => api.get('/pdfs/r2/list'),
 };
 
 // User API

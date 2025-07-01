@@ -7,6 +7,7 @@ import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
+import R2PDFManager from './components/R2PDFManager';
 
 // You'll need to add your Google OAuth Client ID here
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id-here';
@@ -36,6 +37,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/r2-manager" element={<R2PDFManager />} />
           {/* Add more routes as needed */}
         </Routes>
       </main>

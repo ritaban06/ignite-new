@@ -73,12 +73,12 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent mb-2">Search PDFs</h1>
-          <p className="text-gray-600">Find the educational resources you need</p>
+          <p className="text-purple-700">Find the educational resources you need</p>
         </div>
 
         {/* Search Form */}

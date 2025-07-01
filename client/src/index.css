@@ -10,6 +10,10 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
   
+  body {
+    background-color: #faf5ff; /* purple-50 */
+  }
+  
   @keyframes blob {
     0% {
       transform: translate(0px, 0px) scale(1);

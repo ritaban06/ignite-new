@@ -1,4 +1,7 @@
 packages:
-  - 'admin'
-  - 'backend' 
-  - 'client'
+  - admin
+  - backend
+  - client
+
+onlyBuiltDependencies:
+  - esbuild

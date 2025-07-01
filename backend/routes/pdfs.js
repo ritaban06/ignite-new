@@ -137,11 +137,11 @@ router.post('/:pdfId/view', [
     // Increment view count
     await pdf.incrementViewCount();
     
-    // Generate signed URL via worker
-    const urlResult = r2Service.getWorkerViewUrl(
+    // Generate public URL (since bucket is public)
+    const urlResult = r2Service.getViewUrl(
       pdf.cloudflareKey,
       req.user._id,
-      300 // 5 minutes
+      300 // 5 minutes (not used for public URLs)
     );
     
     if (!urlResult.success) {

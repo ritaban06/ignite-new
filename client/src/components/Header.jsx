@@ -20,7 +20,7 @@ const Header = () => {
               alt="Ignite"
               className="h-8 w-auto"
             />
-            <span className="ml-2 text-xl font-bold text-gray-900">
+            <span className="ml-2 text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
               Ignite
             </span>
           </div>
@@ -30,12 +30,14 @@ const Header = () => {
             {/* User info */}
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <User className="h-4 w-4 text-gray-500" />
+                <div className="w-8 h-8 bg-gradient-to-r from-primary-600 to-primary-500 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-white" />
+                </div>
                 <span className="text-sm font-medium text-gray-700">
                   {user?.name}
                 </span>
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-primary-600 font-medium">
                 {user?.department} - Year {user?.year}
               </div>
             </div>
@@ -43,7 +45,7 @@ const Header = () => {
             {/* Actions */}
             <div className="flex items-center space-x-2">
               <button
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
                 title="Settings"
               >
                 <Settings className="h-4 w-4" />

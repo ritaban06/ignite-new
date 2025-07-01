@@ -19,12 +19,12 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-lg hover:border-primary-300 transition-all duration-200 overflow-hidden group">
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
+            <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
               {pdf.title}
             </h3>
             <p className="text-sm text-gray-600 mt-1">
@@ -34,7 +34,7 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
           
           <button
             onClick={() => onView(pdf._id)}
-            className="ml-4 flex items-center space-x-1 px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="ml-4 flex items-center space-x-1 px-3 py-2 gradient-accent text-white rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
           >
             <Eye className="h-4 w-4" />
             <span className="text-sm font-medium">View</span>
@@ -87,7 +87,7 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
               {pdf.tags.slice(0, 3).map((tag, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800"
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700 border border-primary-200"
                 >
                   {tag}
                 </span>

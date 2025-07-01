@@ -77,7 +77,7 @@ const SearchPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Search PDFs</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent mb-2">Search PDFs</h1>
           <p className="text-gray-600">Find the educational resources you need</p>
         </div>
 
@@ -127,14 +127,14 @@ const SearchPage = () => {
                 <button
                   type="submit"
                   disabled={isLoading || !searchQuery.trim()}
-                  className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 gradient-accent text-white px-4 py-2 rounded-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
                 >
                   {isLoading ? 'Searching...' : 'Search'}
                 </button>
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>

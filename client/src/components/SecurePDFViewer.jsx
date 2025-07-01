@@ -103,13 +103,13 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center">
       <div className="w-full h-full max-w-7xl mx-auto flex flex-col bg-white">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-gray-900 text-white">
+        <div className="flex items-center justify-between p-4 gradient-bg text-white">
           <div className="flex items-center space-x-4">
             <h3 className="text-lg font-semibold truncate">
               {pdfInfo?.title || 'PDF Document'}
             </h3>
             {pdfInfo && (
-              <div className="text-sm text-gray-300">
+              <div className="text-sm text-primary-200">
                 {pdfInfo.subject} • {pdfInfo.department} Year {pdfInfo.year}
               </div>
             )}
@@ -117,20 +117,20 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-primary-700 rounded-lg transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
+        <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-primary-100">
           <div className="flex items-center space-x-2">
             {/* Page Navigation */}
             <button
               onClick={() => changePage(-1)}
               disabled={pageNumber <= 1}
-              className="p-2 text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -142,7 +142,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                 max={numPages || 1}
                 value={pageNumber}
                 onChange={(e) => goToPage(e.target.value)}
-                className="w-16 px-2 py-1 text-center border border-gray-300 rounded"
+                className="w-16 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <span className="text-gray-600">
                 of {numPages || '...'}
@@ -152,7 +152,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             <button
               onClick={() => changePage(1)}
               disabled={pageNumber >= numPages}
-              className="p-2 text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -163,19 +163,19 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             <button
               onClick={zoomOut}
               disabled={scale <= 0.5}
-              className="p-2 text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <ZoomOut className="h-5 w-5" />
             </button>
             
-            <span className="text-sm text-gray-600 min-w-12 text-center">
+            <span className="text-sm text-gray-600 min-w-12 text-center font-medium">
               {Math.round(scale * 100)}%
             </span>
             
             <button
               onClick={zoomIn}
               disabled={scale >= 3.0}
-              className="p-2 text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <ZoomIn className="h-5 w-5" />
             </button>
@@ -183,7 +183,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             {/* Rotate */}
             <button
               onClick={rotate}
-              className="p-2 text-gray-600 hover:text-gray-900"
+              className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
             >
               <RotateCw className="h-5 w-5" />
             </button>
@@ -191,7 +191,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             {/* Reset */}
             <button
               onClick={resetView}
-              className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded"
+              className="px-3 py-1 text-sm bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition-colors"
             >
               Reset
             </button>
@@ -215,7 +215,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                 <p className="text-red-600 mb-4">{error}</p>
                 <button
                   onClick={fetchPDFUrl}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  className="px-4 py-2 gradient-accent text-white rounded-lg hover:shadow-md transition-all duration-200"
                 >
                   Retry
                 </button>

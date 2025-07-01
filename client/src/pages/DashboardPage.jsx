@@ -162,10 +162,10 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Welcome Header */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-white shadow-sm border-b border-primary-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
               Welcome back, {user?.name}
             </h1>
             <p className="mt-2 text-gray-600">
@@ -178,38 +178,44 @@ const DashboardPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-primary-100 hover:border-primary-300 transition-colors">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <BookOpen className="h-8 w-8 text-primary-600" />
+                <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg flex items-center justify-center">
+                  <BookOpen className="h-6 w-6 text-white" />
+                </div>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Available PDFs</p>
-                <p className="text-2xl font-bold text-gray-900">{pagination.totalCount}</p>
+                <p className="text-2xl font-bold text-primary-600">{pagination.totalCount}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100 hover:border-green-300 transition-colors">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <Clock className="h-8 w-8 text-green-600" />
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-400 rounded-lg flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Recently Viewed</p>
-                <p className="text-2xl font-bold text-gray-900">{recentPdfs.length}</p>
+                <p className="text-2xl font-bold text-green-600">{recentPdfs.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-blue-100 hover:border-blue-300 transition-colors">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-400 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Your Department</p>
-                <p className="text-2xl font-bold text-gray-900">{user?.department}</p>
+                <p className="text-2xl font-bold text-blue-600">{user?.department}</p>
               </div>
             </div>
           </div>
@@ -284,14 +290,14 @@ const DashboardPage = () => {
               <div className="flex space-x-2">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                  className="flex-1 gradient-accent text-white px-4 py-2 rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
                 >
                   Search
                 </button>
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-primary-300 transition-colors"
                 >
                   Clear
                 </button>
@@ -343,19 +349,19 @@ const DashboardPage = () => {
                     <button
                       onClick={() => changePage(pagination.currentPage - 1)}
                       disabled={!pagination.hasPrev}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Previous
                     </button>
                     
                     <span className="px-4 py-2 text-gray-700">
-                      Page {pagination.currentPage} of {pagination.totalPages}
+                      Page <span className="font-medium text-primary-600">{pagination.currentPage}</span> of <span className="font-medium">{pagination.totalPages}</span>
                     </span>
                     
                     <button
                       onClick={() => changePage(pagination.currentPage + 1)}
                       disabled={!pagination.hasNext}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Next
                     </button>

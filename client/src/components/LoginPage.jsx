@@ -65,19 +65,26 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen gradient-bg flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-primary-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+        </div>
+        
         {/* Logo and Header */}
-        <div className="text-center">
+        <div className="text-center relative z-10">
           <img
             src="/newlogo.webp"
             alt="Ignite"
-            className="mx-auto h-16 w-auto"
+            className="mx-auto h-16 w-auto filter drop-shadow-lg"
           />
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+          <h2 className="mt-6 text-3xl font-bold text-white">
             {isLoginMode ? 'Welcome back' : 'Create your account'}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-primary-200">
             {isLoginMode 
               ? 'Sign in to access your PDF library' 
               : 'Join Ignite to explore educational resources'
@@ -86,8 +93,8 @@ const LoginPage = () => {
         </div>
 
         {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="bg-white rounded-xl shadow-sm p-8 space-y-6">
+        <form className="mt-8 space-y-6 relative z-10" onSubmit={handleSubmit}>
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 space-y-6 border border-white/20">
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -105,7 +112,7 @@ const LoginPage = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your email"
                 />
               </div>
@@ -227,10 +234,10 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full gradient-accent py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
             >
               {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
               ) : (
                 isLoginMode ? 'Sign in' : 'Create account'
               )}
@@ -238,11 +245,11 @@ const LoginPage = () => {
           </div>
 
           {/* Toggle Mode */}
-          <div className="text-center">
+          <div className="text-center relative z-10">
             <button
               type="button"
               onClick={toggleMode}
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              className="text-sm text-primary-200 hover:text-white font-medium transition-colors duration-200"
             >
               {isLoginMode 
                 ? "Don't have an account? Sign up" 

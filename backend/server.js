@@ -89,7 +89,10 @@ app.get('/api/cors-debug', (req, res) => {
     allowedOrigins: allowedOrigins,
     clientUrl: process.env.CLIENT_URL,
     adminUrl: process.env.ADMIN_URL,
-    headers: req.headers
+    referer: req.get('Referer'),
+    userAgent: req.get('User-Agent'),
+    headers: req.headers,
+    timestamp: new Date().toISOString()
   });
 });
 

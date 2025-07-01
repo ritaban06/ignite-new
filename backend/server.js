@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const connectDB = require('./utils/database');
@@ -189,19 +190,39 @@ const server = app.listen(PORT, () => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('📴 SIGTERM received, shutting down gracefully');
   stopScheduledTasks();
+  
+  try {
+    // Close MongoDB connection
+    await mongoose.connection.close();
+    console.log('📴 MongoDB connection closed');
+  } catch (error) {
+    console.error('❌ Error closing MongoDB connection:', error);
+  }
+  
   server.close(() => {
     console.log('🔚 Process terminated');
+    process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('📴 SIGINT received, shutting down gracefully');
   stopScheduledTasks();
+  
+  try {
+    // Close MongoDB connection
+    await mongoose.connection.close();
+    console.log('📴 MongoDB connection closed');
+  } catch (error) {
+    console.error('❌ Error closing MongoDB connection:', error);
+  }
+  
   server.close(() => {
     console.log('🔚 Process terminated');
+    process.exit(0);
   });
 });
 

@@ -8,6 +8,11 @@ import toast from 'react-hot-toast';
 // This serves the worker from your own domain, preventing CORS issues
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
 
+// Also set it via the version-specific approach for better compatibility
+if (typeof window !== 'undefined') {
+  window.pdfWorkerSrc = '/pdfjs/pdf.worker.min.js';
+}
+
 const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
@@ -248,6 +253,9 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                   file={pdfUrl}
                   onLoadSuccess={onDocumentLoadSuccess}
                   onLoadError={onDocumentLoadError}
+                  options={{
+                    workerSrc: '/pdfjs/pdf.worker.min.js'
+                  }}
                   loading={
                     <div className="flex items-center justify-center p-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>

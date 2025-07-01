@@ -31,9 +31,9 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
-  logout: () => api.post('/auth/logout'),
-  getCurrentUser: () => api.get('/auth/me'),
+  login: (credentials) => api.post('/auth/admin-login', credentials),
+  logout: () => api.post('/auth/admin-logout'),
+  getCurrentUser: () => api.get('/auth/admin/me'),
 };
 
 export const pdfAPI = {

@@ -360,7 +360,7 @@ router.post('/force-logout/:userId', async (req, res) => {
 // Admin login using environment variables
 router.post('/admin-login', [
   authRateLimit,
-  body('email').isEmail().normalizeEmail(),
+  body('username').trim().isLength({ min: 1 }),
   body('password').exists()
 ], async (req, res) => {
   try {
@@ -372,7 +372,7 @@ router.post('/admin-login', [
       });
     }
 
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Check against environment variables
     const adminUsername = process.env.ADMIN_USERNAME;
@@ -386,7 +386,7 @@ router.post('/admin-login', [
     }
 
     // Verify admin credentials
-    if (email !== adminUsername || password !== adminPassword) {
+    if (username !== adminUsername || password !== adminPassword) {
       // Log failed admin login attempt
       await AccessLog.logAccess({
         userId: null,
@@ -395,7 +395,7 @@ router.post('/admin-login', [
         userAgent: req.get('User-Agent'),
         deviceId: generateDeviceId(req),
         metadata: {
-          attemptedEmail: email,
+          attemptedUsername: username,
           timestamp: new Date()
         }
       });
@@ -412,7 +412,7 @@ router.post('/admin-login', [
     const token = jwt.sign(
       { 
         userId: 'admin',
-        email: adminUsername,
+        username: adminUsername,
         role: 'admin',
         deviceId,
         isEnvAdmin: true // Flag to indicate this is env-based admin
@@ -429,7 +429,7 @@ router.post('/admin-login', [
       userAgent: req.get('User-Agent'),
       deviceId,
       metadata: {
-        adminEmail: adminUsername,
+        adminUsername: adminUsername,
         timestamp: new Date()
       }
     });
@@ -439,7 +439,7 @@ router.post('/admin-login', [
       token,
       user: {
         id: 'admin',
-        email: adminUsername,
+        username: adminUsername,
         name: 'System Administrator',
         role: 'admin',
         isEnvAdmin: true
@@ -470,7 +470,7 @@ router.post('/admin-logout', async (req, res) => {
         userAgent: req.get('User-Agent'),
         deviceId: decoded.deviceId,
         metadata: {
-          adminEmail: decoded.email,
+          adminUsername: decoded.username || decoded.email, // Support both for compatibility
           timestamp: new Date()
         }
       });
@@ -487,41 +487,21 @@ router.post('/admin-logout', async (req, res) => {
 });
 
 // Get current admin user info
-router.get('/admin/me', async (req, res) => {
+router.get('/admin/me', authenticate, requireAdmin, async (req, res) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
-
-    if (!user || user.role !== 'admin') {
-      return res.status(401).json({ error: 'Invalid token or user not found' });
-    }
-
     res.json({
       user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        isEnvAdmin: user.isEnvAdmin || false
+        id: req.user._id,
+        username: req.user.username || req.user.email, // Support both for compatibility
+        name: req.user.name,
+        role: req.user.role,
+        isEnvAdmin: req.user.isEnvAdmin || false
       }
     });
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expired' });
-    }
-    
-    console.error('Token verification error:', error);
+    console.error('Get admin info error:', error);
     res.status(500).json({ 
-      error: 'Token verification failed', 
+      error: 'Failed to get admin info', 
       message: error.message 
     });
   }

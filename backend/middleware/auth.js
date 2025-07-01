@@ -17,14 +17,14 @@ const authenticate = async (req, res, next) => {
     if (decoded.isEnvAdmin && decoded.role === 'admin') {
       const adminUsername = process.env.ADMIN_USERNAME;
       
-      if (!adminUsername || decoded.email !== adminUsername) {
+      if (!adminUsername || decoded.username !== adminUsername) {
         return res.status(401).json({ error: 'Invalid admin token.' });
       }
       
       // Create a virtual admin user object
       req.user = {
         _id: 'admin',
-        email: decoded.email,
+        username: decoded.username,
         name: 'System Administrator',
         role: 'admin',
         isActive: true,
@@ -87,7 +87,7 @@ const requireAdmin = (req, res, next) => {
   // For environment-based admin, verify credentials are still valid
   if (req.user.isEnvAdmin) {
     const adminUsername = process.env.ADMIN_USERNAME;
-    if (!adminUsername || req.user.email !== adminUsername) {
+    if (!adminUsername || req.user.username !== adminUsername) {
       return res.status(403).json({ error: 'Invalid admin session.' });
     }
   }

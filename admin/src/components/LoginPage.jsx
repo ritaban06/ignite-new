@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -46,22 +46,22 @@ export default function LoginPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
-                Email address
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-1">
+                Username
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
                   required
                   className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="Enter your email"
-                  value={formData.email}
+                  placeholder="Enter your username"
+                  value={formData.username}
                   onChange={handleChange}
                 />
               </div>

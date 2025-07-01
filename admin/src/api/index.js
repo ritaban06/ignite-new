@@ -1,0 +1,57 @@
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add token to requests if available
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adminToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('adminToken');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const authAPI = {
+  login: (credentials) => api.post('/auth/login', credentials),
+  logout: () => api.post('/auth/logout'),
+  getCurrentUser: () => api.get('/auth/me'),
+};
+
+export const pdfAPI = {
+  upload: (formData) => api.post('/admin/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
+  getAllPdfs: (params) => api.get('/admin/pdfs', { params }),
+  deletePdf: (id) => api.delete(`/admin/pdfs/${id}`),
+  updatePdf: (id, data) => api.put(`/admin/pdfs/${id}`, data),
+  getAnalytics: () => api.get('/admin/analytics'),
+};
+
+export const userAPI = {
+  getAllUsers: (params) => api.get('/admin/users', { params }),
+  updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+};
+
+export default api;

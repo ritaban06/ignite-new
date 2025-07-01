@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Import react-pdf styles - must be before Tailwind */
+@import 'react-pdf/dist/Page/AnnotationLayer.css';
+@import 'react-pdf/dist/Page/TextLayer.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import react-pdf styles */
-@import 'react-pdf/dist/Page/AnnotationLayer.css';
-@import 'react-pdf/dist/Page/TextLayer.css';
 
 
 @layer base {

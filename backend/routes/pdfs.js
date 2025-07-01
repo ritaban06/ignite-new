@@ -443,4 +443,78 @@ router.get('/r2/list', [
   }
 });
 
+// Proxy route to serve PDFs with proper CORS headers
+router.get('/proxy/:fileKey', [
+  authenticate
+], async (req, res) => {
+  try {
+    const fileKey = decodeURIComponent(req.params.fileKey);
+    const userId = req.query.userId || req.user._id;
+    
+    // Find the PDF in database to validate access
+    const pdf = await PDF.findOne({ cloudflareKey: fileKey });
+    
+    if (!pdf) {
+      return res.status(404).json({ error: 'PDF not found' });
+    }
+    
+    // Check if user can access this PDF
+    if (!pdf.canUserAccess(req.user)) {
+      return res.status(403).json({ 
+        error: 'You do not have access to this PDF' 
+      });
+    }
+    
+    // Get the PDF from R2 using signed URL
+    const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+    
+    const s3Client = new S3Client({
+      region: 'auto',
+      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+      },
+    });
+
+    const command = new GetObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: fileKey,
+    });
+
+    const response = await s3Client.send(command);
+    
+    // Set CORS headers for PDF viewing
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'inline',
+      'Cache-Control': 'private, max-age=300',
+      'Content-Length': response.ContentLength
+    });
+
+    // Stream the PDF to the client
+    response.Body.pipe(res);
+
+    // Log access
+    await AccessLog.logAccess({
+      userId: req.user._id,
+      pdfId: pdf._id,
+      action: 'proxy_view',
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      deviceId: req.deviceId
+    });
+
+  } catch (error) {
+    console.error('PDF proxy error:', error);
+    res.status(500).json({ 
+      error: 'Failed to serve PDF', 
+      message: error.message 
+    });
+  }
+});
+
 module.exports = router;

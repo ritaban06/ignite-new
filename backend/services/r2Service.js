@@ -69,8 +69,9 @@ class R2Bucket {
         throw new Error('R2 credentials not configured');
       }
 
-      // For public buckets, return direct URL
-      const url = `https://${this.bucketName}.${this.accountId}.r2.cloudflarestorage.com/${fileKey}`;
+      // Use signed URLs to avoid CORS issues
+      // The backend will serve the PDF with proper CORS headers
+      const url = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/pdfs/proxy/${encodeURIComponent(fileKey)}?userId=${userId}`;
       
       return {
         success: true,

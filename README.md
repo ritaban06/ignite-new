@@ -9,7 +9,6 @@ ignite-new/
 ├── admin/          # React admin dashboard for PDF uploads
 ├── backend/        # Express.js API server
 ├── client/         # Public React client for PDF viewing
-├── .env.example    # Environment variables template
 └── pnpm-workspace.yaml
 ```
 

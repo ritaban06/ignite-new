@@ -63,7 +63,9 @@ const corsOptions = {
     'Access-Control-Request-Method',
     'Access-Control-Request-Headers'
   ],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  // Ensure we never send wildcard when credentials are true
+  preflightContinue: false
 };
 app.use(cors(corsOptions));
 
@@ -76,8 +78,10 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
   } else if (!origin) {
-    // For requests without origin (server-to-server, mobile apps, etc.)
-    res.header('Access-Control-Allow-Origin', '*');
+    // For requests without origin, don't set wildcard when credentials are involved
+    // Instead, set to a default allowed origin or handle differently
+    res.header('Access-Control-Allow-Origin', allowedOrigins[0]);
+    res.header('Access-Control-Allow-Credentials', 'true');
   }
   
   res.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');

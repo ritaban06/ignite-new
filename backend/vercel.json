@@ -17,6 +17,7 @@
     {
       "source": "/(.*)",
       "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "https://ignite-client.ritaban.me, https://ignite-admin.ritaban.me, http://localhost:3000, http://localhost:3001" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS, PATCH" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers" },
         { "key": "Access-Control-Allow-Credentials", "value": "true" },

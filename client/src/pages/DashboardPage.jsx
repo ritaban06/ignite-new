@@ -192,6 +192,8 @@ const DashboardPage = () => {
             </div>
           </div>
 
+          {/* Recently Viewed Stats Card - Commented Out */}
+          {/*
           <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100 hover:border-green-300 transition-colors">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -205,6 +207,7 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
+          */}
 
           <div className="bg-white rounded-lg shadow-sm p-6 border border-blue-100 hover:border-blue-300 transition-colors">
             <div className="flex items-center">
@@ -221,7 +224,8 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Recent PDFs Section */}
+        {/* Recent PDFs Section - Commented Out */}
+        {/*
         {recentPdfs.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Recently Viewed</h2>
@@ -237,6 +241,7 @@ const DashboardPage = () => {
             </div>
           </div>
         )}
+        */}
 
         {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">

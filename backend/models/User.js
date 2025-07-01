@@ -83,10 +83,8 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes
-userSchema.index({ email: 1 });
 userSchema.index({ department: 1, year: 1 });
 userSchema.index({ role: 1 });
-userSchema.index({ googleId: 1 }, { sparse: true });
 
 // Virtual for account lock status
 userSchema.virtual('isLocked').get(function() {

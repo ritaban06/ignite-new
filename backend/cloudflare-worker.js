@@ -4,12 +4,13 @@
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const origin = request.headers.get('Origin');
     
-    // Add CORS headers for all responses
+    // Add CORS headers for all responses - dynamically set origin to support credentials
     const corsHeaders = {
-      'Access-Control-Allow-Origin': env.CLIENT_URL || 'http://localhost:3000',
+      'Access-Control-Allow-Origin': origin || '*', // Use requesting origin to support credentials
       'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Worker-Auth, X-Worker-Signature, X-Worker-Timestamp',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Worker-Auth, X-Worker-Signature, X-Worker-Timestamp, Authorization',
       'Access-Control-Allow-Credentials': 'true'
     };
 

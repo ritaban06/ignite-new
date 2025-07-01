@@ -12,7 +12,8 @@ const router = express.Router();
 
 // Handle preflight requests for all auth routes
 router.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.get('Origin') || '*');
+  const origin = req.get('Origin');
+  res.header('Access-Control-Allow-Origin', origin || '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -628,6 +629,23 @@ router.post('/google-verify', [
       message: error.message 
     });
   }
+});
+
+// Test endpoint to verify auth routes are working
+router.get('/test', (req, res) => {
+  res.json({
+    message: 'Auth routes are working!',
+    availableRoutes: [
+      'POST /api/auth/register',
+      'POST /api/auth/login',
+      'POST /api/auth/logout',
+      'POST /api/auth/google-verify',
+      'POST /api/auth/admin-login',
+      'GET /api/auth/admin/me',
+      'GET /api/auth/test'
+    ],
+    googleClientConfigured: !!process.env.GOOGLE_CLIENT_ID
+  });
 });
 
 module.exports = router;

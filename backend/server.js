@@ -31,26 +31,12 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
-const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:3000',
-  process.env.ADMIN_URL || 'http://localhost:3001',
-  'https://ignite-client.ritaban.me',
-  'https://ignite-admin.ritaban.me',
-];
+// CORS configuration - Allow all origins
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests, Postman)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Allow all origins (including no origin for mobile apps, curl, etc.)
+    callback(null, true);
   },
   credentials: true,
   optionsSuccessStatus: 200,
@@ -71,10 +57,15 @@ app.use(cors(corsOptions));
 // Additional CORS middleware for all responses
 app.use((req, res, next) => {
   const origin = req.get('Origin');
-  if (origin && allowedOrigins.includes(origin)) {
+  
+  // Allow all origins
+  if (origin) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
   }
+  
   res.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
   
@@ -109,7 +100,22 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    cors: {
+      origin: req.get('Origin'),
+      method: req.method,
+      headers: req.headers
+    }
+  });
+});
+
+// CORS test endpoint
+app.get('/api/cors-test', (req, res) => {
+  res.json({
+    message: 'CORS is working!',
+    origin: req.get('Origin'),
+    method: req.method,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -117,7 +123,8 @@ app.get('/api/health', (req, res) => {
 app.get('/api/cors-debug', (req, res) => {
   res.json({ 
     origin: req.get('Origin'),
-    allowedOrigins: allowedOrigins,
+    corsEnabled: true,
+    allowAllOrigins: true,
     clientUrl: process.env.CLIENT_URL,
     adminUrl: process.env.ADMIN_URL,
     referer: req.get('Referer'),

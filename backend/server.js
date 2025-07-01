@@ -103,6 +103,16 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
     
+    // Check admin environment variables
+    if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+      console.warn('⚠️  Admin credentials not configured in environment variables');
+      console.warn('   Please set ADMIN_USERNAME and ADMIN_PASSWORD in your .env file');
+      console.warn('   Admin functionality will not be available until configured');
+    } else {
+      console.log('✅ Admin authentication configured');
+      console.log(`👤 Admin login endpoint: http://localhost:${PORT}/api/auth/admin-login`);
+    }
+    
     // Start scheduled tasks in production
     if (process.env.NODE_ENV === 'production') {
       startScheduledTasks();

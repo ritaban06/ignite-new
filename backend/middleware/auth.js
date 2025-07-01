@@ -12,6 +12,30 @@ const authenticate = async (req, res, next) => {
     }
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Handle environment-based admin authentication
+    if (decoded.isEnvAdmin && decoded.role === 'admin') {
+      const adminUsername = process.env.ADMIN_USERNAME;
+      
+      if (!adminUsername || decoded.email !== adminUsername) {
+        return res.status(401).json({ error: 'Invalid admin token.' });
+      }
+      
+      // Create a virtual admin user object
+      req.user = {
+        _id: 'admin',
+        email: decoded.email,
+        name: 'System Administrator',
+        role: 'admin',
+        isActive: true,
+        isLocked: false,
+        isEnvAdmin: true
+      };
+      req.deviceId = decoded.deviceId;
+      return next();
+    }
+    
+    // Handle regular user authentication
     const user = await User.findById(decoded.userId).select('+deviceId');
     
     if (!user) {
@@ -58,6 +82,14 @@ const requireAdmin = (req, res, next) => {
   
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required.' });
+  }
+  
+  // For environment-based admin, verify credentials are still valid
+  if (req.user.isEnvAdmin) {
+    const adminUsername = process.env.ADMIN_USERNAME;
+    if (!adminUsername || req.user.email !== adminUsername) {
+      return res.status(403).json({ error: 'Invalid admin session.' });
+    }
   }
   
   next();

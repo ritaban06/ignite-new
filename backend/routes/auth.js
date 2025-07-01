@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const AccessLog = require('../models/AccessLog');
-const { authRateLimit } = require('../middleware/auth');
+const { authRateLimit, authenticate, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -128,6 +128,14 @@ router.post('/login', [
     if (!user) {
       return res.status(401).json({ 
         error: 'Invalid email or password' 
+      });
+    }
+
+    // Prevent admin users from logging in through regular login
+    // Admin access should only be through admin-login endpoint with env credentials
+    if (user.role === 'admin') {
+      return res.status(403).json({ 
+        error: 'Admin users must use the admin login endpoint' 
       });
     }
 
@@ -344,6 +352,176 @@ router.post('/force-logout/:userId', async (req, res) => {
     console.error('Force logout error:', error);
     res.status(500).json({ 
       error: 'Force logout failed', 
+      message: error.message 
+    });
+  }
+});
+
+// Admin login using environment variables
+router.post('/admin-login', [
+  authRateLimit,
+  body('email').isEmail().normalizeEmail(),
+  body('password').exists()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: errors.array() 
+      });
+    }
+
+    const { email, password } = req.body;
+
+    // Check against environment variables
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminUsername || !adminPassword) {
+      console.error('Admin credentials not configured in environment variables');
+      return res.status(500).json({ 
+        error: 'Admin authentication not configured' 
+      });
+    }
+
+    // Verify admin credentials
+    if (email !== adminUsername || password !== adminPassword) {
+      // Log failed admin login attempt
+      await AccessLog.logAccess({
+        userId: null,
+        action: 'admin_login_failed',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        deviceId: generateDeviceId(req),
+        metadata: {
+          attemptedEmail: email,
+          timestamp: new Date()
+        }
+      });
+
+      return res.status(401).json({ 
+        error: 'Invalid admin credentials' 
+      });
+    }
+
+    // Generate device ID for admin session
+    const deviceId = generateDeviceId(req);
+
+    // Generate JWT token for admin
+    const token = jwt.sign(
+      { 
+        userId: 'admin',
+        email: adminUsername,
+        role: 'admin',
+        deviceId,
+        isEnvAdmin: true // Flag to indicate this is env-based admin
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' } // Shorter expiry for admin sessions
+    );
+
+    // Log successful admin login
+    await AccessLog.logAccess({
+      userId: 'admin',
+      action: 'admin_login_success',
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      deviceId,
+      metadata: {
+        adminEmail: adminUsername,
+        timestamp: new Date()
+      }
+    });
+
+    res.json({
+      message: 'Admin login successful',
+      token,
+      user: {
+        id: 'admin',
+        email: adminUsername,
+        name: 'System Administrator',
+        role: 'admin',
+        isEnvAdmin: true
+      }
+    });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ 
+      error: 'Admin login failed', 
+      message: error.message 
+    });
+  }
+});
+
+// Admin logout
+router.post('/admin-logout', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Log admin logout
+      await AccessLog.logAccess({
+        userId: decoded.isEnvAdmin ? 'admin' : decoded.userId,
+        action: 'admin_logout',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        deviceId: decoded.deviceId,
+        metadata: {
+          adminEmail: decoded.email,
+          timestamp: new Date()
+        }
+      });
+    }
+
+    res.json({ message: 'Admin logout successful' });
+  } catch (error) {
+    console.error('Admin logout error:', error);
+    res.status(500).json({ 
+      error: 'Admin logout failed', 
+      message: error.message 
+    });
+  }
+});
+
+// Get current admin user info
+router.get('/admin/me', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user || user.role !== 'admin') {
+      return res.status(401).json({ error: 'Invalid token or user not found' });
+    }
+
+    res.json({
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        isEnvAdmin: user.isEnvAdmin || false
+      }
+    });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    
+    console.error('Token verification error:', error);
+    res.status(500).json({ 
+      error: 'Token verification failed', 
       message: error.message 
     });
   }

@@ -392,18 +392,8 @@ router.post('/admin-login', [
 
     // Verify admin credentials
     if (username !== adminUsername || password !== adminPassword) {
-      // Log failed admin login attempt
-      await AccessLog.logAccess({
-        userId: null,
-        action: 'admin_login_failed',
-        ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
-        deviceId: generateDeviceId(req),
-        metadata: {
-          attemptedUsername: username,
-          timestamp: new Date()
-        }
-      });
+      // Log failed admin login attempt to console for security monitoring
+      console.warn(`Failed admin login attempt - Username: ${username}, IP: ${req.ip}, User-Agent: ${req.get('User-Agent')}`);
 
       return res.status(401).json({ 
         error: 'Invalid admin credentials' 
@@ -426,18 +416,8 @@ router.post('/admin-login', [
       { expiresIn: '24h' } // Shorter expiry for admin sessions
     );
 
-    // Log successful admin login
-    await AccessLog.logAccess({
-      userId: 'admin',
-      action: 'admin_login_success',
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent'),
-      deviceId,
-      metadata: {
-        adminUsername: adminUsername,
-        timestamp: new Date()
-      }
-    });
+    // Log successful admin login to console for security monitoring
+    console.log(`Successful admin login - Username: ${adminUsername}, IP: ${req.ip}, User-Agent: ${req.get('User-Agent')}`);
 
     res.json({
       message: 'Admin login successful',
@@ -467,18 +447,8 @@ router.post('/admin-logout', async (req, res) => {
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
-      // Log admin logout
-      await AccessLog.logAccess({
-        userId: decoded.isEnvAdmin ? 'admin' : decoded.userId,
-        action: 'admin_logout',
-        ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
-        deviceId: decoded.deviceId,
-        metadata: {
-          adminUsername: decoded.username || decoded.email, // Support both for compatibility
-          timestamp: new Date()
-        }
-      });
+      // Log admin logout to console for security monitoring
+      console.log(`Admin logout - Username: ${decoded.username || decoded.email}, IP: ${req.ip}, User-Agent: ${req.get('User-Agent')}`);
     }
 
     res.json({ message: 'Admin logout successful' });

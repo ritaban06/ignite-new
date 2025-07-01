@@ -52,8 +52,17 @@ const corsOptions = {
   },
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 app.use(cors(corsOptions));
 
@@ -164,23 +173,6 @@ const server = app.listen(PORT, () => {
   if (process.env.NODE_ENV === 'production') {
     startScheduledTasks();
   }
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('📴 SIGTERM received, shutting down gracefully');
-  stopScheduledTasks();
-  server.close(() => {
-    console.log('🔚 Process terminated');
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('📴 SIGINT received, shutting down gracefully');
-  stopScheduledTasks();
-  server.close(() => {
-    console.log('🔚 Process terminated');
-  });
 });
 
 // Graceful shutdown

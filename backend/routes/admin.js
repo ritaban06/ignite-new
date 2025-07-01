@@ -39,10 +39,10 @@ router.post('/upload', [
   upload.single('pdf'),
   body('title').trim().isLength({ min: 1, max: 200 }),
   body('description').optional().trim().isLength({ max: 1000 }),
-  body('department').isIn(['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL']),
+  body('department').isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   body('year').isInt({ min: 1, max: 4 }),
   body('subject').trim().isLength({ min: 1, max: 100 }),
-  body('tags').optional().isArray()
+  body('tags').optional()
 ], async (req, res) => {
   try {
     console.log('Upload request - User object:', {
@@ -52,8 +52,22 @@ router.post('/upload', [
       isEnvAdmin: req.user.isEnvAdmin
     });
 
+    console.log('Upload request body:', req.body);
+    console.log('Upload file info:', req.file ? {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    } : 'No file');
+
+    // Process tags from FormData - when multiple values are sent with same key,
+    // they might not be automatically converted to array
+    if (req.body.tags && !Array.isArray(req.body.tags)) {
+      req.body.tags = [req.body.tags];
+    }
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ 
         error: 'Validation failed', 
         details: errors.array() 

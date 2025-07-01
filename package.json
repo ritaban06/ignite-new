@@ -1,0 +1,25 @@
+{
+  "name": "ignite-workspace",
+  "private": true,
+  "description": "Secure PDF study material platform with MERN stack",
+  "license": "MIT",
+  "workspaces": [
+    "admin",
+    "backend", 
+    "client"
+  ],
+  "scripts": {
+    "dev:all": "pnpm --parallel -r --filter ./backend --filter ./client --filter ./admin run dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:admin": "pnpm --filter admin dev",
+    "dev:client": "pnpm --filter client dev",
+    "build:all": "pnpm --filter admin build && pnpm --filter client build",
+    "start:backend": "pnpm --filter backend start",
+    "clean": "pnpm --filter admin clean && pnpm --filter client clean && pnpm --filter backend clean",
+    "lint": "pnpm --filter admin lint && pnpm --filter client lint && pnpm --filter backend lint"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

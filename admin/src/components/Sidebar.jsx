@@ -20,7 +20,7 @@ const navigation = [
 
 export default function Sidebar() {
   return (
-    <div className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen">
+    <div className="w-64 bg-gray-800 shadow-sm border-r border-gray-700 min-h-screen">
       <nav className="mt-8 px-4">
         <ul className="space-y-2">
           {navigation.map((item) => (
@@ -31,8 +31,8 @@ export default function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
-                      ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'bg-primary-900 text-primary-300 border-r-2 border-primary-500'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-700'
                   }`
                 }
               >

@@ -10,26 +10,26 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-gray-800 shadow-sm border-b border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-gray-900">PDF Admin Dashboard</h1>
+              <h1 className="text-xl font-bold text-white">PDF Admin Dashboard</h1>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-primary-600" />
+              <div className="h-8 w-8 bg-primary-900 rounded-full flex items-center justify-center">
+                <User className="h-4 w-4 text-primary-300" />
               </div>
-              <span className="text-sm font-medium text-gray-700">{user?.email}</span>
+              <span className="text-sm font-medium text-gray-300">{user?.email}</span>
             </div>
             
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
               <LogOut className="h-4 w-4" />
               <span>Logout</span>

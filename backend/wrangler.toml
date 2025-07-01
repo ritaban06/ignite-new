@@ -21,12 +21,12 @@ bucket_name = "ignite-pdfs"
 
 [[env.development.r2_buckets]]
 binding = "R2_BUCKET"
-bucket_name = "ignite-pdfs-dev"
+bucket_name = "ignite-pdfs"
 
 # Default environment (development)
 [[r2_buckets]]
 binding = "R2_BUCKET"
-bucket_name = "ignite-pdfs-dev"
+bucket_name = "ignite-pdfs"
 
 [vars]
 ENVIRONMENT = "development"

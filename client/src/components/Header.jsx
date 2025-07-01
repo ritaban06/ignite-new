@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, User, Settings, Cloud, Home } from 'lucide-react';
+import { LogOut, User, Settings, Cloud, Home, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -44,6 +44,18 @@ const Header = () => {
               >
                 <Home className="h-4 w-4" />
                 <span>Dashboard</span>
+              </Link>
+              
+              <Link
+                to="/search"
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/search')
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'text-gray-500 hover:text-primary-600 hover:bg-primary-50'
+                }`}
+              >
+                <Search className="h-4 w-4" />
+                <span>Search</span>
               </Link>
               
               <Link

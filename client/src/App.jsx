@@ -7,6 +7,7 @@ import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
+import SearchPage from './pages/SearchPage';
 import R2PDFManager from './components/R2PDFManager';
 
 // You'll need to add your Google OAuth Client ID here
@@ -37,8 +38,10 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/r2-manager" element={<R2PDFManager />} />
-          {/* Add more routes as needed */}
+          {/* Catch all other routes and redirect to dashboard */}
+          <Route path="*" element={<DashboardPage />} />
         </Routes>
       </main>
     </div>

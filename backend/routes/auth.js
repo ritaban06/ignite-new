@@ -5,6 +5,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const AccessLog = require('../models/AccessLog');
 const { authRateLimit, authenticate, requireAdmin } = require('../middleware/auth');
+const googleSheetsService = require('../services/googleSheetsService');
 
 const router = express.Router();
 
@@ -502,6 +503,117 @@ router.get('/admin/me', authenticate, requireAdmin, async (req, res) => {
     console.error('Get admin info error:', error);
     res.status(500).json({ 
       error: 'Failed to get admin info', 
+      message: error.message 
+    });
+  }
+});
+
+// Google OAuth verification endpoint
+router.post('/google-verify', [
+  authRateLimit,
+  body('email').isEmail().normalizeEmail(),
+  body('name').trim().isLength({ min: 1, max: 100 }),
+  body('googleId').trim().isLength({ min: 1 }),
+  body('picture').optional().isURL()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: errors.array() 
+      });
+    }
+
+    const { email, name, googleId, picture } = req.body;
+
+    // Check if user is in approved list
+    const approvalResult = await googleSheetsService.isUserApproved(email);
+    
+    if (!approvalResult.approved) {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: `Sorry, your email (${email}) is not in the approved users list. Please contact an administrator to get approval.`
+      });
+    }
+
+    // Create or update user with Google OAuth data and approved user data
+    const userData = {
+      email,
+      name: approvalResult.userData.name || name, // Prefer name from approved list
+      department: approvalResult.userData.department,
+      year: parseInt(approvalResult.userData.year),
+      googleId,
+      picture,
+      loginMethod: 'google',
+      lastLogin: new Date(),
+      isActive: true
+    };
+
+    let user = await User.findOne({ email });
+    
+    if (user) {
+      // Update existing user
+      Object.assign(user, userData);
+      await user.save();
+    } else {
+      // Create new user
+      user = new User(userData);
+      await user.save();
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: user._id, 
+        email: user.email,
+        role: user.role 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    // Log access
+    try {
+      await AccessLog.create({
+        userId: user._id,
+        action: 'google_login',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        deviceId: generateDeviceId(req),
+        timestamp: new Date()
+      });
+    } catch (logError) {
+      console.error('Access log error:', logError);
+    }
+
+    res.json({
+      message: 'Google OAuth verification successful',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        department: user.department,
+        year: user.year,
+        picture: user.picture,
+        role: user.role,
+        loginMethod: user.loginMethod
+      }
+    });
+
+  } catch (error) {
+    console.error('Google OAuth verification error:', error);
+    
+    if (error.message.includes('approved users')) {
+      return res.status(503).json({
+        error: 'Service temporarily unavailable',
+        message: 'Unable to verify approval status. Please try again later.'
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Google OAuth verification failed', 
       message: error.message 
     });
   }

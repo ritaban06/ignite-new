@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: function() {
+      return this.loginMethod !== 'google';
+    },
     minlength: [6, 'Password must be at least 6 characters long'],
     select: false // Don't include password in queries by default
   },
@@ -61,6 +63,20 @@ const userSchema = new mongoose.Schema({
   lockUntil: {
     type: Date,
     default: null
+  },
+  // Google OAuth fields
+  googleId: {
+    type: String,
+    sparse: true // Allow null values, but ensure uniqueness when present
+  },
+  picture: {
+    type: String,
+    default: null
+  },
+  loginMethod: {
+    type: String,
+    enum: ['traditional', 'google'],
+    default: 'traditional'
   }
 }, {
   timestamps: true
@@ -70,6 +86,7 @@ const userSchema = new mongoose.Schema({
 userSchema.index({ email: 1 });
 userSchema.index({ department: 1, year: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ googleId: 1 }, { sparse: true });
 
 // Virtual for account lock status
 userSchema.virtual('isLocked').get(function() {

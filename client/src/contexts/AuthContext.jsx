@@ -140,32 +140,33 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // Create user object for local storage (since we're not using traditional backend auth)
-      const user = {
-        id: userData.googleId,
+      // Send to backend for verification
+      const response = await authAPI.googleVerify({
         email: userData.email,
         name: userData.name,
-        picture: userData.picture,
-        year: userData.year,
-        department: userData.department,
-        loginMethod: 'google',
-        approvedAt: userData.approvedAt,
-        createdAt: new Date().toISOString()
-      };
+        googleId: userData.googleId,
+        picture: userData.picture
+      });
       
-      // Save to localStorage
-      localStorage.setItem('authToken', googleToken);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      // Update state
-      setUser(user);
-      setIsAuthenticated(true);
-      
-      toast.success(`Welcome, ${user.name}!`);
-      return { success: true, user };
+      if (response.data.token && response.data.user) {
+        const { token, user: backendUser } = response.data;
+        
+        // Save to localStorage
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('user', JSON.stringify(backendUser));
+        
+        // Update state
+        setUser(backendUser);
+        setIsAuthenticated(true);
+        
+        toast.success(`Welcome, ${backendUser.name}!`);
+        return { success: true, user: backendUser };
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
       console.error('Google sign-in error:', error);
-      const errorMessage = error.message || 'Google sign-in failed';
+      const errorMessage = error.response?.data?.message || error.message || 'Google sign-in failed';
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

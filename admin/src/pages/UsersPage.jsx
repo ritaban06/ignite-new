@@ -92,17 +92,23 @@ export default function UsersPage() {
       : 'bg-green-100 text-green-800';
   };
 
+  const getDarkRoleBadgeColor = (role) => {
+    return role === 'admin' 
+      ? 'bg-red-900 bg-opacity-40 text-red-300 border border-red-700' 
+      : 'bg-green-900 bg-opacity-40 text-green-300 border border-green-700';
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-white">User Management</h1>
+        <p className="mt-2 text-gray-300">
           Manage user accounts and permissions
         </p>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -110,7 +116,7 @@ export default function UsersPage() {
               <input
                 type="text"
                 placeholder="Search users..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -119,65 +125,65 @@ export default function UsersPage() {
           
           <div>
             <select
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
-              <option value="all">All Roles</option>
-              <option value="user">Users</option>
-              <option value="admin">Admins</option>
+              <option value="all" className="bg-gray-700 text-white">All Roles</option>
+              <option value="user" className="bg-gray-700 text-white">Users</option>
+              <option value="admin" className="bg-gray-700 text-white">Admins</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* Users List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700">
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading users...</p>
+            <p className="mt-2 text-gray-300">Loading users...</p>
           </div>
         ) : users.length === 0 ? (
           <div className="p-8 text-center">
             <UsersIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No users found</p>
+            <p className="text-gray-300">No users found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-600">
+              <thead className="bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Department
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Joined
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-800 divide-y divide-gray-600">
                 {users.map((user) => (
-                  <tr key={user._id} className="hover:bg-gray-50">
+                  <tr key={user._id} className="hover:bg-gray-700">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
-                          <span className="text-primary-600 font-medium text-sm">
+                        <div className="h-10 w-10 bg-primary-900 bg-opacity-40 rounded-full flex items-center justify-center">
+                          <span className="text-primary-300 font-medium text-sm">
                             {user.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                          <div className="flex items-center text-sm text-gray-500">
+                          <div className="text-sm font-medium text-white">{user.name}</div>
+                          <div className="flex items-center text-sm text-gray-400">
                             <Mail className="h-4 w-4 mr-1" />
                             {user.email}
                           </div>
@@ -185,16 +191,16 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDarkRoleBadgeColor(user.role)}`}>
                         <Shield className="h-3 w-3 mr-1" />
                         {user.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {user.department || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
+                      <div className="flex items-center text-sm text-white">
                         <Calendar className="h-4 w-4 mr-1" />
                         {formatDate(user.createdAt)}
                       </div>

@@ -48,20 +48,20 @@ export default function AnalyticsPage() {
   }
 
   const StatCard = ({ title, value, change, icon: Icon, color = 'primary' }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-medium text-gray-300">{title}</p>
+          <p className="text-3xl font-bold text-white">{value}</p>
           {change && (
             <div className="flex items-center mt-2">
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-600">{change}</span>
+              <TrendingUp className="h-4 w-4 text-green-400 mr-1" />
+              <span className="text-sm text-green-400">{change}</span>
             </div>
           )}
         </div>
-        <div className={`p-3 rounded-lg bg-${color}-100`}>
-          <Icon className={`h-6 w-6 text-${color}-600`} />
+        <div className={`p-3 rounded-lg bg-${color}-900 bg-opacity-40`}>
+          <Icon className={`h-6 w-6 text-${color}-400`} />
         </div>
       </div>
     </div>
@@ -71,21 +71,21 @@ export default function AnalyticsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-white">Analytics</h1>
+          <p className="mt-2 text-gray-300">
             Insights and statistics about your PDF repository
           </p>
         </div>
         
         <select
-          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+          className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
           value={timeRange}
           onChange={(e) => setTimeRange(e.target.value)}
         >
-          <option value="7d">Last 7 days</option>
-          <option value="30d">Last 30 days</option>
-          <option value="90d">Last 90 days</option>
-          <option value="1y">Last year</option>
+          <option value="7d" className="bg-gray-700 text-white">Last 7 days</option>
+          <option value="30d" className="bg-gray-700 text-white">Last 30 days</option>
+          <option value="90d" className="bg-gray-700 text-white">Last 90 days</option>
+          <option value="1y" className="bg-gray-700 text-white">Last year</option>
         </select>
       </div>
 
@@ -120,75 +120,75 @@ export default function AnalyticsPage() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Department Distribution */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">PDFs by Department</h2>
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
+          <h2 className="text-lg font-medium text-white mb-4">PDFs by Department</h2>
           {analytics?.departmentStats ? (
             <div className="space-y-3">
               {Object.entries(analytics.departmentStats).map(([dept, count]) => (
                 <div key={dept} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">{dept}</span>
+                  <span className="text-sm font-medium text-gray-300">{dept}</span>
                   <div className="flex items-center">
-                    <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                    <div className="w-32 bg-gray-600 rounded-full h-2 mr-3">
                       <div 
-                        className="bg-primary-600 h-2 rounded-full" 
+                        className="bg-primary-500 h-2 rounded-full" 
                         style={{ 
                           width: `${(count / Math.max(...Object.values(analytics.departmentStats))) * 100}%` 
                         }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-600 w-8 text-right">{count}</span>
+                    <span className="text-sm text-gray-400 w-8 text-right">{count}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No data available</p>
+            <p className="text-gray-400">No data available</p>
           )}
         </div>
 
         {/* Year Distribution */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">PDFs by Year</h2>
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
+          <h2 className="text-lg font-medium text-white mb-4">PDFs by Year</h2>
           {analytics?.yearStats ? (
             <div className="space-y-3">
               {Object.entries(analytics.yearStats).map(([year, count]) => (
                 <div key={year} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Year {year}</span>
+                  <span className="text-sm font-medium text-gray-300">Year {year}</span>
                   <div className="flex items-center">
-                    <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                    <div className="w-32 bg-gray-600 rounded-full h-2 mr-3">
                       <div 
-                        className="bg-green-600 h-2 rounded-full" 
+                        className="bg-green-500 h-2 rounded-full" 
                         style={{ 
                           width: `${(count / Math.max(...Object.values(analytics.yearStats))) * 100}%` 
                         }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-600 w-8 text-right">{count}</span>
+                    <span className="text-sm text-gray-400 w-8 text-right">{count}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No data available</p>
+            <p className="text-gray-400">No data available</p>
           )}
         </div>
       </div>
 
       {/* Activity Timeline */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
+      <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6 mb-8">
+        <h2 className="text-lg font-medium text-white mb-4">Recent Activity</h2>
         {analytics?.recentActivity && analytics.recentActivity.length > 0 ? (
           <div className="space-y-4">
             {analytics.recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center p-4 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center p-4 bg-gray-700 rounded-lg">
                 <div className="flex-shrink-0">
                   <Activity className="h-5 w-5 text-gray-400" />
                 </div>
                 <div className="ml-4 flex-1">
-                  <p className="text-sm font-medium text-gray-900">{activity.description}</p>
+                  <p className="text-sm font-medium text-white">{activity.description}</p>
                   <div className="flex items-center mt-1">
                     <Calendar className="h-4 w-4 text-gray-400 mr-1" />
-                    <p className="text-xs text-gray-500">{activity.timestamp}</p>
+                    <p className="text-xs text-gray-400">{activity.timestamp}</p>
                   </div>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function AnalyticsPage() {
         ) : (
           <div className="text-center py-8">
             <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No recent activity</p>
+            <p className="text-gray-400">No recent activity</p>
           </div>
         )}
       </div>

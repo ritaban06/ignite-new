@@ -49,12 +49,12 @@ export default function SettingsPage() {
   };
 
   const SettingsSection = ({ title, description, icon: Icon, children }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
       <div className="flex items-center mb-4">
-        <Icon className="h-5 w-5 text-primary-600 mr-2" />
+        <Icon className="h-5 w-5 text-primary-400 mr-2" />
         <div>
-          <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-          {description && <p className="text-sm text-gray-600 mt-1">{description}</p>}
+          <h3 className="text-lg font-medium text-white">{title}</h3>
+          {description && <p className="text-sm text-gray-300 mt-1">{description}</p>}
         </div>
       </div>
       {children}
@@ -64,8 +64,8 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-white">Settings</h1>
+        <p className="mt-2 text-gray-300">
           Configure your PDF repository settings and preferences
         </p>
       </div>
@@ -79,13 +79,13 @@ export default function SettingsPage() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Site Name
               </label>
               <input
                 type="text"
                 name="siteName"
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 value={settings.siteName}
                 onChange={handleInputChange}
               />
@@ -96,11 +96,11 @@ export default function SettingsPage() {
                 type="checkbox"
                 id="maintenanceMode"
                 name="maintenanceMode"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 bg-gray-700 border-gray-600 rounded"
                 checked={settings.maintenanceMode}
                 onChange={handleInputChange}
               />
-              <label htmlFor="maintenanceMode" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="maintenanceMode" className="ml-2 block text-sm text-white">
                 Enable maintenance mode
               </label>
             </div>
@@ -115,7 +115,7 @@ export default function SettingsPage() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Maximum File Size (MB)
               </label>
               <input
@@ -123,7 +123,7 @@ export default function SettingsPage() {
                 name="maxFileSize"
                 min="1"
                 max="500"
-                className="block w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 value={settings.maxFileSize}
                 onChange={handleInputChange}
               />
@@ -134,11 +134,11 @@ export default function SettingsPage() {
                 type="checkbox"
                 id="requireApproval"
                 name="requireApproval"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 bg-gray-700 border-gray-600 rounded"
                 checked={settings.requireApproval}
                 onChange={handleInputChange}
               />
-              <label htmlFor="requireApproval" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="requireApproval" className="ml-2 block text-sm text-white">
                 Require admin approval for uploads
               </label>
             </div>
@@ -157,11 +157,11 @@ export default function SettingsPage() {
                 type="checkbox"
                 id="emailNotifications"
                 name="emailNotifications"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 bg-gray-700 border-gray-600 rounded"
                 checked={settings.emailNotifications}
                 onChange={handleInputChange}
               />
-              <label htmlFor="emailNotifications" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="emailNotifications" className="ml-2 block text-sm text-white">
                 Enable email notifications
               </label>
             </div>
@@ -175,12 +175,12 @@ export default function SettingsPage() {
           icon={Shield}
         >
           <div className="space-y-4">
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <div className="p-4 bg-yellow-900 bg-opacity-40 border border-yellow-700 rounded-md">
               <div className="flex">
-                <Shield className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
+                <Shield className="h-5 w-5 text-yellow-400 mr-2 mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-medium text-yellow-800">Security Notice</h4>
-                  <p className="text-sm text-yellow-700 mt-1">
+                  <h4 className="text-sm font-medium text-yellow-200">Security Notice</h4>
+                  <p className="text-sm text-yellow-300 mt-1">
                     Security settings are managed at the server level. Contact your system administrator for changes.
                   </p>
                 </div>
@@ -201,29 +201,29 @@ export default function SettingsPage() {
                 type="checkbox"
                 id="autoBackup"
                 name="autoBackup"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 bg-gray-700 border-gray-600 rounded"
                 checked={settings.autoBackup}
                 onChange={handleInputChange}
               />
-              <label htmlFor="autoBackup" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="autoBackup" className="ml-2 block text-sm text-white">
                 Enable automatic backups
               </label>
             </div>
             
             {settings.autoBackup && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Backup Frequency
                 </label>
                 <select
                   name="backupFrequency"
-                  className="block w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="block w-48 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   value={settings.backupFrequency}
                   onChange={handleInputChange}
                 >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
+                  <option value="daily" className="bg-gray-700 text-white">Daily</option>
+                  <option value="weekly" className="bg-gray-700 text-white">Weekly</option>
+                  <option value="monthly" className="bg-gray-700 text-white">Monthly</option>
                 </select>
               </div>
             )}

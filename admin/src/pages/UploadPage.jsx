@@ -137,23 +137,23 @@ export default function UploadPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Upload PDF</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-white">Upload PDF</h1>
+        <p className="mt-2 text-gray-300">
           Upload a new PDF document to the repository
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* File Upload Area */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">PDF File</h2>
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
+          <h2 className="text-lg font-medium text-white mb-4">PDF File</h2>
           
           {!file ? (
             <div
               className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                 dragActive
-                  ? 'border-primary-400 bg-primary-50'
-                  : 'border-gray-300 hover:border-gray-400'
+                  ? 'border-primary-400 bg-primary-900 bg-opacity-20'
+                  : 'border-gray-600 hover:border-gray-500'
               }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -163,8 +163,8 @@ export default function UploadPage() {
               <Upload className="mx-auto h-12 w-12 text-gray-400" />
               <div className="mt-4">
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  <span className="text-primary-600 font-medium">Choose a file</span>
-                  <span className="text-gray-500"> or drag and drop</span>
+                  <span className="text-primary-400 font-medium">Choose a file</span>
+                  <span className="text-gray-400"> or drag and drop</span>
                   <input
                     ref={fileInputRef}
                     id="file-upload"
@@ -176,21 +176,21 @@ export default function UploadPage() {
                   />
                 </label>
               </div>
-              <p className="text-sm text-gray-500 mt-2">PDF files only, up to 100MB</p>
+              <p className="text-sm text-gray-400 mt-2">PDF files only, up to 100MB</p>
             </div>
           ) : (
-            <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-green-900 bg-opacity-20 border border-green-700 rounded-lg">
               <div className="flex items-center">
-                <FileText className="h-8 w-8 text-green-600" />
+                <FileText className="h-8 w-8 text-green-400" />
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-green-900">{file.name}</p>
-                  <p className="text-sm text-green-700">{formatFileSize(file.size)}</p>
+                  <p className="text-sm font-medium text-green-200">{file.name}</p>
+                  <p className="text-sm text-green-300">{formatFileSize(file.size)}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={removeFile}
-                className="text-green-600 hover:text-green-800"
+                className="text-green-400 hover:text-green-300"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -199,12 +199,12 @@ export default function UploadPage() {
         </div>
 
         {/* PDF Information */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">PDF Information</h2>
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
+          <h2 className="text-lg font-medium text-white mb-4">PDF Information</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
                 Title *
               </label>
               <input
@@ -212,7 +212,7 @@ export default function UploadPage() {
                 id="title"
                 name="title"
                 required
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Enter PDF title"
                 value={formData.title}
                 onChange={handleInputChange}
@@ -220,7 +220,7 @@ export default function UploadPage() {
             </div>
 
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-1">
                 Subject *
               </label>
               <input
@@ -228,7 +228,7 @@ export default function UploadPage() {
                 id="subject"
                 name="subject"
                 required
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Enter subject name"
                 value={formData.subject}
                 onChange={handleInputChange}
@@ -236,52 +236,52 @@ export default function UploadPage() {
             </div>
 
             <div>
-              <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="department" className="block text-sm font-medium text-gray-300 mb-1">
                 Department *
               </label>
               <select
                 id="department"
                 name="department"
                 required
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 value={formData.department}
                 onChange={handleInputChange}
               >
-                <option value="">Select Department</option>
+                <option value="" className="bg-gray-700 text-white">Select Department</option>
                 {DEPARTMENTS.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
+                  <option key={dept} value={dept} className="bg-gray-700 text-white">{dept}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">
                 Year *
               </label>
               <select
                 id="year"
                 name="year"
                 required
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 value={formData.year}
                 onChange={handleInputChange}
               >
-                <option value="">Select Year</option>
+                <option value="" className="bg-gray-700 text-white">Select Year</option>
                 {YEARS.map(year => (
-                  <option key={year} value={year}>Year {year}</option>
+                  <option key={year} value={year} className="bg-gray-700 text-white">Year {year}</option>
                 ))}
               </select>
             </div>
 
             <div className="md:col-span-2">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">
                 Description
               </label>
               <textarea
                 id="description"
                 name="description"
                 rows={3}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Enter a brief description of the PDF content"
                 value={formData.description}
                 onChange={handleInputChange}
@@ -289,19 +289,19 @@ export default function UploadPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="tags" className="block text-sm font-medium text-gray-300 mb-1">
                 Tags
               </label>
               <input
                 type="text"
                 id="tags"
                 name="tags"
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Enter tags separated by commas (e.g. notes, lecture, assignment)"
                 value={formData.tags}
                 onChange={handleInputChange}
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-gray-400">
                 Separate multiple tags with commas
               </p>
             </div>

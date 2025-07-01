@@ -1,4 +1,4 @@
-import { GoogleAuth } from '@react-oauth/google';
+// Google Auth Service - handles Google OAuth token processing and validation
 
 class GoogleAuthService {
   constructor() {

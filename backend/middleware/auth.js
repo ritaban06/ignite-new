@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const AccessLog = require('../models/AccessLog');
+
+// Special ObjectId for system admin
+const ADMIN_OBJECT_ID = new mongoose.Types.ObjectId('000000000000000000000001');
 
 // Verify JWT token
 const authenticate = async (req, res, next) => {
@@ -23,7 +27,7 @@ const authenticate = async (req, res, next) => {
       
       // Create a virtual admin user object
       req.user = {
-        _id: 'admin',
+        _id: ADMIN_OBJECT_ID,
         username: decoded.username,
         name: 'System Administrator',
         role: 'admin',

@@ -14,7 +14,18 @@ const accessLogSchema = new mongoose.Schema({
   action: {
     type: String,
     required: [true, 'Action is required'],
-    enum: ['view', 'download_attempt', 'share_attempt', 'print_attempt']
+    enum: [
+      'view', 
+      'download_attempt', 
+      'share_attempt', 
+      'print_attempt',
+      'upload',
+      'update',
+      'delete',
+      'login',
+      'logout',
+      'unauthorized_access_attempt'
+    ]
   },
   ipAddress: {
     type: String,

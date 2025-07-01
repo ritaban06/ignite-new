@@ -45,6 +45,13 @@ router.post('/upload', [
   body('tags').optional().isArray()
 ], async (req, res) => {
   try {
+    console.log('Upload request - User object:', {
+      _id: req.user._id,
+      username: req.user.username,
+      role: req.user.role,
+      isEnvAdmin: req.user.isEnvAdmin
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ 

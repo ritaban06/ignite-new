@@ -228,9 +228,21 @@ const createRateLimit = (windowMs, max, message) => {
     message: { error: message },
     standardHeaders: true,
     legacyHeaders: false,
+    // Skip rate limiting in development if needed
+    skip: (req) => {
+      return process.env.NODE_ENV === 'development' && req.headers['x-skip-rate-limit'];
+    },
     keyGenerator: (req) => {
       // Use user ID if authenticated, otherwise IP
       return req.user ? `user_${req.user._id}` : `ip_${req.ip}`;
+    },
+    // Handler for when rate limit is exceeded
+    handler: (req, res) => {
+      console.log(`Rate limit exceeded for ${req.ip} on ${req.originalUrl}`);
+      res.status(429).json({ 
+        error: message,
+        retryAfter: Math.round(windowMs / 1000)
+      });
     }
   });
 };

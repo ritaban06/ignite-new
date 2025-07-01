@@ -14,52 +14,13 @@ const {
 
 const router = express.Router();
 
-// Enhanced CORS handling for admin routes
-router.use((req, res, next) => {
-  const origin = req.get('Origin');
-  const allowedOrigins = [
-    'https://ignite-client.ritaban.me',
-    'https://ignite-admin.ritaban.me',
-    'http://localhost:3000',
-    'http://localhost:3001'
-  ];
-
-  console.log('Admin route CORS - Origin:', origin);
-  console.log('Admin route CORS - Method:', req.method);
-  console.log('Admin route CORS - Path:', req.path);
-
-  // Always set CORS headers, regardless of origin
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    console.log('Admin CORS: Origin allowed with credentials');
-  } else if (!origin) {
-    res.header('Access-Control-Allow-Origin', '*');
-    console.log('Admin CORS: No origin, allowing all');
-  } else {
-    // Still allow but without credentials for unknown origins
-    res.header('Access-Control-Allow-Origin', origin);
-    console.log('Admin CORS: Unknown origin allowed without credentials');
-  }
-
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
-  res.header('Access-Control-Max-Age', '86400');
-
-  // Handle preflight requests immediately
-  if (req.method === 'OPTIONS') {
-    console.log('Admin CORS: Handling preflight request');
-    return res.status(200).end();
-  }
-
-  next();
-});
-
 // Debug middleware to log all requests to admin routes
 router.use('*', (req, res, next) => {
   console.log(`Admin route accessed: ${req.method} ${req.originalUrl}`);
   console.log('Headers:', Object.keys(req.headers));
   console.log('Authorization header present:', !!req.headers.authorization);
+  console.log('Content-Type:', req.headers['content-type']);
+  console.log('Origin:', req.headers.origin);
   next();
 });
 
@@ -88,12 +49,15 @@ router.get('/test-cors', (req, res) => {
   });
 });
 
-// Test preflight handling specifically
-router.options('/upload', (req, res) => {
-  console.log('Upload preflight request received');
-  console.log('Origin:', req.get('Origin'));
-  console.log('Headers:', req.headers);
-  res.status(200).end();
+// Simple ping endpoint to test if admin routes are working
+router.get('/ping', (req, res) => {
+  res.json({ 
+    message: 'Admin routes are working',
+    path: req.originalUrl,
+    method: req.method,
+    origin: req.get('Origin'),
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Simple upload test endpoint for debugging
@@ -101,6 +65,23 @@ router.post('/upload-test', authenticate, requireAdmin, (req, res) => {
   res.json({ 
     message: 'Upload route accessible',
     user: req.user.username,
+    origin: req.get('Origin'),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Test upload endpoint without auth for debugging
+router.post('/upload-debug', (req, res) => {
+  console.log('=== UPLOAD DEBUG ENDPOINT ===');
+  console.log('Method:', req.method);
+  console.log('Headers:', req.headers);
+  console.log('Body present:', !!req.body);
+  console.log('=== END UPLOAD DEBUG ===');
+  
+  res.json({ 
+    message: 'Upload debug endpoint reached',
+    method: req.method,
+    headers: Object.keys(req.headers),
     origin: req.get('Origin'),
     timestamp: new Date().toISOString()
   });
@@ -125,6 +106,17 @@ router.post('/test-auth', authenticate, requireAdmin, (req, res) => {
 
 // Upload PDF
 router.post('/upload', [
+  (req, res, next) => {
+    console.log('=== UPLOAD ROUTE ACCESSED ===');
+    console.log('Method:', req.method);
+    console.log('Path:', req.path);
+    console.log('Original URL:', req.originalUrl);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Content-Length:', req.headers['content-length']);
+    console.log('=== END UPLOAD DEBUG ===');
+    next();
+  },
   authenticate,
   requireAdmin,
   uploadRateLimit,

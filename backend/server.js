@@ -15,6 +15,10 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
+// Trust proxy settings for platforms like Vercel, Heroku, etc.
+// This is required for rate limiting and getting real client IPs
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(helmet({
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
@@ -26,7 +30,20 @@ app.use(compression());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  message: { error: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Skip rate limiting for health checks and CORS preflight
+  skip: (req) => {
+    return req.method === 'OPTIONS' || req.path === '/api/health' || req.path === '/api/cors-test';
+  },
+  handler: (req, res) => {
+    console.log(`Global rate limit exceeded for ${req.ip} on ${req.originalUrl}`);
+    res.status(429).json({ 
+      error: 'Too many requests from this IP, please try again later.',
+      retryAfter: Math.round(15 * 60) // 15 minutes in seconds
+    });
+  }
 });
 app.use(limiter);
 
@@ -57,16 +74,10 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     console.log('Global CORS: No origin, allowing all');
   } else {
-    // For admin routes, be more permissive
-    if (req.path.startsWith('/api/admin/')) {
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true');
-      console.log('Global CORS: Admin route - allowing origin with credentials');
-    } else {
-      console.log('Global CORS: Origin blocked:', origin);
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true');
-    }
+    // Be more permissive with unknown origins
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    console.log('Global CORS: Unknown origin allowed with credentials:', origin);
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');

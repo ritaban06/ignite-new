@@ -78,10 +78,9 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
   } else if (!origin) {
-    // For requests without origin, don't set wildcard when credentials are involved
-    // Instead, set to a default allowed origin or handle differently
-    res.header('Access-Control-Allow-Origin', allowedOrigins[0]);
-    res.header('Access-Control-Allow-Credentials', 'true');
+    // For requests without origin (like from Postman), don't set credentials
+    res.header('Access-Control-Allow-Origin', '*');
+    // Don't set credentials header for requests without origin
   }
   
   res.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
@@ -101,8 +100,8 @@ app.use((req, res, next) => {
 app.use(morgan('combined'));
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Connect to MongoDB
 connectDB();

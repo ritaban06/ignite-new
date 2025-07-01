@@ -18,7 +18,7 @@ const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit for admin uploads
+    fileSize: 50 * 1024 * 1024, // 50MB limit for admin uploads (Vercel limit)
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/pdf') {
@@ -36,7 +36,29 @@ router.use(requireAdmin);
 // Upload PDF
 router.post('/upload', [
   uploadRateLimit,
-  upload.single('pdf'),
+  (req, res, next) => {
+    upload.single('pdf')(req, res, (err) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(413).json({ 
+            error: 'File too large', 
+            message: 'PDF file must be smaller than 50MB' 
+          });
+        }
+        if (err.message === 'Only PDF files are allowed') {
+          return res.status(400).json({ 
+            error: 'Invalid file type', 
+            message: 'Only PDF files are allowed' 
+          });
+        }
+        return res.status(400).json({ 
+          error: 'File upload error', 
+          message: err.message 
+        });
+      }
+      next();
+    });
+  },
   body('title').trim().isLength({ min: 1, max: 200 }),
   body('description').optional().trim().isLength({ max: 1000 }),
   body('department').isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),

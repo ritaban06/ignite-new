@@ -32,7 +32,7 @@ const pdfSchema = new mongoose.Schema({
   department: {
     type: String,
     required: [true, 'Department is required'],
-    enum: ['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL']
+    enum: ['AIML', 'CSE', 'ECE', 'EEE', 'IT']
   },
   year: {
     type: Number,

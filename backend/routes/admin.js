@@ -154,7 +154,7 @@ router.post('/upload', [
 
 // Get all PDFs (admin view)
 router.get('/pdfs', [
-  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL']),
+  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('subject').optional().trim(),
   query('isActive').optional().isBoolean(),
@@ -230,7 +230,7 @@ router.get('/pdfs', [
 router.put('/pdfs/:pdfId', [
   body('title').optional().trim().isLength({ min: 1, max: 200 }),
   body('description').optional().trim().isLength({ max: 1000 }),
-  body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL']),
+  body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   body('year').optional().isInt({ min: 1, max: 4 }),
   body('subject').optional().trim().isLength({ min: 1, max: 100 }),
   body('tags').optional().isArray(),
@@ -347,7 +347,7 @@ router.delete('/pdfs/:pdfId', async (req, res) => {
 // Get all users (admin view)
 router.get('/users', [
   query('role').optional().isIn(['client', 'admin']),
-  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL']),
+  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('isActive').optional().isBoolean(),
   query('page').optional().isInt({ min: 1 }).toInt(),
@@ -413,7 +413,7 @@ router.get('/users', [
 router.put('/users/:userId', [
   body('isActive').optional().isBoolean(),
   body('name').optional().trim().isLength({ min: 2, max: 50 }),
-  body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL']),
+  body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   body('year').optional().isInt({ min: 1, max: 4 })
 ], async (req, res) => {
   try {

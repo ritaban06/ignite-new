@@ -20,7 +20,7 @@ const nameValidation = body('name')
 
 const departmentValidation = (field = 'department') => 
   body(field)
-    .isIn(['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL'])
+    .isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT'])
     .withMessage('Invalid department');
 
 const yearValidation = (field = 'year') =>

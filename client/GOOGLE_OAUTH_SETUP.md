@@ -43,7 +43,7 @@ Create a public Google Sheet with the following structure:
 - The sheet must be publicly accessible (anyone with the link can view)
 - Column headers must be exactly: `email`, `name`, `year`, `department`
 - Email addresses should be lowercase
-- Department values can be: AIML, CSE, ECE, MECH, CIVIL, EEE, IT, CHEMICAL
+- Department values can be: AIML, CSE, ECE, EEE, IT
 - Year values should be numbers: 1, 2, 3, 4
 
 ### 4. Making the Sheet Public

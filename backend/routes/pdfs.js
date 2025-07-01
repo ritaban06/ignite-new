@@ -31,7 +31,7 @@ const upload = multer({
 // Get PDFs for authenticated user
 router.get('/', [
   authenticate,
-  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL']),
+  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('subject').optional().trim(),
   query('search').optional().trim(),
@@ -174,7 +174,7 @@ router.post('/:pdfId/view', [
 router.get('/search/query', [
   authenticate,
   query('q').trim().isLength({ min: 1 }),
-  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL']),
+  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 50 }).toInt()

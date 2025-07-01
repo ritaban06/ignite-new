@@ -21,7 +21,7 @@ const SearchPage = () => {
     totalCount: 0
   });
 
-  const departments = ['AIML', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'CHEMICAL'];
+  const departments = ['AIML', 'CSE', 'ECE', 'EEE', 'IT'];
   const years = [1, 2, 3, 4];
 
   const handleSearch = async (e) => {

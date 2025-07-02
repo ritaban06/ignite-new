@@ -59,6 +59,9 @@ export const pdfAPI = {
   // Get secure view URL for PDF
   getViewURL: (pdfId) => api.post(`/pdfs/${pdfId}/view`),
   
+  // Get PDF as base64 data (alternative for when direct fetch is blocked)
+  getPDFBase64: (pdfId) => api.post(`/pdfs/${pdfId}/view-base64`),
+  
   // Search PDFs
   searchPDFs: (params) => api.get('/pdfs/search/query', { params }),
   

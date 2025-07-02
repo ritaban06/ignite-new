@@ -109,8 +109,45 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           console.error('Failed to fetch PDF content:', fetchError);
           console.error('Fetch error details:', fetchError.message);
           
-          // Fallback: try using the proxy URL directly
-          console.log('Falling back to direct proxy URL');
+          // Check if it's a blocked request (ad blocker, etc.)
+          if (fetchError.message.includes('Failed to fetch') || 
+              fetchError.message.includes('ERR_BLOCKED_BY_CLIENT') ||
+              fetchError.message.includes('net::ERR_FAILED')) {
+            
+            console.log('Direct fetch blocked, trying base64 approach...');
+            
+            try {
+              // Try getting PDF as base64 data instead
+              const base64Response = await pdfAPI.getPDFBase64(pdfId);
+              console.log('Base64 response received, size:', base64Response.data.base64Data?.length);
+              
+              if (base64Response.data.base64Data) {
+                // Convert base64 to blob
+                const binaryData = atob(base64Response.data.base64Data);
+                const bytes = new Uint8Array(binaryData.length);
+                for (let i = 0; i < binaryData.length; i++) {
+                  bytes[i] = binaryData.charCodeAt(i);
+                }
+                
+                const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
+                const blobUrl = URL.createObjectURL(pdfBlob);
+                
+                console.log('PDF blob created from base64, size:', pdfBlob.size);
+                console.log('PDF blob URL created:', blobUrl);
+                
+                setPdfUrl(blobUrl);
+                setPdfInfo(base64Response.data.pdf);
+                console.log('PDF loaded successfully via base64 method');
+                
+                return; // Success, don't fall back to direct URL
+              }
+            } catch (base64Error) {
+              console.error('Base64 method also failed:', base64Error);
+            }
+          }
+          
+          // Final fallback: try using the proxy URL directly
+          console.log('All fetch methods failed, falling back to direct proxy URL');
           setPdfUrl(response.data.viewUrl);
           setPdfInfo(response.data.pdf);
           console.log('Using direct proxy URL as fallback:', response.data.viewUrl);
@@ -392,6 +429,41 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors mr-2"
                   >
                     Debug Auth
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        console.log('=== Testing PDF Base64 Method ===');
+                        const response = await pdfAPI.getPDFBase64(pdfId);
+                        console.log('Base64 response status:', response.status);
+                        console.log('Base64 data length:', response.data.base64Data?.length);
+                        console.log('Base64 PDF info:', response.data.pdf);
+                        
+                        if (response.data.base64Data) {
+                          // Try to create blob and blob URL
+                          const binaryData = atob(response.data.base64Data);
+                          const bytes = new Uint8Array(binaryData.length);
+                          for (let i = 0; i < binaryData.length; i++) {
+                            bytes[i] = binaryData.charCodeAt(i);
+                          }
+                          
+                          const blob = new Blob([bytes], { type: 'application/pdf' });
+                          const blobUrl = URL.createObjectURL(blob);
+                          console.log('Test blob created, size:', blob.size);
+                          console.log('Test blob URL:', blobUrl);
+                          
+                          toast.success('Base64 test completed - check console');
+                        } else {
+                          throw new Error('No base64 data received');
+                        }
+                      } catch (error) {
+                        console.error('Base64 test failed:', error);
+                        toast.error('Base64 test failed - check console');
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors mr-2"
+                  >
+                    Test Base64
                   </button>
                   <button
                     onClick={async () => {

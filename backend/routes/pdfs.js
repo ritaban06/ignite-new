@@ -772,4 +772,103 @@ router.get('/test-r2-connection', authenticate, async (req, res) => {
   }
 });
 
+// Alternative endpoint to get PDF as base64 data (for cases where direct fetch is blocked)
+router.post('/:pdfId/view-base64', [
+  authenticate,
+  validatePdfAccess,
+  pdfViewRateLimit,
+  logAccess('view')
+], async (req, res) => {
+  try {
+    const pdf = req.pdf;
+    
+    // Increment view count
+    await pdf.incrementViewCount();
+    
+    console.log('Getting PDF as base64 for:', pdf.title);
+    
+    // Get PDF stream from R2
+    const pdfResult = await r2Service.getPdfStream(pdf.cloudflareKey);
+    
+    if (!pdfResult.success) {
+      console.error('Failed to get PDF from R2:', pdfResult.error);
+      return res.status(500).json({ error: 'Failed to retrieve PDF file' });
+    }
+    
+    try {
+      let pdfBuffer;
+      
+      if (pdfResult.useSignedUrl) {
+        console.log('Using signed URL to fetch PDF content for base64 conversion');
+        // Fetch from signed URL using Node.js fetch or https
+        const https = require('https');
+        const url = require('url');
+        
+        const signedUrlObj = new url.URL(pdfResult.signedUrl);
+        
+        pdfBuffer = await new Promise((resolve, reject) => {
+          const options = {
+            hostname: signedUrlObj.hostname,
+            port: signedUrlObj.port || 443,
+            path: signedUrlObj.pathname + signedUrlObj.search,
+            method: 'GET',
+            headers: {
+              'User-Agent': 'Ignite-PDF-Base64/1.0'
+            }
+          };
+          
+          const req = https.request(options, (response) => {
+            if (response.statusCode !== 200) {
+              return reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
+            }
+            
+            const chunks = [];
+            response.on('data', (chunk) => chunks.push(chunk));
+            response.on('end', () => resolve(Buffer.concat(chunks)));
+          });
+          
+          req.on('error', reject);
+          req.end();
+        });
+      } else {
+        // Direct stream from R2
+        const chunks = [];
+        for await (const chunk of pdfResult.stream) {
+          chunks.push(chunk);
+        }
+        pdfBuffer = Buffer.concat(chunks);
+      }
+      
+      // Convert to base64
+      const base64Data = pdfBuffer.toString('base64');
+      
+      console.log('PDF converted to base64, size:', base64Data.length);
+      
+      res.json({
+        base64Data: base64Data,
+        contentType: 'application/pdf',
+        filename: `${pdf.title}.pdf`,
+        pdf: {
+          id: pdf._id,
+          title: pdf.title,
+          subject: pdf.subject,
+          department: pdf.department,
+          year: pdf.year
+        }
+      });
+      
+    } catch (conversionError) {
+      console.error('Failed to convert PDF to base64:', conversionError);
+      return res.status(500).json({ error: 'Failed to process PDF file' });
+    }
+    
+  } catch (error) {
+    console.error('Get PDF base64 error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get PDF as base64', 
+      message: error.message 
+    });
+  }
+});
+
 module.exports = router;

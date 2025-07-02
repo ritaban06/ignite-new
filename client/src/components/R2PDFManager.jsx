@@ -357,7 +357,7 @@ const R2PDFManager = () => {
                             <span>Download</span>
                           </button> */}
                           
-                          <a
+                          {/* <a
                             href={pdf.viewUrl}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -365,7 +365,7 @@ const R2PDFManager = () => {
                           >
                             <ExternalLink className="h-4 w-4" />
                             <span>Direct Link</span>
-                          </a>
+                          </a> */}
                         </div>
                       </td>
                     </tr>

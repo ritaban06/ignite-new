@@ -142,6 +142,9 @@ router.post('/:pdfId/view', [
     const accessToken = jwt.sign(
       { 
         userId: req.user._id, 
+        userRole: req.user.role,
+        userDepartment: req.user.department,
+        userYear: req.user.year,
         pdfId: pdf._id,
         fileKey: pdf.cloudflareKey,
         exp: Math.floor(Date.now() / 1000) + (5 * 60) // 5 minutes
@@ -487,11 +490,22 @@ router.get('/proxy/:fileKey', [
         // Verify the token is for this specific file and user
         if (decoded.fileKey === decodeURIComponent(req.params.fileKey) && 
             decoded.userId === userIdFromQuery) {
-          // Create user object from token
-          req.user = { _id: decoded.userId };
+          // Create complete user object from token data
+          req.user = { 
+            _id: decoded.userId,
+            role: decoded.userRole,
+            department: decoded.userDepartment,
+            year: decoded.userYear
+          };
           req.tokenData = decoded;
           return next();
         } else {
+          console.log('Token validation failed:', {
+            tokenFileKey: decoded.fileKey,
+            requestFileKey: decodeURIComponent(req.params.fileKey),
+            tokenUserId: decoded.userId,
+            requestUserId: userIdFromQuery
+          });
           return res.status(403).json({ error: 'Invalid access token for this resource' });
         }
       } catch (error) {
@@ -516,11 +530,33 @@ router.get('/proxy/:fileKey', [
     }
     
     // Check if user can access this PDF
+    console.log('PDF Access Check:', {
+      pdfId: pdf._id,
+      pdfDepartment: pdf.department,
+      pdfYear: pdf.year,
+      pdfActive: pdf.isActive,
+      userId: req.user._id,
+      userRole: req.user.role,
+      userDepartment: req.user.department,
+      userYear: req.user.year
+    });
+    
     if (!pdf.canUserAccess(req.user)) {
+      console.log('Access denied for user:', {
+        reason: 'canUserAccess returned false',
+        userRole: req.user.role,
+        userDept: req.user.department,
+        userYear: req.user.year,
+        pdfDept: pdf.department,
+        pdfYear: pdf.year,
+        pdfActive: pdf.isActive
+      });
       return res.status(403).json({ 
         error: 'You do not have access to this PDF' 
       });
     }
+    
+    console.log('Access granted for PDF:', pdf.title);
     
     // Get the PDF from R2 using signed URL
     const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');

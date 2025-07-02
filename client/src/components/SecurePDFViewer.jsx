@@ -121,9 +121,25 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     } else if (error.message && error.message.includes('Unexpected token')) {
       setError('PDF worker file is corrupted or invalid. Please contact support.');
       toast.error('PDF worker file is corrupted');
+    } else if (error.message && (error.message.includes('404') || error.message.includes('Not Found'))) {
+      setError('PDF file not found. It may have been deleted or moved.');
+      toast.error('PDF file not found');
+    } else if (error.message && (error.message.includes('403') || error.message.includes('Forbidden'))) {
+      setError('Access denied. You may not have permission to view this PDF.');
+      toast.error('Access denied to PDF');
     } else {
-      setError('Failed to load PDF document. The file might be corrupted or inaccessible.');
+      setError('Failed to load PDF document. The file might be corrupted or the server may be experiencing issues.');
       toast.error('Failed to load PDF document');
+      
+      // Log additional debugging info
+      console.log('=== PDF Load Error Debug ===');
+      console.log('Error name:', error.name);
+      console.log('Error message:', error.message);
+      console.log('Error stack:', error.stack);
+      console.log('PDF URL:', pdfUrl);
+      console.log('PDF URL type:', typeof pdfUrl);
+      console.log('PDF URL includes token:', pdfUrl ? pdfUrl.includes('token=') : 'No URL');
+      console.log('========================');
     }
   };
 
@@ -333,11 +349,23 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             <div className="flex justify-center">
               <div style={{ transform: `rotate(${rotation}deg)` }}>
                 <Document
-                  file={pdfUrl}
+                  file={{
+                    url: pdfUrl,
+                    httpHeaders: {
+                      'Accept': 'application/pdf',
+                    },
+                    withCredentials: false
+                  }}
                   onLoadSuccess={onDocumentLoadSuccess}
                   onLoadError={onDocumentLoadError}
                   options={{
-                    workerSrc: '/pdfjs/pdf.worker.min.js'
+                    workerSrc: '/pdfjs/pdf.worker.min.js',
+                    // Additional options for better PDF handling
+                    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.4.120/cmaps/',
+                    cMapPacked: true,
+                    disableAutoFetch: false,
+                    disableStream: false,
+                    isEvalSupported: false
                   }}
                   loading={
                     <div className="flex items-center justify-center p-8">

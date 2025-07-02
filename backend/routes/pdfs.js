@@ -566,36 +566,97 @@ router.get('/proxy/:fileKey', [
       return res.status(500).json({ error: 'Failed to retrieve PDF file' });
     }
     
-    // If R2 service returned a signed URL due to SSL issues, redirect to it
+    // If R2 service returned a signed URL due to SSL issues, fetch and proxy the content
     if (pdfResult.useSignedUrl) {
-      console.log('Using signed URL fallback due to SSL issues');
-      return res.redirect(pdfResult.signedUrl);
-    }
-    
-    // Set proper headers for PDF streaming
-    res.set({
-      'Content-Type': pdfResult.contentType || 'application/pdf',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-      'Cache-Control': 'private, no-cache',
-      'Content-Disposition': 'inline'
-    });
-    
-    if (pdfResult.contentLength) {
-      res.set('Content-Length', pdfResult.contentLength);
-    }
-    
-    // Stream the PDF to the client
-    pdfResult.stream.pipe(res);
-    
-    // Handle stream errors
-    pdfResult.stream.on('error', (streamError) => {
-      console.error('Stream error:', streamError);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Error streaming PDF' });
+      console.log('Using signed URL fallback due to SSL issues, fetching content to proxy');
+      
+      try {
+        // Fetch the PDF content from the signed URL and proxy it using https module
+        const https = require('https');
+        const url = require('url');
+        
+        const signedUrlObj = new url.URL(pdfResult.signedUrl);
+        
+        const options = {
+          hostname: signedUrlObj.hostname,
+          port: signedUrlObj.port || 443,
+          path: signedUrlObj.pathname + signedUrlObj.search,
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Ignite-PDF-Proxy/1.0'
+          }
+        };
+        
+        // Set proper headers for PDF viewing (inline display)
+        res.set({
+          'Content-Type': 'application/pdf',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET',
+          'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+          'Cache-Control': 'private, no-cache',
+          'Content-Disposition': 'inline', // This ensures inline viewing, not download
+          'X-Content-Type-Options': 'nosniff'
+        });
+        
+        const req = https.request(options, (response) => {
+          if (response.statusCode !== 200) {
+            console.error('Signed URL fetch failed:', response.statusCode, response.statusMessage);
+            if (!res.headersSent) {
+              return res.status(500).json({ error: 'Failed to fetch PDF from signed URL' });
+            }
+            return;
+          }
+          
+          // Set content length if available
+          if (response.headers['content-length']) {
+            res.set('Content-Length', response.headers['content-length']);
+          }
+          
+          // Pipe the response directly to our response
+          response.pipe(res);
+        });
+        
+        req.on('error', (error) => {
+          console.error('HTTPS request error:', error);
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Error fetching PDF from signed URL' });
+          }
+        });
+        
+        req.end();
+        
+      } catch (fetchError) {
+        console.error('Failed to fetch from signed URL:', fetchError);
+        return res.status(500).json({ error: 'Failed to fetch PDF content' });
       }
-    });
+    } else {
+      // Direct streaming from R2
+      // Set proper headers for PDF streaming (inline display)
+      res.set({
+        'Content-Type': pdfResult.contentType || 'application/pdf',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+        'Cache-Control': 'private, no-cache',
+        'Content-Disposition': 'inline', // This ensures inline viewing, not download
+        'X-Content-Type-Options': 'nosniff'
+      });
+      
+      if (pdfResult.contentLength) {
+        res.set('Content-Length', pdfResult.contentLength);
+      }
+      
+      // Stream the PDF to the client
+      pdfResult.stream.pipe(res);
+      
+      // Handle stream errors
+      pdfResult.stream.on('error', (streamError) => {
+        console.error('Direct stream error:', streamError);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error streaming PDF' });
+        }
+      });
+    }
     
     // Log access
     try {

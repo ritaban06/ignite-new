@@ -148,7 +148,66 @@ export default function DebugPage() {
     {
       name: 'Get PDFs (working endpoint)',
       fn: () => pdfAPI.getAllPdfs({ page: 1, limit: 1 })
-    }
+    },
+    {
+      name: 'Environment Info',
+      fn: () => Promise.resolve({
+        API_URL: import.meta.env.VITE_API_URL || 'Using default/proxy',
+        NODE_ENV: import.meta.env.NODE_ENV,
+        DEV: import.meta.env.DEV,
+        PROD: import.meta.env.PROD,
+        BASE_URL: import.meta.env.BASE_URL,
+        CURRENT_ORIGIN: window.location.origin,
+        USER_AGENT: navigator.userAgent,
+        TIMESTAMP: new Date().toISOString()
+      })
+    },
+    {
+      name: 'Auth Token Check',
+      fn: () => Promise.resolve({
+        tokenExists: !!localStorage.getItem('adminToken'),
+        tokenLength: localStorage.getItem('adminToken')?.length || 0,
+        tokenPreview: localStorage.getItem('adminToken')?.substring(0, 20) + '...' || 'No token',
+        timestamp: new Date().toISOString()
+      })
+    },
+    {
+      name: 'Upload Test (With Auth)',
+      fn: () => {
+        const formData = new FormData();
+        const blob = new Blob(['test pdf content'], { type: 'application/pdf' });
+        formData.append('pdf', blob, 'test.pdf');
+        formData.append('title', 'Test PDF');
+        formData.append('department', 'CSE');
+        formData.append('year', '1');
+        formData.append('subject', 'Test Subject');
+        
+        return api.post('/admin/upload-simple', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+    },
+    {
+      name: 'Direct Backend Test',
+      fn: () => {
+        // Test direct connection to backend without using our API wrapper
+        const backendUrl = 'https://ignite-backend-eight.vercel.app/api/admin/ping';
+        return fetch(backendUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        }).then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        });
+      }
+    },
   ];
 
   return (

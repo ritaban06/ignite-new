@@ -121,12 +121,33 @@ class GoogleSheetsService {
       throw new Error('Invalid sheet format - no data found');
     }
     
-    // Get headers from first row
-    const headers = lines[0].split(',').map(header => 
-      header.trim().toLowerCase().replace(/"/g, '')
+    // Get headers from first row and normalize them
+    const rawHeaders = lines[0].split(',').map(header => 
+      header.trim().replace(/"/g, '')
     );
     
-    // Validate required headers
+    // Create header mapping from new format to expected format
+    const headerMapping = {
+      'Registration ID': 'registrationId',
+      'Student Name': 'name',
+      'Email': 'email',
+      'Event Name': 'eventName',
+      'Payment Status': 'paymentStatus',
+      'Payment ID': 'paymentId',
+      'Payment Type': 'paymentType',
+      'Payment Date': 'paymentDate',
+      'Amount (₹)': 'amount',
+      'Team Name': 'teamName',
+      'Team UID': 'teamUid',
+      'Team Role': 'teamRole',
+      'Year': 'year',
+      'Department': 'department'
+    };
+    
+    // Map headers to normalized field names
+    const headers = rawHeaders.map(header => headerMapping[header] || header.toLowerCase());
+    
+    // Validate required headers (using normalized names)
     const requiredHeaders = ['email', 'name', 'year', 'department'];
     const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
     
@@ -150,12 +171,27 @@ class GoogleSheetsService {
       
       // Only add users with valid email
       if (user.email && user.email.includes('@')) {
-        users.push({
+        const userRecord = {
+          // Core required fields
           email: user.email.toLowerCase().trim(),
           name: user.name?.trim(),
           year: user.year?.trim(),
-          department: user.department?.trim()
-        });
+          department: user.department?.trim(),
+          
+          // Additional fields from new header format
+          registrationId: user.registrationId?.trim(),
+          eventName: user.eventName?.trim(),
+          paymentStatus: user.paymentStatus?.trim(),
+          paymentId: user.paymentId?.trim(),
+          paymentType: user.paymentType?.trim(),
+          paymentDate: user.paymentDate?.trim(),
+          amount: user.amount?.trim(),
+          teamName: user.teamName?.trim(),
+          teamUid: user.teamUid?.trim(),
+          teamRole: user.teamRole?.trim()
+        };
+        
+        users.push(userRecord);
       }
     }
     

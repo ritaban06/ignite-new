@@ -30,10 +30,11 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     return () => {
       // Cleanup: revoke object URL if it exists
       if (pdfUrl && pdfUrl.startsWith('blob:')) {
+        console.log('Cleaning up blob URL:', pdfUrl);
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [isOpen, pdfId]);
+  }, [isOpen, pdfId, pdfUrl]); // Add pdfUrl to dependencies for cleanup
 
   const fetchPDFUrl = async () => {
     try {
@@ -73,6 +74,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
         
         try {
           // Fetch the PDF content with proper headers
+          console.log('Attempting to fetch PDF content...');
           const pdfResponse = await fetch(response.data.viewUrl, {
             method: 'GET',
             headers: {
@@ -83,27 +85,35 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             mode: 'cors'
           });
           
+          console.log('PDF fetch response status:', pdfResponse.status);
+          console.log('PDF fetch response headers:', [...pdfResponse.headers.entries()]);
+          
           if (!pdfResponse.ok) {
             throw new Error(`HTTP ${pdfResponse.status}: ${pdfResponse.statusText}`);
           }
           
+          console.log('Converting PDF response to blob...');
           // Convert response to blob
           const pdfBlob = await pdfResponse.blob();
+          console.log('PDF blob created, size:', pdfBlob.size, 'type:', pdfBlob.type);
           
           // Create blob URL for react-pdf to use
           const blobUrl = URL.createObjectURL(pdfBlob);
+          console.log('PDF blob URL created:', blobUrl);
           
           setPdfUrl(blobUrl);
           setPdfInfo(response.data.pdf);
-          console.log('PDF blob URL created successfully');
+          console.log('PDF blob URL set successfully');
           
         } catch (fetchError) {
           console.error('Failed to fetch PDF content:', fetchError);
+          console.error('Fetch error details:', fetchError.message);
           
           // Fallback: try using the proxy URL directly
           console.log('Falling back to direct proxy URL');
           setPdfUrl(response.data.viewUrl);
           setPdfInfo(response.data.pdf);
+          console.log('Using direct proxy URL as fallback:', response.data.viewUrl);
         }
       } else {
         throw new Error('Failed to get PDF view URL');
@@ -335,7 +345,14 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     onClick={async () => {
                       try {
                         console.log('=== Testing API Connectivity ===');
-                        const testResponse = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/auth/profile`, {
+                        // Test health endpoint first
+                        const healthResponse = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/health`);
+                        console.log('Health API response status:', healthResponse.status);
+                        const healthData = await healthResponse.json();
+                        console.log('Health API response data:', healthData);
+                        
+                        // Test authenticated endpoint
+                        const testResponse = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/pdfs`, {
                           method: 'GET',
                           headers: {
                             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -384,12 +401,29 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                         const proxyUrl = response.data.viewUrl;
                         console.log('Proxy URL:', proxyUrl);
                         
-                        // Try to open in new tab to test
-                        window.open(proxyUrl, '_blank');
-                        toast.success('Opened proxy URL in new tab');
+                        // Test fetch first
+                        console.log('Testing fetch to proxy URL...');
+                        const testFetch = await fetch(proxyUrl, {
+                          method: 'GET',
+                          headers: { 'Accept': 'application/pdf' },
+                          mode: 'cors'
+                        });
+                        console.log('Fetch test status:', testFetch.status);
+                        console.log('Fetch test headers:', [...testFetch.headers.entries()]);
+                        
+                        if (testFetch.ok) {
+                          const blob = await testFetch.blob();
+                          console.log('Blob size:', blob.size, 'type:', blob.type);
+                          
+                          // Try to open in new tab
+                          window.open(proxyUrl, '_blank');
+                          toast.success('Proxy URL test completed - check console');
+                        } else {
+                          throw new Error(`HTTP ${testFetch.status}`);
+                        }
                       } catch (error) {
                         console.error('Failed to test proxy URL:', error);
-                        toast.error('Failed to test proxy URL');
+                        toast.error('Failed to test proxy URL - check console');
                       }
                     }}
                     className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
@@ -424,7 +458,11 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     isEvalSupported: false,
                     // Disable worker for blob URLs to avoid issues
                     useWorkerFetch: !pdfUrl.startsWith('blob:'),
-                    verbosity: 0 // Reduce console noise
+                    verbosity: 0, // Reduce console noise
+                    // Enable range requests for better streaming
+                    disableRange: pdfUrl.startsWith('blob:'),
+                    // Enable font loading
+                    disableFontFace: false
                   }}
                   loading={
                     <div className="flex items-center justify-center p-8">

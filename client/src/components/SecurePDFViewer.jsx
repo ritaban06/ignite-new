@@ -40,6 +40,23 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       setIsLoading(true);
       setError(null);
       
+      // Debug authentication state
+      const token = localStorage.getItem('authToken');
+      const user = localStorage.getItem('user');
+      
+      console.log('=== PDF Fetch Debug ===');
+      console.log('PDF ID:', pdfId);
+      console.log('Auth token exists:', !!token);
+      console.log('Auth token length:', token?.length);
+      console.log('User exists:', !!user);
+      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
+      console.log('API Base URL:', import.meta.env.VITE_API_URL || '/api');
+      console.log('======================');
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+      
       console.log('Fetching PDF URL for ID:', pdfId);
       const response = await pdfAPI.getViewURL(pdfId);
       console.log('PDF URL response:', response.data);
@@ -54,8 +71,17 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     } catch (error) {
       console.error('Error fetching PDF URL:', error);
       console.error('Error details:', error.response?.data);
-      setError(error.response?.data?.error || 'Failed to load PDF');
-      toast.error('Failed to load PDF');
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        setError('Authentication failed. Please log in again.');
+        toast.error('Please log in again to view PDFs');
+        // Optionally redirect to login
+        // window.location.href = '/login';
+      } else {
+        setError(error.response?.data?.error || error.message || 'Failed to load PDF');
+        toast.error('Failed to load PDF');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -240,14 +266,29 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
           {error && (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
+              <div className="text-center max-w-md">
                 <p className="text-red-600 mb-4">{error}</p>
-                <button
-                  onClick={fetchPDFUrl}
-                  className="px-4 py-2 gradient-accent text-white rounded-lg hover:shadow-md transition-all duration-200"
-                >
-                  Retry
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={fetchPDFUrl}
+                    className="px-4 py-2 gradient-accent text-white rounded-lg hover:shadow-md transition-all duration-200 mr-2"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log('=== Auth Debug Info ===');
+                      console.log('Token:', localStorage.getItem('authToken') ? 'Present' : 'Missing');
+                      console.log('User:', localStorage.getItem('user') ? 'Present' : 'Missing');
+                      console.log('API URL:', import.meta.env.VITE_API_URL || '/api');
+                      console.log('Current URL:', window.location.href);
+                      toast.info('Check browser console for debug info');
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    Debug Auth
+                  </button>
+                </div>
               </div>
             </div>
           )}

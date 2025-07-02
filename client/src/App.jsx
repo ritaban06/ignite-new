@@ -9,6 +9,7 @@ import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
 import SearchPage from './pages/SearchPage';
 import R2PDFManager from './components/R2PDFManager';
+import AuthDebug from './components/AuthDebug';
 
 // You'll need to add your Google OAuth Client ID here
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id-here';
@@ -34,6 +35,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-purple-50">
       <Header />
+      <AuthDebug />
       <main>
         <Routes>
           <Route path="/" element={<DashboardPage />} />

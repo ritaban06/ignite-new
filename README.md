@@ -1,4 +1,4 @@
-# Ignite - PDF Study Material Platform
+# Ignite - Samarth's Study Material Platform
 
 A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. Perfect for educational institutions and organizations that need to protect PDF content while providing seamless access to authorized users.
 

@@ -65,7 +65,7 @@ app.use((req, res, next) => {
   console.log('Global CORS Debug - Path:', req.path);
   console.log('Global CORS Debug - Allowed Origins:', allowedOrigins);
   
-  // Set CORS headers for all requests
+  // Always set CORS headers for allowed origins
   if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -75,12 +75,14 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     console.log('Global CORS: No origin, allowing all');
   } else {
-    // Be more permissive with unknown origins
+    // Log unknown origins but still allow them for debugging
+    console.log('Global CORS: Unknown origin:', origin);
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     console.log('Global CORS: Unknown origin allowed with credentials:', origin);
   }
   
+  // Always set these headers regardless of origin
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
   res.header('Access-Control-Max-Age', '86400');
@@ -132,7 +134,11 @@ app.get('/api/cors-test', (req, res) => {
     message: 'CORS is working!',
     origin: req.get('Origin'),
     method: req.method,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    corsHeaders: {
+      'Access-Control-Allow-Origin': res.get('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Credentials': res.get('Access-Control-Allow-Credentials')
+    }
   });
 });
 
@@ -178,6 +184,18 @@ app.use('*', (req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
+  
+  // Ensure CORS headers are set even for errors
+  const origin = req.get('Origin');
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else if (!origin) {
+    res.header('Access-Control-Allow-Origin', '*');
+  } else {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
   
   if (err.name === 'ValidationError') {
     return res.status(400).json({ 

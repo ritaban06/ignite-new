@@ -12,6 +12,7 @@ const ensureCORS = (req, res) => {
   const allowedOrigins = [
     'https://ignite-client.ritaban.me',
     'https://ignite-admin.ritaban.me',
+    'https://ignite-backend-eight.vercel.app',
     'http://localhost:3000',
     'http://localhost:3001'
   ];
@@ -19,15 +20,33 @@ const ensureCORS = (req, res) => {
   if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
+  } else if (!origin) {
+    res.header('Access-Control-Allow-Origin', '*');
+  } else {
+    // Be more permissive for debugging
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
   }
+  
+  // Always set these essential headers
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
 };
 
 // Verify JWT token
 const authenticate = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const authHeader = req.header('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    console.log('Auth Debug - Path:', req.path);
+    console.log('Auth Debug - Method:', req.method);
+    console.log('Auth Debug - Auth Header Present:', !!authHeader);
+    console.log('Auth Debug - Token Present:', !!token);
+    console.log('Auth Debug - Origin:', req.get('Origin'));
     
     if (!token) {
+      console.log('Auth Debug - No token provided');
       // Ensure CORS headers are preserved even on auth failure
       ensureCORS(req, res);
       return res.status(401).json({ error: 'Access denied. No token provided.' });

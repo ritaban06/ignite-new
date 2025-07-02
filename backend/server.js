@@ -35,7 +35,10 @@ const limiter = rateLimit({
   legacyHeaders: false,
   // Skip rate limiting for health checks and CORS preflight
   skip: (req) => {
-    return req.method === 'OPTIONS' || req.path === '/api/health' || req.path === '/api/cors-test';
+    return req.method === 'OPTIONS' || 
+           req.path === '/api/health' || 
+           req.path === '/api/cors-test' ||
+           req.path.startsWith('/api/pdfs/proxy/'); // Skip rate limiting for PDF proxy
   },
   handler: (req, res) => {
     console.log(`Global rate limit exceeded for ${req.ip} on ${req.originalUrl}`);
@@ -84,7 +87,7 @@ app.use((req, res, next) => {
   
   // Always set these headers regardless of origin
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Cache-Control');
   res.header('Access-Control-Max-Age', '86400');
   res.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');

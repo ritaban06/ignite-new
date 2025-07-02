@@ -78,8 +78,8 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           const pdfResponse = await fetch(response.data.viewUrl, {
             method: 'GET',
             headers: {
-              'Accept': 'application/pdf',
-              'Cache-Control': 'no-cache'
+              'Accept': 'application/pdf'
+              // Removed Cache-Control header to avoid CORS issues
             },
             credentials: 'omit', // Don't send cookies to avoid CORS issues
             mode: 'cors'

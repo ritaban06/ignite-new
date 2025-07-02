@@ -523,7 +523,7 @@ router.get('/proxy/:fileKey', [
     res.set({
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Cache-Control',
     });
     
     const fileKey = decodeURIComponent(req.params.fileKey);
@@ -696,7 +696,7 @@ router.options('/proxy/:fileKey', (req, res) => {
   res.set({
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control',
     'Access-Control-Max-Age': '86400' // 24 hours
   });
   res.status(200).end();

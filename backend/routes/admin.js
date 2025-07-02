@@ -830,4 +830,28 @@ router.post('/test-upload-no-rate-limit', authenticate, requireAdmin, upload.sin
   });
 });
 
+// Test upload endpoint for CORS debugging (no auth)
+router.post('/test-upload-cors', (req, res) => {
+  console.log('=== TEST UPLOAD CORS ===');
+  console.log('Origin:', req.get('Origin'));
+  console.log('Method:', req.method);
+  console.log('Content-Type:', req.get('Content-Type'));
+  console.log('Response CORS headers:', {
+    'Access-Control-Allow-Origin': res.get('Access-Control-Allow-Origin'),
+    'Access-Control-Allow-Credentials': res.get('Access-Control-Allow-Credentials')
+  });
+  console.log('=== END TEST ===');
+  
+  res.json({ 
+    message: 'Upload CORS test successful',
+    origin: req.get('Origin'),
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    corsHeaders: {
+      'Access-Control-Allow-Origin': res.get('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Credentials': res.get('Access-Control-Allow-Credentials')
+    }
+  });
+});
+
 module.exports = router;

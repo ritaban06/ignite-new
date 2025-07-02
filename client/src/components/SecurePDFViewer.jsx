@@ -58,8 +58,14 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       }
       
       console.log('Fetching PDF URL for ID:', pdfId);
+      
+      // Test the API request step by step
+      console.log('Making API request to:', `${import.meta.env.VITE_API_URL || '/api'}/pdfs/${pdfId}/view`);
+      
       const response = await pdfAPI.getViewURL(pdfId);
-      console.log('PDF URL response:', response.data);
+      console.log('PDF URL response status:', response.status);
+      console.log('PDF URL response headers:', response.headers);
+      console.log('PDF URL response data:', response.data);
       
       if (response.data.viewUrl) {
         setPdfUrl(response.data.viewUrl);
@@ -276,13 +282,42 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     Retry
                   </button>
                   <button
+                    onClick={async () => {
+                      try {
+                        console.log('=== Testing API Connectivity ===');
+                        const testResponse = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/auth/profile`, {
+                          method: 'GET',
+                          headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                            'Content-Type': 'application/json'
+                          },
+                          credentials: 'include'
+                        });
+                        console.log('Test API response status:', testResponse.status);
+                        console.log('Test API response headers:', [...testResponse.headers.entries()]);
+                        const testData = await testResponse.json();
+                        console.log('Test API response data:', testData);
+                        toast.success('API test completed - check console');
+                      } catch (error) {
+                        console.error('API test failed:', error);
+                        toast.error('API test failed - check console');
+                      }
+                    }}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors mr-2"
+                  >
+                    Test API
+                  </button>
+                  <button
                     onClick={() => {
                       console.log('=== Auth Debug Info ===');
                       console.log('Token:', localStorage.getItem('authToken') ? 'Present' : 'Missing');
                       console.log('User:', localStorage.getItem('user') ? 'Present' : 'Missing');
                       console.log('API URL:', import.meta.env.VITE_API_URL || '/api');
                       console.log('Current URL:', window.location.href);
-                      toast.info('Check browser console for debug info');
+                      console.log('User data:', JSON.parse(localStorage.getItem('user') || '{}'));
+                      console.log('Token preview:', localStorage.getItem('authToken')?.substring(0, 30) + '...');
+                      // Use toast.success instead of toast.info
+                      toast.success('Check browser console for debug info');
                     }}
                     className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                   >

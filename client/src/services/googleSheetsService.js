@@ -32,8 +32,9 @@ class GoogleSheetsService {
 
   // Convert Google Sheets URL to CSV export URL
   convertToCSVUrl(sheetUrl) {
-    // Extract the sheet ID from various Google Sheets URL formats
+    // Extract the sheet ID and optional gid from various Google Sheets URL formats
     let sheetId;
+    let gid = null;
     
     // Handle different URL formats
     const patterns = [
@@ -50,12 +51,23 @@ class GoogleSheetsService {
       }
     }
     
+    // Extract gid (sheet ID) if present in URL
+    const gidMatch = sheetUrl.match(/[#&]gid=([0-9]+)/);
+    if (gidMatch) {
+      gid = gidMatch[1];
+    }
+    
     if (!sheetId) {
       throw new Error('Invalid Google Sheets URL format');
     }
     
-    // Return CSV export URL
-    return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+    // Return CSV export URL with optional gid parameter
+    let csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+    if (gid) {
+      csvUrl += `&gid=${gid}`;
+    }
+    
+    return csvUrl;
   }
 
   // Parse CSV text into array of user objects
@@ -143,6 +155,33 @@ class GoogleSheetsService {
   clearCache() {
     this.sheetsData = null;
     this.lastFetch = null;
+  }
+
+  // Function to fetch data from a specific sheet by GID
+  async fetchFromSpecificSheet(workbookUrl, gid) {
+    try {
+      // Create URL for specific sheet
+      const sheetUrl = gid ? `${workbookUrl}&gid=${gid}` : workbookUrl;
+      
+      // Convert to CSV export URL
+      const csvUrl = this.convertToCSVUrl(sheetUrl);
+      
+      const response = await fetch(csvUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch sheet ${gid}`);
+      }
+      
+      const csvText = await response.text();
+      const users = this.parseCSV(csvText);
+      
+      this.sheetsData = users;
+      this.lastFetch = Date.now();
+      
+      return users;
+    } catch (error) {
+      console.error(`Error fetching from sheet ${gid}:`, error);
+      throw new Error(`Unable to fetch data from sheet ${gid}. Please try again later.`);
+    }
   }
 }
 

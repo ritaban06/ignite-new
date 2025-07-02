@@ -1,11 +1,38 @@
 const axios = require('axios');
 
+/**
+ * Google Sheets Service for reading approved users data
+ * 
+ * MULTIPLE SHEETS SUPPORT:
+ * 
+ * 1. Reading from a specific sheet in a workbook:
+ *    - Method 1: Add GID to your sheet URL in environment variable
+ *      APPROVED_USERS_SHEET_URL=https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=123456789
+ *    
+ *    - Method 2: Set the GID separately
+ *      APPROVED_USERS_SHEET_URL=https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit
+ *      APPROVED_USERS_SHEET_GID=123456789
+ * 
+ * 2. How to find a sheet's GID:
+ *    - Open your Google Sheets workbook
+ *    - Click on the sheet tab you want to use
+ *    - Look at the URL in your browser - it will show: #gid=123456789
+ *    - The number after gid= is your sheet ID
+ * 
+ * 3. Programmatically fetch from different sheets:
+ *    - Use fetchFromSpecificSheet(workbookUrl, gid) method
+ *    - Example: googleSheetsService.fetchFromSpecificSheet(baseUrl, '123456789')
+ * 
+ * If no GID is specified, it will read from the first sheet in the workbook.
+ */
+
 class GoogleSheetsService {
   constructor() {
     this.sheetsData = null;
     this.lastFetch = null;
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
     this.approvedUsersSheetUrl = process.env.APPROVED_USERS_SHEET_URL;
+    this.approvedUsersSheetGid = process.env.APPROVED_USERS_SHEET_GID; // Optional: specific sheet GID
   }
 
   // Function to fetch data from public Google Sheet
@@ -15,8 +42,18 @@ class GoogleSheetsService {
         throw new Error('APPROVED_USERS_SHEET_URL environment variable is not set');
       }
 
+      // Use specific sheet GID if provided, otherwise use default sheet
+      let sheetUrl = this.approvedUsersSheetUrl;
+      if (this.approvedUsersSheetGid) {
+        // Add GID to URL if not already present
+        if (!sheetUrl.includes('gid=')) {
+          const separator = sheetUrl.includes('#') ? '&' : '#';
+          sheetUrl = `${sheetUrl}${separator}gid=${this.approvedUsersSheetGid}`;
+        }
+      }
+
       // Convert Google Sheets URL to CSV export URL
-      const csvUrl = this.convertToCSVUrl(this.approvedUsersSheetUrl);
+      const csvUrl = this.convertToCSVUrl(sheetUrl);
       
       const response = await axios.get(csvUrl, {
         timeout: 10000, // 10 second timeout
@@ -39,8 +76,9 @@ class GoogleSheetsService {
 
   // Convert Google Sheets URL to CSV export URL
   convertToCSVUrl(sheetUrl) {
-    // Extract the sheet ID from various Google Sheets URL formats
+    // Extract the sheet ID and optional gid from various Google Sheets URL formats
     let sheetId;
+    let gid = null;
     
     // Handle different URL formats
     const patterns = [
@@ -57,12 +95,23 @@ class GoogleSheetsService {
       }
     }
     
+    // Extract gid (sheet ID) if present in URL
+    const gidMatch = sheetUrl.match(/[#&]gid=([0-9]+)/);
+    if (gidMatch) {
+      gid = gidMatch[1];
+    }
+    
     if (!sheetId) {
       throw new Error('Invalid Google Sheets URL format');
     }
     
-    // Return CSV export URL
-    return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+    // Return CSV export URL with optional gid parameter
+    let csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+    if (gid) {
+      csvUrl += `&gid=${gid}`;
+    }
+    
+    return csvUrl;
   }
 
   // Parse CSV text into array of user objects
@@ -185,6 +234,38 @@ class GoogleSheetsService {
       cacheAge: this.lastFetch ? Date.now() - this.lastFetch : null,
       usersCount: this.sheetsData ? this.sheetsData.length : 0
     };
+  }
+
+  // Function to fetch data from a specific sheet by GID
+  async fetchFromSpecificSheet(workbookUrl, gid) {
+    try {
+      if (!workbookUrl) {
+        throw new Error('APPROVED_USERS_SHEET_URL environment variable is not set');
+      }
+
+      // Create URL for specific sheet
+      const sheetUrl = gid ? `${workbookUrl}&gid=${gid}` : workbookUrl;
+      
+      // Convert to CSV export URL
+      const csvUrl = this.convertToCSVUrl(sheetUrl);
+      
+      const response = await axios.get(csvUrl, {
+        timeout: 10000, // 10 second timeout
+        headers: {
+          'User-Agent': 'Ignite-App/1.0'
+        }
+      });
+      
+      const users = this.parseCSV(response.data);
+      
+      this.sheetsData = users;
+      this.lastFetch = Date.now();
+      
+      return users;
+    } catch (error) {
+      console.error(`Error fetching from sheet ${gid}:`, error.message);
+      throw new Error(`Unable to fetch approved users from sheet ${gid}. Please contact administrator.`);
+    }
   }
 }
 

@@ -53,6 +53,8 @@ export const userAPI = {
   getAllUsers: (params) => api.get('/admin/users', { params }),
   updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  syncSheets: () => api.post('/admin/sync-sheets'),
+  getSheetsStatus: () => api.get('/admin/sheets-status'),
 };
 
 export default api;

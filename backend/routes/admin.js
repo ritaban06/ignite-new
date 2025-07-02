@@ -5,6 +5,7 @@ const PDF = require('../models/PDF');
 const User = require('../models/User');
 const AccessLog = require('../models/AccessLog');
 const r2Service = require('../services/r2Service');
+const googleSheetsService = require('../services/googleSheetsService');
 const { 
   authenticate, 
   requireAdmin, 
@@ -659,6 +660,57 @@ router.get('/test-r2', authenticate, requireAdmin, async (req, res) => {
     console.error('R2 test error:', error);
     res.status(500).json({ 
       error: 'R2 connection test failed', 
+      message: error.message 
+    });
+  }
+});
+
+// Sync from Google Sheets
+router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
+  try {
+    console.log('Admin initiated Google Sheets sync');
+    
+    // Clear cache to force fresh fetch
+    googleSheetsService.clearCache();
+    
+    // Fetch fresh data from Google Sheets
+    const users = await googleSheetsService.fetchApprovedUsers();
+    
+    // Get cache status for response
+    const cacheStatus = googleSheetsService.getCacheStatus();
+    
+    res.json({ 
+      success: true,
+      message: 'Successfully synced from Google Sheets',
+      data: {
+        usersCount: users.length,
+        cacheStatus,
+        syncTime: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Google Sheets sync error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to sync from Google Sheets', 
+      message: error.message 
+    });
+  }
+});
+
+// Get Google Sheets cache status
+router.get('/sheets-status', authenticate, requireAdmin, (req, res) => {
+  try {
+    const cacheStatus = googleSheetsService.getCacheStatus();
+    res.json({
+      success: true,
+      data: cacheStatus
+    });
+  } catch (error) {
+    console.error('Error getting sheets status:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to get sheets status', 
       message: error.message 
     });
   }

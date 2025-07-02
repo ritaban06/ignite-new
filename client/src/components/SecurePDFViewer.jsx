@@ -3,6 +3,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, X, RotateCw } from 'lucide-react';
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
+import PDFTest from './PDFTest';
 
 // The PDF worker is configured globally in main.jsx with CORS-friendly CDN
 
@@ -20,6 +21,8 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pdfInfo, setPdfInfo] = useState(null);
+  const [showTestComponent, setShowTestComponent] = useState(false);
+  const [useIframeFallback, setUseIframeFallback] = useState(false);
 
   // Fetch secure PDF URL when component mounts or pdfId changes
   useEffect(() => {
@@ -93,17 +96,35 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           }
           
           console.log('Converting PDF response to blob...');
-          // Convert response to blob
+          // Convert response to blob with explicit PDF type
           const pdfBlob = await pdfResponse.blob();
           console.log('PDF blob created, size:', pdfBlob.size, 'type:', pdfBlob.type);
           
+          // Ensure the blob has the correct MIME type
+          const correctedBlob = pdfBlob.type === 'application/pdf' ? 
+            pdfBlob : 
+            new Blob([pdfBlob], { type: 'application/pdf' });
+          
           // Create blob URL for react-pdf to use
-          const blobUrl = URL.createObjectURL(pdfBlob);
+          const blobUrl = URL.createObjectURL(correctedBlob);
           console.log('PDF blob URL created:', blobUrl);
+          
+          // Test if blob is valid by creating a temporary link
+          const testLink = document.createElement('a');
+          testLink.href = blobUrl;
+          testLink.download = 'test.pdf';
+          console.log('✅ Blob URL is valid, download would work');
           
           setPdfUrl(blobUrl);
           setPdfInfo(response.data.pdf);
           console.log('PDF blob URL set successfully');
+          console.log('🔍 PDF State Update:');
+          console.log('- Original blob size:', pdfBlob.size, 'bytes');
+          console.log('- Original blob type:', pdfBlob.type);
+          console.log('- Corrected blob type:', correctedBlob.type);
+          console.log('- Blob URL:', blobUrl);
+          console.log('- PDF Info:', response.data.pdf);
+          console.log('- Setting loading to false and error to null');
           
         } catch (fetchError) {
           console.error('Failed to fetch PDF content:', fetchError);
@@ -175,16 +196,25 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
-    console.log('PDF loaded successfully with', numPages, 'pages');
+    console.log('✅ PDF Document loaded successfully!');
+    console.log('Number of pages:', numPages);
+    console.log('PDF URL used:', pdfUrl);
+    console.log('Worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
     setNumPages(numPages);
     setPageNumber(1);
     setScale(1.0);
     setRotation(0);
+    toast.success(`PDF loaded successfully with ${numPages} pages!`);
   };
 
   const onDocumentLoadError = (error) => {
-    console.error('PDF loading error:', error);
+    console.error('❌ PDF Document loading error:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     console.error('PDF URL that failed:', pdfUrl);
+    console.error('PDF URL type:', typeof pdfUrl);
+    console.error('Is blob URL:', pdfUrl?.startsWith('blob:'));
     console.error('Current worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
     
     // Check if it's a worker-related error
@@ -358,6 +388,13 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
         {/* PDF Content */}
         <div className="flex-1 overflow-auto bg-primary-100/50 backdrop-blur-sm p-4">
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-2 bg-yellow-100 text-yellow-800 text-xs rounded">
+              Debug: isLoading={isLoading.toString()}, error={error?.toString() || 'null'}, pdfUrl={pdfUrl ? 'set' : 'null'}, numPages={numPages || 'null'}
+            </div>
+          )}
+          
           {isLoading && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -466,89 +503,138 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     Test Base64
                   </button>
                   <button
-                    onClick={async () => {
-                      try {
-                        console.log('=== Testing PDF Proxy Direct ===');
-                        const response = await pdfAPI.getViewURL(pdfId);
-                        const proxyUrl = response.data.viewUrl;
-                        console.log('Proxy URL:', proxyUrl);
-                        
-                        // Test fetch first
-                        console.log('Testing fetch to proxy URL...');
-                        const testFetch = await fetch(proxyUrl, {
-                          method: 'GET',
-                          headers: { 'Accept': 'application/pdf' },
-                          mode: 'cors'
-                        });
-                        console.log('Fetch test status:', testFetch.status);
-                        console.log('Fetch test headers:', [...testFetch.headers.entries()]);
-                        
-                        if (testFetch.ok) {
-                          const blob = await testFetch.blob();
-                          console.log('Blob size:', blob.size, 'type:', blob.type);
-                          
-                          // Try to open in new tab
-                          window.open(proxyUrl, '_blank');
-                          toast.success('Proxy URL test completed - check console');
-                        } else {
-                          throw new Error(`HTTP ${testFetch.status}`);
-                        }
-                      } catch (error) {
-                        console.error('Failed to test proxy URL:', error);
-                        toast.error('Failed to test proxy URL - check console');
-                      }
-                    }}
-                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                    onClick={() => setShowTestComponent(prev => !prev)}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors mr-2"
                   >
-                    Test Proxy URL
+                    {showTestComponent ? 'Hide' : 'Show'} Test Component
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log('🔄 Force re-render PDF component');
+                      setNumPages(null);
+                      setPageNumber(1);
+                      setError(null);
+                      // Force re-render by briefly setting pdfUrl to null then back
+                      const currentUrl = pdfUrl;
+                      setPdfUrl(null);
+                      setTimeout(() => {
+                        setPdfUrl(currentUrl);
+                        console.log('PDF URL restored:', currentUrl);
+                      }, 100);
+                    }}
+                    className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors mr-2"
+                  >
+                    Force Re-render
+                  </button>
+                  <button
+                    onClick={() => {
+                      setUseIframeFallback(prev => !prev);
+                      console.log('Switched to iframe fallback:', !useIframeFallback);
+                    }}
+                    className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+                  >
+                    {useIframeFallback ? 'Use React-PDF' : 'Use Iframe'}
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {pdfUrl && !isLoading && !error && (
+          {/* Test Component */}
+          {showTestComponent && pdfUrl && (
+            <PDFTest pdfUrl={pdfUrl} />
+          )}
+
+          {/* Iframe Fallback */}
+          {useIframeFallback && pdfUrl && !isLoading && !error && (
+            <div className="h-full w-full flex justify-center">
+              <iframe
+                src={pdfUrl}
+                width="100%"
+                height="600px"
+                style={{ 
+                  border: 'none',
+                  minHeight: '600px',
+                  backgroundColor: 'white'
+                }}
+                title="PDF Document"
+                onLoad={() => console.log('✅ Iframe PDF loaded successfully')}
+                onError={() => console.error('❌ Iframe PDF failed to load')}
+              />
+            </div>
+          )}
+
+          {/* React-PDF Component */}
+          {!useIframeFallback && pdfUrl && !isLoading && !error && (
             <div className="flex justify-center">
               <div style={{ transform: `rotate(${rotation}deg)` }}>
                 <Document
-                  file={{
-                    url: pdfUrl,
-                    httpHeaders: pdfUrl.startsWith('blob:') ? {} : {
-                      'Accept': 'application/pdf',
-                    },
-                    withCredentials: false
-                  }}
+                  file={pdfUrl}
                   onLoadSuccess={onDocumentLoadSuccess}
                   onLoadError={onDocumentLoadError}
+                  onLoadProgress={({ loaded, total }) => {
+                    if (total > 0) {
+                      console.log(`Loading progress: ${loaded}/${total} (${Math.round(loaded/total*100)}%)`);
+                    }
+                  }}
+                  onSourceSuccess={() => {
+                    console.log('✅ PDF source loaded successfully');
+                  }}
+                  onSourceError={(error) => {
+                    console.error('❌ PDF source error:', error);
+                  }}
                   options={{
-                    workerSrc: '/pdfjs/pdf.worker.min.js',
-                    // Additional options for better PDF handling
-                    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.4.120/cmaps/',
-                    cMapPacked: true,
+                    // Simplified options - remove problematic ones
+                    workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,
+                    verbosity: 1, // Show more debug info
+                    isEvalSupported: false,
                     disableAutoFetch: false,
                     disableStream: false,
-                    isEvalSupported: false,
-                    // Disable worker for blob URLs to avoid issues
-                    useWorkerFetch: !pdfUrl.startsWith('blob:'),
-                    verbosity: 0, // Reduce console noise
-                    // Enable range requests for better streaming
-                    disableRange: pdfUrl.startsWith('blob:'),
-                    // Enable font loading
-                    disableFontFace: false
+                    disableRange: false
                   }}
                   loading={
-                    <div className="flex items-center justify-center p-8">
+                    <div className="flex flex-col items-center justify-center p-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                      <span className="ml-2 text-primary-700 mt-2">Loading PDF document...</span>
+                      <span className="text-xs text-gray-500 mt-1">Worker: {pdfjs.GlobalWorkerOptions.workerSrc}</span>
+                    </div>
+                  }
+                  error={
+                    <div className="flex items-center justify-center p-8">
+                      <div className="text-center">
+                        <p className="text-red-600 mb-2">Failed to load PDF document</p>
+                        <p className="text-xs text-gray-500 mb-4">URL: {pdfUrl?.substring(0, 50)}...</p>
+                        <button 
+                          onClick={fetchPDFUrl}
+                          className="px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600"
+                        >
+                          Retry
+                        </button>
+                      </div>
                     </div>
                   }
                 >
-                  <Page
-                    pageNumber={pageNumber}
-                    scale={scale}
-                    className="shadow-lg"
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                  />
+                  {numPages && (
+                    <Page
+                      pageNumber={pageNumber}
+                      scale={scale}
+                      className="shadow-lg mx-auto"
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      onRenderSuccess={() => {
+                        console.log(`✅ Page ${pageNumber} rendered successfully`);
+                      }}
+                      onRenderError={(error) => {
+                        console.error(`❌ Page ${pageNumber} render error:`, error);
+                      }}
+                      onLoadSuccess={() => {
+                        console.log(`✅ Page ${pageNumber} loaded successfully`);
+                      }}
+                      onLoadError={(error) => {
+                        console.error(`❌ Page ${pageNumber} load error:`, error);
+                      }}
+                    />
+                  )}
                 </Document>
               </div>
             </div>

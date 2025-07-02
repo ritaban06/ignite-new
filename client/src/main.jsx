@@ -5,30 +5,42 @@ import './index.css'
 import App from './App.jsx'
 
 // Configure PDF.js worker globally to prevent CORS issues
-// Use CDNJS which has proper CORS headers
-const workerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Try local file first for development
+const isProduction = import.meta.env.PROD;
+let workerUrl;
+
+if (isProduction) {
+  // Use CDNJS for production
+  workerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+} else {
+  // Use local file for development to avoid CORS issues
+  workerUrl = '/pdfjs/pdf.worker.min.js';
+}
+
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
 console.log('PDF.js version:', pdfjs.version);
 console.log('PDF.js worker configured to use:', workerUrl);
+console.log('Environment:', isProduction ? 'production' : 'development');
 
-// Fallback to local file if CDN fails
+// Test worker accessibility
 if (typeof window !== 'undefined') {
-  const originalWorkerSrc = pdfjs.GlobalWorkerOptions.workerSrc;
-  
-  // Test if CDN is accessible
-  fetch(originalWorkerSrc, { method: 'HEAD' })
+  fetch(workerUrl, { method: 'HEAD' })
     .then(response => {
       if (response.ok) {
-        console.log('✅ CDNJS worker is accessible');
+        console.log('✅ PDF worker is accessible');
       } else {
-        throw new Error(`CDN responded with status ${response.status}`);
+        throw new Error(`Worker responded with status ${response.status}`);
       }
     })
     .catch((error) => {
-      console.warn('CDN worker failed:', error.message);
-      console.log('Falling back to local worker');
-      pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
+      console.warn('❌ PDF worker test failed:', error.message);
+      // Fallback to CDN if local fails in development
+      if (!isProduction) {
+        const fallbackWorker = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+        console.log('Falling back to CDN worker:', fallbackWorker);
+        pdfjs.GlobalWorkerOptions.workerSrc = fallbackWorker;
+      }
     });
 }
 

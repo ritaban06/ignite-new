@@ -349,13 +349,13 @@ const R2PDFManager = () => {
                             <span>View</span>
                           </button>
                           
-                          <button
+                          {/* <button
                             onClick={() => handleDownloadPDF(pdf)}
                             className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
                           >
                             <Download className="h-4 w-4" />
                             <span>Download</span>
-                          </button>
+                          </button> */}
                           
                           <a
                             href={pdf.viewUrl}

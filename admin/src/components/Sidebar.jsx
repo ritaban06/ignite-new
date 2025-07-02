@@ -7,7 +7,8 @@ import {
   Users, 
   BarChart3,
   Settings,
-  RefreshCw 
+  RefreshCw,
+  Bug
 } from 'lucide-react';
 import { userAPI } from '../api';
 
@@ -18,6 +19,7 @@ const navigation = [
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Debug', href: '/debug', icon: Bug },
 ];
 
 export default function Sidebar() {

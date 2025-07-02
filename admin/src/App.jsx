@@ -12,6 +12,7 @@ import PDFManagementPage from './pages/PDFManagementPage';
 import UsersPage from './pages/UsersPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
+import DebugPage from './pages/DebugPage';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -44,6 +45,7 @@ function AppContent() {
             <Route path="/users" element={<UsersPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/debug" element={<DebugPage />} />
           </Routes>
         </main>
       </div>

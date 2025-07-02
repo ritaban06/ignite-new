@@ -716,4 +716,118 @@ router.get('/sheets-status', authenticate, requireAdmin, (req, res) => {
   }
 });
 
+// Test upload with file handling (simplified version)
+router.post('/test-upload-file', authenticate, requireAdmin, upload.single('pdf'), (req, res) => {
+  console.log('=== FILE UPLOAD TEST ===');
+  console.log('User authenticated:', !!req.user);
+  console.log('File received:', !!req.file);
+  console.log('File details:', req.file ? {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+  } : 'No file');
+  console.log('Form data:', req.body);
+  console.log('=== END FILE UPLOAD TEST ===');
+  
+  res.json({
+    message: 'File upload test successful',
+    fileReceived: !!req.file,
+    fileName: req.file?.originalname,
+    fileSize: req.file?.size,
+    formData: req.body,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Minimal upload test - step by step debugging
+router.post('/test-upload-minimal', [
+  (req, res, next) => {
+    console.log('=== MINIMAL UPLOAD STEP 1: Request received ===');
+    console.log('Method:', req.method);
+    console.log('Content-Type:', req.get('Content-Type'));
+    console.log('Authorization:', req.get('Authorization') ? 'Present' : 'Missing');
+    next();
+  },
+  authenticate,
+  (req, res, next) => {
+    console.log('=== MINIMAL UPLOAD STEP 2: Authentication passed ===');
+    console.log('User:', req.user?.username);
+    console.log('Role:', req.user?.role);
+    next();
+  },
+  requireAdmin,
+  (req, res, next) => {
+    console.log('=== MINIMAL UPLOAD STEP 3: Admin check passed ===');
+    next();
+  },
+  upload.single('pdf'),
+  (req, res, next) => {
+    console.log('=== MINIMAL UPLOAD STEP 4: File upload middleware ===');
+    console.log('File received:', !!req.file);
+    if (req.file) {
+      console.log('File details:', {
+        name: req.file.originalname,
+        size: req.file.size,
+        type: req.file.mimetype
+      });
+    }
+    console.log('Body:', req.body);
+    next();
+  }
+], (req, res) => {
+  console.log('=== MINIMAL UPLOAD STEP 5: Final handler ===');
+  
+  res.json({
+    success: true,
+    message: 'All middleware passed successfully',
+    fileReceived: !!req.file,
+    fileName: req.file?.originalname,
+    fileSize: req.file?.size,
+    formData: req.body,
+    user: {
+      username: req.user?.username,
+      role: req.user?.role
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Upload test without validation to isolate validation issues
+router.post('/test-upload-no-validation', authenticate, requireAdmin, upload.single('pdf'), (req, res) => {
+  console.log('=== UPLOAD WITHOUT VALIDATION ===');
+  console.log('File received:', !!req.file);
+  console.log('File info:', req.file ? {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+  } : 'No file');
+  console.log('Body:', req.body);
+  console.log('=== END UPLOAD WITHOUT VALIDATION ===');
+  
+  res.json({
+    success: true,
+    message: 'Upload test without validation successful',
+    fileReceived: !!req.file,
+    fileName: req.file?.originalname,
+    fileSize: req.file?.size,
+    bodyKeys: Object.keys(req.body || {}),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Upload test without rate limiting to isolate rate limit issues
+router.post('/test-upload-no-rate-limit', authenticate, requireAdmin, upload.single('pdf'), (req, res) => {
+  console.log('=== UPLOAD WITHOUT RATE LIMIT ===');
+  console.log('File received:', !!req.file);
+  console.log('User:', req.user?.username);
+  console.log('=== END UPLOAD WITHOUT RATE LIMIT ===');
+  
+  res.json({
+    success: true,
+    message: 'Upload test without rate limit successful',
+    fileReceived: !!req.file,
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router;

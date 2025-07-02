@@ -22,16 +22,16 @@ const AuthDebug = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 bg-white p-4 rounded-lg shadow-lg border max-w-sm">
-      <h3 className="font-bold text-sm mb-2">Auth Debug</h3>
-      <div className="text-xs space-y-1">
+    <div className="fixed top-4 right-4 z-50 bg-primary-100/90 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-primary-200 max-w-sm">
+      <h3 className="font-bold text-sm mb-2 text-primary-800">Auth Debug</h3>
+      <div className="text-xs space-y-1 text-primary-700">
         <div>Status: {isLoading ? 'Loading...' : isAuthenticated ? 'Authenticated' : 'Not Authenticated'}</div>
         <div>User: {user?.name || 'None'}</div>
         <div>Token: {localStorage.getItem('authToken') ? 'Present' : 'Missing'}</div>
       </div>
       <button
         onClick={checkAuthState}
-        className="mt-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+        className="mt-2 px-2 py-1 bg-primary-600 text-white text-xs rounded hover:bg-primary-700"
       >
         Debug Console
       </button>

@@ -162,13 +162,13 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-purple-50">
       {/* Welcome Header */}
-      <div className="bg-white shadow-sm border-b border-primary-100">
+      <div className="gradient-accent shadow-sm border-b border-primary-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-white">
               Welcome back, {user?.name}
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-primary-100">
               {user?.department} Department • Year {user?.year}
             </p>
           </div>
@@ -178,7 +178,7 @@ const DashboardPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-primary-100 hover:border-primary-300 transition-colors">
+          <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 border border-primary-200 hover:border-primary-300 transition-colors">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg flex items-center justify-center">
@@ -186,7 +186,7 @@ const DashboardPage = () => {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Available PDFs</p>
+                <p className="text-sm font-medium text-primary-700">Available PDFs</p>
                 <p className="text-2xl font-bold text-primary-600">{pagination.totalCount}</p>
               </div>
             </div>
@@ -194,7 +194,7 @@ const DashboardPage = () => {
 
           {/* Recently Viewed Stats Card - Commented Out */}
           {/*
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100 hover:border-green-300 transition-colors">
+          <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 border border-green-200 hover:border-green-300 transition-colors">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-400 rounded-lg flex items-center justify-center">
@@ -202,14 +202,14 @@ const DashboardPage = () => {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Recently Viewed</p>
+                <p className="text-sm font-medium text-green-700">Recently Viewed</p>
                 <p className="text-2xl font-bold text-green-600">{recentPdfs.length}</p>
               </div>
             </div>
           </div>
           */}
 
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-blue-100 hover:border-blue-300 transition-colors">
+          <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 border border-blue-200 hover:border-blue-300 transition-colors">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-400 rounded-lg flex items-center justify-center">
@@ -217,7 +217,7 @@ const DashboardPage = () => {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Your Department</p>
+                <p className="text-sm font-medium text-blue-700">Your Department</p>
                 <p className="text-2xl font-bold text-blue-600">{user?.department}</p>
               </div>
             </div>
@@ -244,7 +244,7 @@ const DashboardPage = () => {
         */}
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 mb-8 border border-primary-200">
           <form onSubmit={handleSearch} className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
@@ -302,7 +302,7 @@ const DashboardPage = () => {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-primary-300 transition-colors"
+                  className="px-4 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-200 hover:border-primary-400 transition-colors"
                 >
                   Clear
                 </button>
@@ -325,12 +325,12 @@ const DashboardPage = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow-sm h-64 animate-pulse">
+                <div key={i} className="bg-primary-100/60 backdrop-blur-sm rounded-lg shadow-sm h-64 animate-pulse border border-primary-200">
                   <div className="p-4">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-4 bg-primary-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-primary-200 rounded w-1/2 mb-4"></div>
+                    <div className="h-3 bg-primary-200 rounded w-full mb-2"></div>
+                    <div className="h-3 bg-primary-200 rounded w-2/3"></div>
                   </div>
                 </div>
               ))}
@@ -354,19 +354,19 @@ const DashboardPage = () => {
                     <button
                       onClick={() => changePage(pagination.currentPage - 1)}
                       disabled={!pagination.hasPrev}
-                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-2 border border-primary-300 rounded-lg text-primary-700 hover:bg-primary-200 hover:border-primary-400 hover:text-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Previous
                     </button>
                     
-                    <span className="px-4 py-2 text-gray-700">
-                      Page <span className="font-medium text-primary-600">{pagination.currentPage}</span> of <span className="font-medium">{pagination.totalPages}</span>
+                    <span className="px-4 py-2 text-primary-700">
+                      Page <span className="font-medium text-primary-800">{pagination.currentPage}</span> of <span className="font-medium text-primary-800">{pagination.totalPages}</span>
                     </span>
                     
                     <button
                       onClick={() => changePage(pagination.currentPage + 1)}
                       disabled={!pagination.hasNext}
-                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-2 border border-primary-300 rounded-lg text-primary-700 hover:bg-primary-200 hover:border-primary-400 hover:text-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Next
                     </button>
@@ -376,9 +376,9 @@ const DashboardPage = () => {
             </>
           ) : (
             <div className="text-center py-12">
-              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No PDFs found</h3>
-              <p className="text-gray-600">
+              <BookOpen className="h-12 w-12 text-primary-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-primary-700 mb-2">No PDFs found</h3>
+              <p className="text-primary-600">
                 {searchQuery ? 'Try adjusting your search terms or filters.' : 'No PDFs are available for your department and year.'}
               </p>
             </div>

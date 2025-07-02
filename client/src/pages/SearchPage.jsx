@@ -82,7 +82,7 @@ const SearchPage = () => {
         </div>
 
         {/* Search Form */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 mb-8 border border-primary-200">
           <form onSubmit={handleSearch} className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
@@ -134,7 +134,7 @@ const SearchPage = () => {
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 transition-colors"
+                  className="px-4 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-200 hover:border-primary-400 hover:text-primary-800 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -147,11 +147,11 @@ const SearchPage = () => {
         <div>
           {searchQuery && (
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-primary-700 mb-2">
                 Search Results for "{searchQuery}"
               </h2>
               {pagination.totalCount > 0 && (
-                <p className="text-gray-600">
+                <p className="text-primary-600">
                   Found {pagination.totalCount} PDF{pagination.totalCount !== 1 ? 's' : ''}
                 </p>
               )}
@@ -161,12 +161,12 @@ const SearchPage = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow-sm h-64 animate-pulse">
+                <div key={i} className="bg-primary-100/60 backdrop-blur-sm rounded-lg shadow-sm h-64 animate-pulse border border-primary-200">
                   <div className="p-4">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-4 bg-primary-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-primary-200 rounded w-1/2 mb-4"></div>
+                    <div className="h-3 bg-primary-200 rounded w-full mb-2"></div>
+                    <div className="h-3 bg-primary-200 rounded w-2/3"></div>
                   </div>
                 </div>
               ))}
@@ -183,17 +183,17 @@ const SearchPage = () => {
             </div>
           ) : searchQuery ? (
             <div className="text-center py-12">
-              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No results found</h3>
-              <p className="text-gray-600">
+              <Search className="h-12 w-12 text-primary-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-primary-700 mb-2">No results found</h3>
+              <p className="text-primary-600">
                 Try adjusting your search terms or filters.
               </p>
             </div>
           ) : (
             <div className="text-center py-12">
-              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Start your search</h3>
-              <p className="text-gray-600">
+              <Search className="h-12 w-12 text-primary-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-primary-700 mb-2">Start your search</h3>
+              <p className="text-primary-600">
                 Enter keywords to find PDFs across all subjects and departments.
               </p>
             </div>

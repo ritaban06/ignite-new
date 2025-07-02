@@ -16,7 +16,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-primary-100/80 backdrop-blur-sm shadow-sm border-b border-primary-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -38,8 +38,8 @@ const Header = () => {
                 to="/dashboard"
                 className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive('/dashboard') || isActive('/')
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'text-gray-500 hover:text-primary-600 hover:bg-primary-50'
+                    ? 'bg-primary-300 text-primary-800'
+                    : 'text-primary-700 hover:text-primary-800 hover:bg-primary-200'
                 }`}
               >
                 <Home className="h-4 w-4" />
@@ -50,8 +50,8 @@ const Header = () => {
                 to="/search"
                 className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive('/search')
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'text-gray-500 hover:text-primary-600 hover:bg-primary-50'
+                    ? 'bg-primary-300 text-primary-800'
+                    : 'text-primary-700 hover:text-primary-800 hover:bg-primary-200'
                 }`}
               >
                 <Search className="h-4 w-4" />
@@ -62,8 +62,8 @@ const Header = () => {
                 to="/r2-manager"
                 className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive('/r2-manager')
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'text-gray-500 hover:text-primary-600 hover:bg-primary-50'
+                    ? 'bg-primary-300 text-primary-800'
+                    : 'text-primary-700 hover:text-primary-800 hover:bg-primary-200'
                 }`}
               >
                 <Cloud className="h-4 w-4" />
@@ -80,7 +80,7 @@ const Header = () => {
                 <div className="w-8 h-8 bg-gradient-to-r from-primary-600 to-primary-500 rounded-full flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-primary-700">
                   {user?.name}
                 </span>
               </div>
@@ -92,7 +92,7 @@ const Header = () => {
             {/* Actions */}
             <div className="flex items-center space-x-2">
               <button
-                className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
+                className="p-2 text-primary-600 hover:text-primary-800 hover:bg-primary-200 rounded-md transition-colors"
                 title="Settings"
               >
                 <Settings className="h-4 w-4" />
@@ -100,7 +100,7 @@ const Header = () => {
               
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-1 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                className="flex items-center space-x-1 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-md transition-colors"
                 title="Logout"
               >
                 <LogOut className="h-4 w-4" />

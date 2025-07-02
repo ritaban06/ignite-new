@@ -9,6 +9,7 @@
     "client"
   ],
   "scripts": {
+    "setup": "node setup.js",
     "dev:all": "pnpm --parallel -r --filter ./backend --filter ./client --filter ./admin run dev",
     "dev:backend": "pnpm --filter backend dev",
     "dev:admin": "pnpm --filter admin dev",

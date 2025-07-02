@@ -558,54 +558,137 @@ router.get('/proxy/:fileKey', [
     
     console.log('Access granted for PDF:', pdf.title);
     
-    // Get the PDF from R2 using signed URL
-    const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+    // Use the R2 service to get PDF stream or signed URL
+    const pdfResult = await r2Service.getPdfStream(fileKey);
     
-    const s3Client = new S3Client({
-      region: 'auto',
-      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-      },
-    });
-
-    const command = new GetObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: fileKey,
-    });
-
-    const response = await s3Client.send(command);
+    if (!pdfResult.success) {
+      console.error('Failed to get PDF from R2:', pdfResult.error);
+      return res.status(500).json({ error: 'Failed to retrieve PDF file' });
+    }
     
-    // Set CORS headers for PDF viewing
+    // If R2 service returned a signed URL due to SSL issues, redirect to it
+    if (pdfResult.useSignedUrl) {
+      console.log('Using signed URL fallback due to SSL issues');
+      return res.redirect(pdfResult.signedUrl);
+    }
+    
+    // Set proper headers for PDF streaming
     res.set({
+      'Content-Type': pdfResult.contentType || 'application/pdf',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': 'inline',
-      'Cache-Control': 'private, max-age=300',
-      'Content-Length': response.ContentLength
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+      'Cache-Control': 'private, no-cache',
+      'Content-Disposition': 'inline'
     });
-
+    
+    if (pdfResult.contentLength) {
+      res.set('Content-Length', pdfResult.contentLength);
+    }
+    
     // Stream the PDF to the client
-    response.Body.pipe(res);
-
-    // Log access
-    await AccessLog.logAccess({
-      userId: req.user._id,
-      pdfId: pdf._id,
-      action: 'proxy_view',
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent'),
-      deviceId: req.deviceId
+    pdfResult.stream.pipe(res);
+    
+    // Handle stream errors
+    pdfResult.stream.on('error', (streamError) => {
+      console.error('Stream error:', streamError);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error streaming PDF' });
+      }
     });
+    
+    // Log access
+    try {
+      await AccessLog.logAccess({
+        userId: req.user._id,
+        pdfId: pdf._id,
+        action: 'proxy_view',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        deviceId: req.deviceId
+      });
+    } catch (logError) {
+      console.error('Failed to log access:', logError);
+      // Don't fail the response for logging errors
+    }
 
   } catch (error) {
     console.error('PDF proxy error:', error);
-    res.status(500).json({ 
-      error: 'Failed to serve PDF', 
-      message: error.message 
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Failed to serve PDF', 
+        message: error.message 
+      });
+    }
+  }
+});
+
+// Test R2 connectivity endpoint (admin only)
+router.get('/test-r2-connection', authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    console.log('Testing R2 connection...');
+    
+    // Test basic R2 configuration
+    const configTest = {
+      hasAccountId: !!process.env.CLOUDFLARE_ACCOUNT_ID,
+      hasAccessKey: !!process.env.R2_ACCESS_KEY_ID,
+      hasSecretKey: !!process.env.R2_SECRET_ACCESS_KEY,
+      hasBucketName: !!process.env.R2_BUCKET_NAME
+    };
+
+    console.log('R2 Config:', configTest);
+
+    // Test listing files
+    const listResult = await r2Service.listFiles();
+    
+    let testResults = {
+      config: configTest,
+      listFiles: {
+        success: listResult.success,
+        fileCount: listResult.files ? listResult.files.length : 0,
+        error: listResult.error
+      }
+    };
+
+    // If list works, test signed URL generation
+    if (listResult.success && listResult.files.length > 0) {
+      const firstFile = listResult.files[0];
+      console.log('Testing signed URL for:', firstFile);
+      
+      const signedUrlResult = await r2Service.getSignedViewUrl(firstFile, 60);
+      testResults.signedUrl = {
+        success: signedUrlResult.success,
+        hasUrl: !!signedUrlResult.url,
+        error: signedUrlResult.error
+      };
+
+      // Test PDF stream
+      console.log('Testing PDF stream for:', firstFile);
+      const streamResult = await r2Service.getPdfStream(firstFile);
+      testResults.pdfStream = {
+        success: streamResult.success,
+        useSignedUrl: streamResult.useSignedUrl,
+        hasStream: !!streamResult.stream,
+        error: streamResult.error
+      };
+    }
+
+    res.json({
+      message: 'R2 connection test completed',
+      results: testResults,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('R2 connection test error:', error);
+    res.status(500).json({
+      error: 'R2 connection test failed',
+      message: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });

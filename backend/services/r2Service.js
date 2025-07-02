@@ -1,5 +1,6 @@
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const https = require('https');
 
 // R2Bucket class - Represents a bucket in R2 storage
 class R2Bucket {
@@ -9,7 +10,7 @@ class R2Bucket {
     this.secretAccessKey = secretAccessKey;
     this.bucketName = bucketName;
     
-    // Initialize S3Client for R2
+    // Initialize S3Client for R2 with SSL/TLS configuration for Vercel
     this.s3Client = new S3Client({
       region: 'auto',
       endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
@@ -17,6 +18,25 @@ class R2Bucket {
         accessKeyId: accessKeyId,
         secretAccessKey: secretAccessKey,
       },
+      // SSL/TLS configuration for better compatibility on Vercel
+      requestHandler: {
+        requestTimeout: 30000,
+        connectionTimeout: 10000,
+        // Create custom HTTPS agent to handle SSL issues
+        httpsAgent: new https.Agent({
+          keepAlive: true,
+          maxSockets: 50,
+          rejectUnauthorized: true,
+          // Use TLS 1.2 for better compatibility
+          secureProtocol: 'TLSv1_2_method',
+          // Allow legacy server connect
+          secureOptions: require('constants').SSL_OP_LEGACY_SERVER_CONNECT || 0
+        })
+      },
+      forcePathStyle: false,
+      useAccelerateEndpoint: false,
+      // Log AWS SDK calls in development
+      logger: process.env.NODE_ENV === 'development' ? console : undefined
     });
   }
 
@@ -224,6 +244,61 @@ class R2Bucket {
     } catch (error) {
       console.error('R2 cleanup error:', error);
       throw new Error(`Failed to cleanup files from R2: ${error.message}`);
+    }
+  }
+
+  // Get PDF stream for proxy serving with enhanced error handling
+  async getPdfStream(fileKey) {
+    try {
+      if (!this.accountId || !this.accessKeyId || !this.secretAccessKey) {
+        throw new Error('R2 credentials not configured');
+      }
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: fileKey,
+      });
+
+      console.log('Getting PDF stream for key:', fileKey);
+      
+      try {
+        const response = await this.s3Client.send(command);
+        
+        return {
+          success: true,
+          stream: response.Body,
+          contentType: response.ContentType || 'application/pdf',
+          contentLength: response.ContentLength
+        };
+      } catch (streamError) {
+        console.error('Stream error, attempting signed URL fallback:', streamError);
+        
+        // If streaming fails due to SSL/TLS issues, return signed URL instead
+        if (streamError.code === 'EPROTO' || 
+            streamError.message.includes('SSL') || 
+            streamError.message.includes('TLS') ||
+            streamError.message.includes('ECONNRESET')) {
+          
+          const signedUrlResult = await this.getSignedViewUrl(fileKey, 600); // 10 minutes
+          
+          if (signedUrlResult.success) {
+            return {
+              success: true,
+              useSignedUrl: true,
+              signedUrl: signedUrlResult.url,
+              error: 'SSL_FALLBACK'
+            };
+          }
+        }
+        
+        throw streamError;
+      }
+    } catch (error) {
+      console.error('R2 getPdfStream error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
   }
 }

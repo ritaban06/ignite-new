@@ -51,6 +51,7 @@ app.use(limiter);
 const allowedOrigins = [
   'https://ignite-client.ritaban.me',
   'https://ignite-admin.ritaban.me', 
+  'https://ignite-backend-eight.vercel.app',
   'http://localhost:3000',
   'http://localhost:3001',
 ];

@@ -519,6 +519,13 @@ router.get('/proxy/:fileKey', [
   }
 ], async (req, res) => {
   try {
+    // Set CORS headers early
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+    });
+    
     const fileKey = decodeURIComponent(req.params.fileKey);
     const userId = req.query.userId || req.user._id;
     
@@ -682,6 +689,17 @@ router.get('/proxy/:fileKey', [
       });
     }
   }
+});
+
+// Handle CORS preflight requests for PDF proxy
+router.options('/proxy/:fileKey', (req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    'Access-Control-Max-Age': '86400' // 24 hours
+  });
+  res.status(200).end();
 });
 
 // Test R2 connectivity endpoint (admin only)

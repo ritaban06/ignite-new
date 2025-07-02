@@ -68,10 +68,43 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       console.log('PDF URL response data:', response.data);
       
       if (response.data.viewUrl) {
-        setPdfUrl(response.data.viewUrl);
-        setPdfInfo(response.data.pdf);
-        console.log('PDF URL set to:', response.data.viewUrl);
-        console.log('PDF URL includes token:', response.data.viewUrl.includes('token='));
+        // Instead of using the proxy URL directly, fetch the PDF content and create a blob URL
+        console.log('Fetching PDF content from proxy URL:', response.data.viewUrl);
+        
+        try {
+          // Fetch the PDF content with proper headers
+          const pdfResponse = await fetch(response.data.viewUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/pdf',
+              'Cache-Control': 'no-cache'
+            },
+            credentials: 'omit', // Don't send cookies to avoid CORS issues
+            mode: 'cors'
+          });
+          
+          if (!pdfResponse.ok) {
+            throw new Error(`HTTP ${pdfResponse.status}: ${pdfResponse.statusText}`);
+          }
+          
+          // Convert response to blob
+          const pdfBlob = await pdfResponse.blob();
+          
+          // Create blob URL for react-pdf to use
+          const blobUrl = URL.createObjectURL(pdfBlob);
+          
+          setPdfUrl(blobUrl);
+          setPdfInfo(response.data.pdf);
+          console.log('PDF blob URL created successfully');
+          
+        } catch (fetchError) {
+          console.error('Failed to fetch PDF content:', fetchError);
+          
+          // Fallback: try using the proxy URL directly
+          console.log('Falling back to direct proxy URL');
+          setPdfUrl(response.data.viewUrl);
+          setPdfInfo(response.data.pdf);
+        }
       } else {
         throw new Error('Failed to get PDF view URL');
       }
@@ -333,12 +366,35 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                       console.log('Current URL:', window.location.href);
                       console.log('User data:', JSON.parse(localStorage.getItem('user') || '{}'));
                       console.log('Token preview:', localStorage.getItem('authToken')?.substring(0, 30) + '...');
+                      console.log('Current PDF URL:', pdfUrl);
+                      console.log('PDF URL type:', typeof pdfUrl);
+                      console.log('Is blob URL:', pdfUrl?.startsWith('blob:'));
                       // Use toast.success instead of toast.info
                       toast.success('Check browser console for debug info');
                     }}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors mr-2"
                   >
                     Debug Auth
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        console.log('=== Testing PDF Proxy Direct ===');
+                        const response = await pdfAPI.getViewURL(pdfId);
+                        const proxyUrl = response.data.viewUrl;
+                        console.log('Proxy URL:', proxyUrl);
+                        
+                        // Try to open in new tab to test
+                        window.open(proxyUrl, '_blank');
+                        toast.success('Opened proxy URL in new tab');
+                      } catch (error) {
+                        console.error('Failed to test proxy URL:', error);
+                        toast.error('Failed to test proxy URL');
+                      }
+                    }}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                  >
+                    Test Proxy URL
                   </button>
                 </div>
               </div>
@@ -351,7 +407,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                 <Document
                   file={{
                     url: pdfUrl,
-                    httpHeaders: {
+                    httpHeaders: pdfUrl.startsWith('blob:') ? {} : {
                       'Accept': 'application/pdf',
                     },
                     withCredentials: false
@@ -365,7 +421,10 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     cMapPacked: true,
                     disableAutoFetch: false,
                     disableStream: false,
-                    isEvalSupported: false
+                    isEvalSupported: false,
+                    // Disable worker for blob URLs to avoid issues
+                    useWorkerFetch: !pdfUrl.startsWith('blob:'),
+                    verbosity: 0 // Reduce console noise
                   }}
                   loading={
                     <div className="flex items-center justify-center p-8">

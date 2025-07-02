@@ -663,7 +663,7 @@ router.get('/proxy/:fileKey', [
       await AccessLog.logAccess({
         userId: req.user._id,
         pdfId: pdf._id,
-        action: 'proxy_view',
+        action: 'view', // Use 'view' instead of 'proxy_view' to match enum
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
         deviceId: req.deviceId

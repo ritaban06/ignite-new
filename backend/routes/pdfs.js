@@ -137,11 +137,23 @@ router.post('/:pdfId/view', [
     // Increment view count
     await pdf.incrementViewCount();
     
-    // Generate public URL (since bucket is public)
+    // Generate signed URL with temporary access token
+    const jwt = require('jsonwebtoken');
+    const accessToken = jwt.sign(
+      { 
+        userId: req.user._id, 
+        pdfId: pdf._id,
+        fileKey: pdf.cloudflareKey,
+        exp: Math.floor(Date.now() / 1000) + (5 * 60) // 5 minutes
+      },
+      process.env.JWT_SECRET
+    );
+    
     const urlResult = r2Service.getViewUrl(
       pdf.cloudflareKey,
       req.user._id,
-      300 // 5 minutes (not used for public URLs)
+      300, // 5 minutes
+      accessToken // Pass the access token
     );
     
     if (!urlResult.success) {
@@ -445,7 +457,52 @@ router.get('/r2/list', [
 
 // Proxy route to serve PDFs with proper CORS headers
 router.get('/proxy/:fileKey', [
-  authenticate
+  (req, res, next) => {
+    // For PDF proxy, try multiple authentication methods
+    // 1. Check for Authorization header (for API calls)
+    // 2. Check for token in query parameters (for direct PDF access)
+    
+    const authHeader = req.header('Authorization');
+    const tokenFromQuery = req.query.token;
+    const userIdFromQuery = req.query.userId;
+    
+    console.log('PDF Proxy Debug:', {
+      authHeader: !!authHeader,
+      tokenFromQuery: !!tokenFromQuery,
+      userIdFromQuery: !!userIdFromQuery,
+      fileKey: req.params.fileKey
+    });
+    
+    // If we have an auth header, use normal authentication
+    if (authHeader) {
+      return authenticate(req, res, next);
+    }
+    
+    // If we have a token in query, verify it
+    if (tokenFromQuery) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(tokenFromQuery, process.env.JWT_SECRET);
+        
+        // Verify the token is for this specific file and user
+        if (decoded.fileKey === decodeURIComponent(req.params.fileKey) && 
+            decoded.userId === userIdFromQuery) {
+          // Create user object from token
+          req.user = { _id: decoded.userId };
+          req.tokenData = decoded;
+          return next();
+        } else {
+          return res.status(403).json({ error: 'Invalid access token for this resource' });
+        }
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        return res.status(401).json({ error: 'Invalid or expired access token' });
+      }
+    }
+    
+    // No valid authentication method
+    return res.status(401).json({ error: 'Authentication required' });
+  }
 ], async (req, res) => {
   try {
     const fileKey = decodeURIComponent(req.params.fileKey);

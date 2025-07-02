@@ -63,7 +63,7 @@ class R2Bucket {
   }
 
   // Generate a view URL for a PDF
-  getViewUrl(fileKey, userId, expiresIn = 300) {
+  getViewUrl(fileKey, userId, expiresIn = 300, accessToken = null) {
     try {
       if (!this.accountId || !this.accessKeyId || !this.secretAccessKey) {
         throw new Error('R2 credentials not configured');
@@ -71,7 +71,13 @@ class R2Bucket {
 
       // Use signed URLs to avoid CORS issues
       // The backend will serve the PDF with proper CORS headers
-      const url = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/pdfs/proxy/${encodeURIComponent(fileKey)}?userId=${userId}`;
+      const backendUrl = process.env.BACKEND_URL || 'https://ignite-backend-eight.vercel.app';
+      let url = `${backendUrl}/api/pdfs/proxy/${encodeURIComponent(fileKey)}?userId=${userId}`;
+      
+      // Include access token if provided
+      if (accessToken) {
+        url += `&token=${accessToken}`;
+      }
       
       return {
         success: true,

@@ -71,6 +71,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
         setPdfUrl(response.data.viewUrl);
         setPdfInfo(response.data.pdf);
         console.log('PDF URL set to:', response.data.viewUrl);
+        console.log('PDF URL includes token:', response.data.viewUrl.includes('token='));
       } else {
         throw new Error('Failed to get PDF view URL');
       }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, X, RotateCw } from 'lucide-react';
 import { pdfAPI } from '../api';
@@ -23,24 +23,84 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [pdfInfo, setPdfInfo] = useState(null);
   const [showTestComponent, setShowTestComponent] = useState(false);
   const [useIframeFallback, setUseIframeFallback] = useState(false);
+  
+  // Refs to track state and prevent infinite loops
+  const fetchingRef = useRef(false);
+  const currentPdfIdRef = useRef(null);
 
-  // Fetch secure PDF URL when component mounts or pdfId changes
+  // Reset state when modal closes
   useEffect(() => {
-    if (isOpen && pdfId) {
-      fetchPDFUrl();
+    if (!isOpen) {
+      setNumPages(null);
+      setPageNumber(1);
+      setScale(1.0);
+      setRotation(0);
+      setError(null);
+      setPdfInfo(null);
+      setShowTestComponent(false);
+      setUseIframeFallback(false);
+      
+      // Clean up blob URL
+      if (pdfUrl && pdfUrl.startsWith('blob:')) {
+        console.log('Cleaning up blob URL on modal close:', pdfUrl);
+        URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
+      
+      // Reset refs
+      fetchingRef.current = false;
+      currentPdfIdRef.current = null;
     }
+  }, [isOpen, pdfUrl]);
+
+  // Separate effect for cleanup of previous blob URLs
+  useEffect(() => {
+    // Store the current URL so we can clean it up when it changes
+    const currentUrl = pdfUrl;
     
     return () => {
       // Cleanup: revoke object URL if it exists
+      if (currentUrl && currentUrl.startsWith('blob:')) {
+        console.log('Cleaning up blob URL:', currentUrl);
+        URL.revokeObjectURL(currentUrl);
+      }
+    };
+  }, [pdfUrl]); // This will run when pdfUrl changes
+
+  // Reset refs when component unmounts or PDF changes
+  useEffect(() => {
+    return () => {
+      fetchingRef.current = false;
+      currentPdfIdRef.current = null;
+    };
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
       if (pdfUrl && pdfUrl.startsWith('blob:')) {
-        console.log('Cleaning up blob URL:', pdfUrl);
+        console.log('Cleaning up blob URL on unmount:', pdfUrl);
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [isOpen, pdfId, pdfUrl]); // Add pdfUrl to dependencies for cleanup
+  }, []); // Only run on mount/unmount
 
-  const fetchPDFUrl = async () => {
+  // Fetch secure PDF URL when component mounts or pdfId changes
+  useEffect(() => {
+    if (isOpen && pdfId && pdfId !== currentPdfIdRef.current && !fetchingRef.current) {
+      currentPdfIdRef.current = pdfId;
+      fetchPDFUrl();
+    }
+  }, [isOpen, pdfId, fetchPDFUrl]); // Add fetchPDFUrl to dependencies
+
+  const fetchPDFUrl = useCallback(async () => {
+    if (fetchingRef.current) {
+      console.log('Fetch already in progress, skipping...');
+      return;
+    }
+    
     try {
+      fetchingRef.current = true;
       setIsLoading(true);
       setError(null);
       
@@ -192,8 +252,9 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       }
     } finally {
       setIsLoading(false);
+      fetchingRef.current = false;
     }
-  };
+  }, [pdfId]); // Dependencies for useCallback
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     console.log('✅ PDF Document loaded successfully!');

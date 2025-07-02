@@ -44,7 +44,7 @@ export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   logout: () => api.post('/auth/logout'),
   refreshToken: () => api.post('/auth/refresh'),
-  getProfile: () => api.get('/auth/profile'),
+  getProfile: () => api.get('/auth/me'),
   googleVerify: (googleData) => api.post('/auth/google-verify', googleData),
 };
 

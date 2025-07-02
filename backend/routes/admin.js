@@ -40,6 +40,22 @@ const upload = multer({
   }
 });
 
+// Simplified upload for debugging - smaller file size limit
+const debugUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit instead of 50MB
+  },
+  fileFilter: (req, file, cb) => {
+    console.log('File filter - mimetype:', file.mimetype);
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  }
+});
+
 // Public test routes (no auth required)
 // Test route without auth for CORS debugging
 router.get('/test-cors', (req, res) => {
@@ -852,6 +868,212 @@ router.post('/test-upload-cors', (req, res) => {
       'Access-Control-Allow-Credentials': res.get('Access-Control-Allow-Credentials')
     }
   });
+});
+
+// Diagnostic endpoint - minimal dependencies
+router.get('/health', (req, res) => {
+  try {
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '1.0.0',
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      headers: {
+        origin: req.get('Origin'),
+        userAgent: req.get('User-Agent'),
+        contentType: req.get('Content-Type')
+      }
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Diagnostic endpoint - check environment variables
+router.get('/env-check', (req, res) => {
+  try {
+    const envCheck = {
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      checks: {
+        JWT_SECRET: !!process.env.JWT_SECRET,
+        MONGODB_URI: !!process.env.MONGODB_URI,
+        ADMIN_USERNAME: !!process.env.ADMIN_USERNAME,
+        GOOGLE_SHEETS_ID: !!process.env.GOOGLE_SHEETS_ID,
+        R2_ACCOUNT_ID: !!process.env.R2_ACCOUNT_ID,
+        R2_ACCESS_KEY_ID: !!process.env.R2_ACCESS_KEY_ID,
+        R2_SECRET_ACCESS_KEY: !!process.env.R2_SECRET_ACCESS_KEY,
+        R2_BUCKET_NAME: !!process.env.R2_BUCKET_NAME
+      }
+    };
+    
+    res.json(envCheck);
+  } catch (error) {
+    console.error('Environment check error:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Super simple upload test - no middleware
+router.post('/simple-upload', (req, res) => {
+  try {
+    console.log('=== SIMPLE UPLOAD TEST ===');
+    console.log('Method:', req.method);
+    console.log('Headers present:', Object.keys(req.headers || {}));
+    console.log('Body type:', typeof req.body);
+    console.log('Raw body available:', !!req.rawBody);
+    console.log('=== END SIMPLE UPLOAD TEST ===');
+    
+    res.json({
+      success: true,
+      message: 'Simple upload endpoint reached',
+      method: req.method,
+      timestamp: new Date().toISOString(),
+      headers: Object.keys(req.headers || {}),
+      bodyType: typeof req.body
+    });
+  } catch (error) {
+    console.error('Simple upload error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Debug upload with smaller limits
+router.post('/debug-upload', [
+  (req, res, next) => {
+    console.log('=== DEBUG UPLOAD START ===');
+    console.log('Content-Type:', req.get('Content-Type'));
+    console.log('Content-Length:', req.get('Content-Length'));
+    next();
+  },
+  debugUpload.single('pdf'),
+  (req, res, next) => {
+    console.log('=== DEBUG UPLOAD FILE PROCESSED ===');
+    console.log('File received:', !!req.file);
+    if (req.file) {
+      console.log('File size:', req.file.size);
+      console.log('File type:', req.file.mimetype);
+    }
+    next();
+  }
+], (req, res) => {
+  try {
+    console.log('=== DEBUG UPLOAD SUCCESS ===');
+    res.json({
+      success: true,
+      message: 'Debug upload successful',
+      fileReceived: !!req.file,
+      fileSize: req.file?.size,
+      fileName: req.file?.originalname,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Debug upload error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test the actual upload route but without authentication
+router.post('/upload-no-auth', [
+  (req, res, next) => {
+    console.log('=== UPLOAD NO AUTH - START ===');
+    console.log('Content-Type:', req.get('Content-Type'));
+    console.log('Origin:', req.get('Origin'));
+    next();
+  },
+  upload.single('pdf'),
+  (req, res, next) => {
+    console.log('=== UPLOAD NO AUTH - FILE PROCESSED ===');
+    console.log('File received:', !!req.file);
+    next();
+  }
+], async (req, res) => {
+  try {
+    console.log('=== UPLOAD NO AUTH - PROCESSING ===');
+    
+    if (!req.file) {
+      return res.status(400).json({ 
+        error: 'PDF file is required' 
+      });
+    }
+
+    // Just return success without actually saving anything
+    res.json({
+      success: true,
+      message: 'Upload test successful (no auth, no save)',
+      fileReceived: !!req.file,
+      fileName: req.file?.originalname,
+      fileSize: req.file?.size,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Upload no auth error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Simplified main upload route for debugging
+router.post('/upload-simple', authenticate, requireAdmin, upload.single('pdf'), async (req, res) => {
+  try {
+    console.log('=== SIMPLE UPLOAD ROUTE ===');
+    console.log('User:', req.user?.username);
+    console.log('File received:', !!req.file);
+    
+    if (!req.file) {
+      return res.status(400).json({ 
+        error: 'PDF file is required' 
+      });
+    }
+
+    const { title = 'Test Title', department = 'CSE', year = 1, subject = 'Test Subject' } = req.body;
+
+    console.log('Basic validation passed');
+
+    // Skip R2 upload and database save for now - just test the middleware
+    res.json({
+      success: true,
+      message: 'Simple upload route successful',
+      fileReceived: !!req.file,
+      fileName: req.file?.originalname,
+      fileSize: req.file?.size,
+      formData: { title, department, year, subject },
+      user: req.user?.username,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Simple upload route error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 module.exports = router;

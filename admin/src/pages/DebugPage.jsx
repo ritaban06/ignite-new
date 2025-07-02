@@ -40,12 +40,56 @@ export default function DebugPage() {
 
   const tests = [
     {
+      name: 'Server Health Check',
+      fn: () => api.get('/admin/health')
+    },
+    {
+      name: 'Environment Variables Check',
+      fn: () => api.get('/admin/env-check')
+    },
+    {
+      name: 'Admin Routes Ping',
+      fn: () => api.get('/admin/ping')
+    },
+    {
       name: 'Basic CORS Test',
       fn: () => api.get('/admin/test-cors')
     },
     {
+      name: 'Simple Upload Test (No Middleware)',
+      fn: () => api.post('/admin/simple-upload', { test: 'data' })
+    },
+    {
       name: 'Upload CORS Test',
       fn: () => api.post('/admin/test-upload-cors', { test: 'data' })
+    },
+    {
+      name: 'Debug Upload (5MB limit)',
+      fn: () => {
+        const formData = new FormData();
+        const blob = new Blob(['test pdf content'], { type: 'application/pdf' });
+        formData.append('pdf', blob, 'test.pdf');
+        
+        return api.post('/admin/debug-upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+    },
+    {
+      name: 'Upload Test (No Auth)',
+      fn: () => {
+        const formData = new FormData();
+        const blob = new Blob(['test pdf content'], { type: 'application/pdf' });
+        formData.append('pdf', blob, 'test.pdf');
+        
+        return api.post('/admin/upload-no-auth', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
     },
     {
       name: 'Auth Test',

@@ -15,15 +15,16 @@ export default defineConfig({
         secure: false,
       }
     },
-    // Configure proper MIME types for PDF worker
+    // Configure proper headers for PDF.js worker compatibility
     middlewareMode: false,
     headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
+      // Remove restrictive COOP/COEP headers that can break PDF.js
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
+      'Cross-Origin-Opener-Policy': 'unsafe-none',
     }
   },
   optimizeDeps: {
-    include: ['pdfjs-dist']
+    include: ['pdfjs-dist', 'react-pdf']
   },
   build: {
     rollupOptions: {

@@ -5,14 +5,24 @@ import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
 import PDFTest from './PDFTest';
 
-// The PDF worker is configured globally in main.jsx with CORS-friendly CDN
-
-// Also set it via the version-specific approach for better compatibility
-if (typeof window !== 'undefined') {
-  window.pdfWorkerSrc = '/pdfjs/pdf.worker.min.js';
-}
-
 const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
+  // Validate and ensure PDF.js worker is configured
+  useEffect(() => {
+    const validateWorker = () => {
+      try {
+        if (!pdfjs.GlobalWorkerOptions?.workerSrc) {
+          console.warn('PDF worker not configured, setting fallback...');
+          pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
+        }
+        console.log('PDF worker validated:', pdfjs.GlobalWorkerOptions.workerSrc);
+      } catch (error) {
+        console.error('Error validating PDF worker:', error);
+      }
+    };
+    
+    validateWorker();
+  }, []);
+
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
@@ -260,7 +270,11 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     console.log('✅ PDF Document loaded successfully!');
     console.log('Number of pages:', numPages);
     console.log('PDF URL used:', pdfUrl);
-    console.log('Worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
+    try {
+      console.log('Worker source:', pdfjs.GlobalWorkerOptions?.workerSrc || 'not configured');
+    } catch (error) {
+      console.warn('Could not access worker source:', error);
+    }
     setNumPages(numPages);
     setPageNumber(1);
     setScale(1.0);

@@ -24,7 +24,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['pdfjs-dist', 'react-pdf']
+    include: ['pdfjs-dist', '@react-pdf-viewer/core', '@react-pdf-viewer/default-layout']
   },
   build: {
     rollupOptions: {

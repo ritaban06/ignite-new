@@ -107,3 +107,4 @@ temp/
 
 package-lock.json
 analyzeStorage.js
+/docs

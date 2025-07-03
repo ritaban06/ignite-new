@@ -165,6 +165,9 @@ importers:
       lucide-react:
         specifier: ^0.454.0
         version: 0.454.0(react@19.1.0)
+      pdfjs-dist:
+        specifier: 3.11.174
+        version: 3.11.174
       react:
         specifier: ^19.1.0
         version: 19.1.0

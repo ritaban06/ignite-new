@@ -549,6 +549,9 @@ router.post('/google-verify', [
       });
     }
 
+    // Generate device ID for this login
+    const deviceId = generateDeviceId(req);
+
     // Create or update user with Google OAuth data and approved user data
     const userData = {
       email,
@@ -562,24 +565,33 @@ router.post('/google-verify', [
       isActive: true
     };
 
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email }).select('+deviceId');
     
     if (user) {
+      // Check device restriction for existing users
+      if (user.role === 'client' && user.deviceId && user.deviceId !== deviceId) {
+        return res.status(403).json({ 
+          error: 'This account is already logged in on another device. Please logout from the other device first.' 
+        });
+      }
+      
       // Update existing user
       Object.assign(user, userData);
+      user.deviceId = deviceId;
       await user.save();
     } else {
       // Create new user
-      user = new User(userData);
+      user = new User({ ...userData, deviceId });
       await user.save();
     }
 
-    // Generate JWT token
+    // Generate JWT token with deviceId
     const token = jwt.sign(
       { 
         userId: user._id, 
         email: user.email,
-        role: user.role 
+        role: user.role,
+        deviceId
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
@@ -592,7 +604,7 @@ router.post('/google-verify', [
         action: 'google_login',
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
-        deviceId: generateDeviceId(req),
+        deviceId: deviceId,
         timestamp: new Date()
       });
     } catch (logError) {

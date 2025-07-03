@@ -176,7 +176,19 @@ export default function UsersPage() {
                   <tr key={user._id} className="hover:bg-gray-700">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 bg-primary-900 bg-opacity-40 rounded-full flex items-center justify-center">
+                        {user.picture ? (
+                          <img 
+                            src={user.picture} 
+                            alt={user.name}
+                            className="h-10 w-10 rounded-full object-cover"
+                            onError={(e) => {
+                              // Fallback to default avatar if image fails to load
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className={`h-10 w-10 bg-primary-900 bg-opacity-40 rounded-full flex items-center justify-center ${user.picture ? 'hidden' : ''}`}>
                           <span className="text-primary-300 font-medium text-sm">
                             {user.name.charAt(0).toUpperCase()}
                           </span>

@@ -109,7 +109,8 @@ router.post('/register', [
         name: user.name,
         department: user.department,
         year: user.year,
-        role: user.role
+        role: user.role,
+        picture: user.picture
       }
     });
   } catch (error) {
@@ -226,6 +227,7 @@ router.post('/login', [
         department: user.department,
         year: user.year,
         role: user.role,
+        picture: user.picture,
         lastLogin: user.lastLogin
       }
     });
@@ -302,6 +304,7 @@ router.get('/me', async (req, res) => {
         department: user.department,
         year: user.year,
         role: user.role,
+        picture: user.picture,
         lastLogin: user.lastLogin
       }
     });
@@ -480,7 +483,9 @@ router.get('/admin/me', authenticate, requireAdmin, async (req, res) => {
         id: req.user._id,
         username: req.user.username || req.user.email, // Support both for compatibility
         name: req.user.name,
+        email: req.user.email,
         role: req.user.role,
+        picture: req.user.picture,
         isEnvAdmin: req.user.isEnvAdmin || false
       }
     });

@@ -12,19 +12,18 @@
     <!-- Production domains - HTTPS only -->
     <domain-config cleartextTrafficPermitted="false">
         <!-- Add your production backend domain here -->
-        <domain includeSubdomains="true">ignite-backend-eight.vercel.app</domain>
+        <domain includeSubdomains="true">https://ignite-backend-eight.vercel.app/api</domain>
         
         <!-- Add your Vercel domains here -->
-        <domain includeSubdomains="true">ignite-client.ritaban.me</domain>
+        <domain includeSubdomains="true">https://ignite-client.ritaban.me</domain>
         
         <!-- Cloudflare R2 domains -->
-        <domain includeSubdomains="true">ignite-pdf.ritaban.me</domain>
+        <domain includeSubdomains="true">https://ignite-pdf.ritaban.me</domain>
         
         <!-- Google services for OAuth -->
         <domain includeSubdomains="true">accounts.google.com</domain>
         <domain includeSubdomains="true">oauth2.googleapis.com</domain>
         <domain includeSubdomains="true">www.googleapis.com</domain>
-        <domain includeSubdomains="true">gstatic.com</domain>
         
         <!-- Google Sheets API -->
         <domain includeSubdomains="true">sheets.googleapis.com</domain>

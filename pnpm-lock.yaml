@@ -150,6 +150,9 @@ importers:
       '@capacitor/core':
         specifier: ^7.4.0
         version: 7.4.0
+      '@codetrix-studio/capacitor-google-auth':
+        specifier: 3.4.0-rc.4
+        version: 3.4.0-rc.4(@capacitor/core@7.4.0)
       '@headlessui/react':
         specifier: ^2.1.10
         version: 2.2.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -585,6 +588,11 @@ packages:
 
   '@capacitor/core@7.4.0':
     resolution: {integrity: sha512-P6NnjoHyobZgTjynlZSn27d0SUj6j38inlNxFnKZr9qwU7/r6+0Sg2nWkGkIH/pMmXHsvGD8zVe6KUq1UncIjA==}
+
+  '@codetrix-studio/capacitor-google-auth@3.4.0-rc.4':
+    resolution: {integrity: sha512-d548/xKrbMHHbzMYSWnlgZCLZYo2zzY7Onrh3x8ujojrb7atkNK68I6su5WgmaBt4E+R4gxBsWams4554aOFjA==}
+    peerDependencies:
+      '@capacitor/core': ^6.0.0
 
   '@esbuild/aix-ppc64@0.25.5':
     resolution: {integrity: sha512-9o3TMmpmftaCMepOdA5k/yDw8SfInyzWWTjYTFCX3kPSDJMROQTb8jg+h9Cnwnmm1vOzvxN7gIfB5V2ewpjtGA==}
@@ -4616,6 +4624,10 @@ snapshots:
   '@capacitor/core@7.4.0':
     dependencies:
       tslib: 2.8.1
+
+  '@codetrix-studio/capacitor-google-auth@3.4.0-rc.4(@capacitor/core@7.4.0)':
+    dependencies:
+      '@capacitor/core': 7.4.0
 
   '@esbuild/aix-ppc64@0.25.5':
     optional: true

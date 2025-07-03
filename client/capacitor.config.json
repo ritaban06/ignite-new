@@ -1,5 +1,12 @@
 {
   "appId": "com.samarth.ignite",
   "appName": "Ignite",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "",
+      "forceCodeForRefreshToken": true
+    }
+  }
 }

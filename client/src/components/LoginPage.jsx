@@ -1,5 +1,5 @@
 import React from 'react';
-import GoogleLoginComponent from './GoogleLoginComponent';
+import HybridGoogleLogin from './HybridGoogleLogin';
 
 const LoginPage = () => {
   return (
@@ -27,9 +27,9 @@ const LoginPage = () => {
           </p>
         </div>
 
-        {/* Google Login Component */}
+        {/* Hybrid Google Login Component */}
         <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 sm:p-8 border border-white/20 relative z-10">
-          <GoogleLoginComponent />
+          <HybridGoogleLogin />
         </div>
       </div>
     </div>

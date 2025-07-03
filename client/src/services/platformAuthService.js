@@ -22,11 +22,26 @@ class PlatformAuthService {
     }
   }
 
+  // Get the appropriate Google Client ID based on platform
+  getGoogleClientId() {
+    if (this.isAndroid) {
+      return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
+    }
+    // For web and iOS, use the web client ID
+    return import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  }
+
   async initializeNativeGoogleAuth() {
     try {
-      // Initialize Google Auth for native platforms
+      // Initialize Google Auth for native platforms with appropriate client ID
+      const clientId = this.getGoogleClientId();
+      
+      if (!clientId) {
+        throw new Error('Google Client ID not configured for this platform');
+      }
+      
       await GoogleAuth.initialize({
-        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        clientId,
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       });
@@ -65,7 +80,7 @@ class PlatformAuthService {
       // Convert to format compatible with existing backend
       const credentials = {
         credential: result.authentication.idToken,
-        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID
+        clientId: this.getGoogleClientId()
       };
 
       return credentials;
@@ -112,13 +127,50 @@ class PlatformAuthService {
 
   // Get platform info for debugging
   getPlatformInfo() {
+    const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const androidClientId = import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
+    const currentClientId = this.getGoogleClientId();
+    const validation = this.validateEnvironment();
+    
     return {
       isNative: this.isNative,
       isAndroid: this.isAndroid,
       isIOS: this.isIOS,
       isWeb: this.isWeb,
       platform: Capacitor.getPlatform(),
-      hasGoogleClientId: !!import.meta.env.VITE_GOOGLE_CLIENT_ID
+      hasGoogleClientId: !!webClientId,
+      hasAndroidClientId: !!androidClientId,
+      currentClientId: currentClientId ? currentClientId.substring(0, 12) + '...' : 'Not Set',
+      clientIdSource: this.isAndroid && androidClientId ? 'Android' : 'Web',
+      isValid: validation.isValid,
+      issues: validation.issues,
+      warnings: validation.warnings
+    };
+  }
+
+  // Validate environment configuration
+  validateEnvironment() {
+    const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const androidClientId = import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
+    
+    const issues = [];
+    
+    if (!webClientId) {
+      issues.push('VITE_GOOGLE_CLIENT_ID is not set');
+    }
+    
+    if (this.isAndroid && !androidClientId) {
+      console.warn('⚠️ VITE_GOOGLE_ANDROID_CLIENT_ID not set, falling back to web client ID');
+    }
+    
+    if (this.isAndroid && !androidClientId && !webClientId) {
+      issues.push('No Google Client ID configured for Android platform');
+    }
+    
+    return {
+      isValid: issues.length === 0,
+      issues,
+      warnings: this.isAndroid && !androidClientId ? ['Android client ID not set, using web fallback'] : []
     };
   }
 }

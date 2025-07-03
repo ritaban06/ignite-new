@@ -133,10 +133,30 @@ const HybridGoogleLogin = () => {
 
         {/* Debug info for development */}
         {import.meta.env.DEV && (
-          <div className="text-xs text-gray-500 text-center space-y-1">
+          <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
+            <p className="font-semibold">Debug Info:</p>
             <p>Platform: {platformInfo.platform}</p>
             <p>Native: {platformInfo.isNative ? 'Yes' : 'No'}</p>
-            <p>Client ID: {platformInfo.hasGoogleClientId ? 'Set' : 'Not Set'}</p>
+            <p>Web Client ID: {platformInfo.hasGoogleClientId ? 'Set' : 'Not Set'}</p>
+            <p>Android Client ID: {platformInfo.hasAndroidClientId ? 'Set' : 'Not Set'}</p>
+            <p>Using: {platformInfo.clientIdSource} Client ID</p>
+            <p>Current ID: {platformInfo.currentClientId}</p>
+            {platformInfo.warnings && platformInfo.warnings.length > 0 && (
+              <div className="text-orange-600">
+                <p className="font-semibold">Warnings:</p>
+                {platformInfo.warnings.map((warning, i) => (
+                  <p key={i}>• {warning}</p>
+                ))}
+              </div>
+            )}
+            {platformInfo.issues && platformInfo.issues.length > 0 && (
+              <div className="text-red-600">
+                <p className="font-semibold">Issues:</p>
+                {platformInfo.issues.map((issue, i) => (
+                  <p key={i}>• {issue}</p>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

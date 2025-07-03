@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { Capacitor } from '@capacitor/core';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -11,8 +12,20 @@ import SearchPage from './pages/SearchPage';
 import R2PDFManager from './components/R2PDFManager';
 import AuthDebug from './components/AuthDebug';
 
-// You'll need to add your Google OAuth Client ID here
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id-here';
+// Get the appropriate Google OAuth Client ID based on platform
+const getGoogleClientId = () => {
+  const isAndroid = Capacitor.getPlatform() === 'android';
+  
+  if (isAndroid) {
+    // For Android, use Android-specific client ID if available, fallback to web client ID
+    return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
+  }
+  
+  // For web and iOS, use web client ID
+  return import.meta.env.VITE_GOOGLE_CLIENT_ID;
+};
+
+const GOOGLE_CLIENT_ID = getGoogleClientId() || 'your-google-client-id-here';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();

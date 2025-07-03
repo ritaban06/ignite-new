@@ -25,11 +25,11 @@ router.options('*', (req, res) => {
 const GOOGLE_WEB_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_WEB_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_ANDROID_CLIENT_ID = process.env.GOOGLE_ANDROID_CLIENT_ID;
-const GOOGLE_ANDROID_CLIENT_SECRET = process.env.GOOGLE_ANDROID_CLIENT_SECRET;
+// Note: Android OAuth clients don't have client secrets
 
 // Create OAuth2 clients for each platform
 const googleWebClient = new OAuth2Client(GOOGLE_WEB_CLIENT_ID, GOOGLE_WEB_CLIENT_SECRET);
-const googleAndroidClient = new OAuth2Client(GOOGLE_ANDROID_CLIENT_ID, GOOGLE_ANDROID_CLIENT_SECRET);
+const googleAndroidClient = new OAuth2Client(GOOGLE_ANDROID_CLIENT_ID); // No secret for Android
 
 // Generate device ID from user agent and other factors
 const generateDeviceId = (req) => {

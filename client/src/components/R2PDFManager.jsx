@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Cloud, 
-  Download, 
   Eye, 
   RefreshCw, 
   Search, 
@@ -99,15 +98,16 @@ const R2PDFManager = () => {
     window.open(pdf.viewUrl, '_blank');
   };
 
-  const handleDownloadPDF = (pdf) => {
-    // Create download link
-    const link = document.createElement('a');
-    link.href = pdf.viewUrl;
-    link.download = pdf.title || 'document.pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // Download functionality disabled for security
+  // const handleDownloadPDF = (pdf) => {
+  //   // Create download link
+  //   const link = document.createElement('a');
+  //   link.href = pdf.viewUrl;
+  //   link.download = pdf.title || 'document.pdf';
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
 
   const formatFileSize = (bytes) => {
     if (!bytes) return 'Unknown';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Viewer, Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import { Download, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
 
@@ -16,12 +16,11 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const fetchingRef = useRef(false);
   const currentPdfIdRef = useRef(null);
 
-  // Create default layout plugin instance
+  // Create default layout plugin instance with disabled features
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
     sidebarTabs: (defaultTabs) => [
-      // Remove bookmark tab, keep only thumbnail and attachment tabs
+      // Only keep thumbnail tab, remove others to prevent file access
       defaultTabs[0], // thumbnail tab
-      defaultTabs[2], // attachment tab
     ],
   });
 
@@ -172,43 +171,49 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     }
   }, [isOpen, pdfId, fetchPDFUrl]);
 
-  const handleDownload = async () => {
-    if (!pdfUrl || !pdfInfo) return;
-    
-    try {
-      if (pdfUrl.startsWith('blob:')) {
-        // For blob URLs, create a direct download
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.download = pdfInfo.title || `pdf-${pdfId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        // For direct URLs, fetch and download
-        const response = await fetch(pdfUrl);
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = pdfInfo.title || `pdf-${pdfId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+  // Disable right-click context menu and keyboard shortcuts
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleKeyDown = (e) => {
+      // Disable Ctrl+S (Save), Ctrl+P (Print), Ctrl+A (Select All), F12 (DevTools)
+      if (
+        (e.ctrlKey && (e.key === 's' || e.key === 'S')) ||
+        (e.ctrlKey && (e.key === 'p' || e.key === 'P')) ||
+        (e.ctrlKey && (e.key === 'a' || e.key === 'A')) ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) ||
+        e.key === 'F12' ||
+        e.keyCode === 123
+      ) {
+        e.preventDefault();
+        toast.error('This action is disabled for security reasons');
+        return false;
       }
-      
-      toast.success('PDF downloaded successfully!');
-    } catch (error) {
-      console.error('Download failed:', error);
-      toast.error('Failed to download PDF');
+    };
+
+    if (isOpen) {
+      document.addEventListener('contextmenu', handleContextMenu);
+      document.addEventListener('keydown', handleKeyDown);
     }
-  };
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style={{ userSelect: 'none' }} // Disable text selection
+    >
       <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-6xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
@@ -224,15 +229,9 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           </div>
           
           <div className="flex items-center space-x-2">
-            {pdfUrl && !isLoading && !error && (
-              <button
-                onClick={handleDownload}
-                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Download PDF"
-              >
-                <Download size={20} />
-              </button>
-            )}
+            <div className="text-xs text-red-600 mr-4">
+              🔒 Viewing Only - Download & Print Disabled
+            </div>
             
             <button
               onClick={() => {
@@ -282,16 +281,19 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
           {/* Iframe Fallback */}
           {useIframeFallback && pdfUrl && !isLoading && !error && (
-            <div className="h-full w-full">
+            <div className="h-full w-full" style={{ userSelect: 'none' }}>
               <iframe
                 src={pdfUrl}
                 width="100%"
                 height="100%"
                 style={{ 
                   border: 'none',
-                  backgroundColor: 'white'
+                  backgroundColor: 'white',
+                  userSelect: 'none'
                 }}
                 title="PDF Document"
+                sandbox="allow-same-origin allow-scripts"
+                referrerPolicy="no-referrer"
                 onLoad={() => console.log('✅ Iframe PDF loaded successfully')}
                 onError={() => console.error('❌ Iframe PDF failed to load')}
               />
@@ -300,7 +302,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
           {/* React PDF Viewer */}
           {!useIframeFallback && pdfUrl && !isLoading && !error && (
-            <div className="h-full pdf-viewer-container">
+            <div className="h-full pdf-viewer-container" style={{ userSelect: 'none' }}>
               <Worker workerUrl="/pdfjs/pdf.worker.min.js">
                 <Viewer
                   fileUrl={pdfUrl}
@@ -325,6 +327,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
         {/* Footer */}
         <div className="p-4 bg-gray-100 border-t text-center text-sm text-gray-600">
           <p>This PDF is protected and can only be viewed through Ignite.</p>
+          <p className="text-xs text-red-500 mt-1">Download, Print, and Right-click are disabled</p>
         </div>
       </div>
     </div>

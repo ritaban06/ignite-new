@@ -10,6 +10,10 @@ const {
   logAccess, 
   pdfViewRateLimit 
 } = require('../middleware/auth');
+const { 
+  pdfSecurityHeaders, 
+  disablePdfCaching 
+} = require('../middleware/pdfSecurity');
 
 const router = express.Router();
 
@@ -460,6 +464,8 @@ router.get('/r2/list', [
 
 // Proxy route to serve PDFs with proper CORS headers
 router.get('/proxy/:fileKey', [
+  pdfSecurityHeaders,
+  disablePdfCaching,
   (req, res, next) => {
     // For PDF proxy, try multiple authentication methods
     // 1. Check for Authorization header (for API calls)
@@ -644,9 +650,12 @@ router.get('/proxy/:fileKey', [
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',
         'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-        'Cache-Control': 'private, no-cache',
-        'Content-Disposition': 'inline', // This ensures inline viewing, not download
-        'X-Content-Type-Options': 'nosniff'
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+        'Content-Disposition': 'inline; filename="secured.pdf"', // Force inline viewing
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-Download-Options': 'noopen',
+        'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
       });
       
       if (pdfResult.contentLength) {
@@ -774,6 +783,8 @@ router.get('/test-r2-connection', authenticate, async (req, res) => {
 
 // Alternative endpoint to get PDF as base64 data (for cases where direct fetch is blocked)
 router.post('/:pdfId/view-base64', [
+  pdfSecurityHeaders,
+  disablePdfCaching,
   authenticate,
   validatePdfAccess,
   pdfViewRateLimit,

@@ -9,15 +9,62 @@
   height: 100%;
   width: 100%;
   background: white;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .pdf-viewer-container .rpv-core__viewer {
   border: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .pdf-viewer-container .rpv-core__page {
   margin: 0 auto;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Disable text selection and context menu for PDF content */
+.pdf-viewer-container canvas {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  pointer-events: none;
+}
+
+.pdf-viewer-container .rpv-core__text-layer {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  pointer-events: none;
+}
+
+/* Hide download/print buttons from PDF.js toolbar */
+.pdf-viewer-container button[title*="Download"],
+.pdf-viewer-container button[title*="Print"],
+.pdf-viewer-container .rpv-download,
+.pdf-viewer-container .rpv-print {
+  display: none !important;
+}
+
+/* Disable context menu globally for PDF viewer */
+.pdf-viewer-container * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 @tailwind base;

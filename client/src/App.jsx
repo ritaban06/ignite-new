@@ -35,7 +35,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-purple-50">
       <Header />
-      <AuthDebug />
+      {/* <AuthDebug /> */}
       <main>
         <Routes>
           <Route path="/" element={<DashboardPage />} />

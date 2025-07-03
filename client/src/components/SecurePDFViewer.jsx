@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Viewer, Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { toolbarPlugin, MoreActionsPopover } from '@react-pdf-viewer/toolbar';
 import { X } from 'lucide-react';
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
@@ -16,12 +17,34 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const fetchingRef = useRef(false);
   const currentPdfIdRef = useRef(null);
 
+  // Create secure toolbar plugin that disables download, print, and open
+  const secureToolbarPluginInstance = toolbarPlugin({
+    // Transform the toolbar to remove dangerous buttons
+    transform: (slot) => ({
+      ...slot,
+      // Remove download button completely
+      Download: () => <></>,
+      DownloadMenuItem: () => <></>,
+      // Remove print button completely  
+      Print: () => <></>,
+      PrintMenuItem: () => <></>,
+      // Remove open file button
+      Open: () => <></>,
+      OpenMenuItem: () => <></>,
+      // Remove more actions that might contain download/print
+      MoreActions: () => <></>,
+      MoreActionsPopover: () => <></>,
+    }),
+  });
+
   // Create default layout plugin instance with disabled features
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
     sidebarTabs: (defaultTabs) => [
       // Only keep thumbnail tab, remove others to prevent file access
       defaultTabs[0], // thumbnail tab
     ],
+    // Use our secure toolbar
+    toolbarPlugin: secureToolbarPluginInstance,
   });
 
   // Reset state when modal closes
@@ -206,6 +229,47 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen]);
+
+  // Additional effect to hide any remaining toolbar buttons after PDF loads
+  useEffect(() => {
+    if (pdfUrl && !isLoading && !error) {
+      const hideToolbarButtons = () => {
+        // Hide download, print, and open buttons by various selectors
+        const selectors = [
+          'button[title*="Download"]',
+          'button[title*="Print"]', 
+          'button[title*="Open"]',
+          'button[title*="Save"]',
+          '[data-testid="toolbar__download-button"]',
+          '[data-testid="toolbar__print-button"]',
+          '[data-testid="toolbar__open-button"]',
+          '[data-testid="more-actions__menu"]',
+          '.rpv-download',
+          '.rpv-print',
+          '.rpv-open'
+        ];
+
+        selectors.forEach(selector => {
+          const elements = document.querySelectorAll(selector);
+          elements.forEach(el => {
+            el.style.display = 'none';
+            el.style.visibility = 'hidden';
+            el.remove(); // Completely remove the element
+          });
+        });
+      };
+
+      // Hide buttons immediately and after a short delay to catch late-rendered elements
+      hideToolbarButtons();
+      const timer = setTimeout(hideToolbarButtons, 500);
+      const timer2 = setTimeout(hideToolbarButtons, 1000);
+      
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(timer2);
+      };
+    }
+  }, [pdfUrl, isLoading, error]);
 
   if (!isOpen) return null;
 

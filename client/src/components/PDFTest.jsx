@@ -1,11 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Viewer, Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
 
 // Simple test component to debug PDF rendering
 const PDFTest = ({ pdfUrl }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Create secure toolbar plugin that disables download, print, and open
+  const secureToolbarPluginInstance = toolbarPlugin({
+    transform: (slot) => ({
+      ...slot,
+      Download: () => <></>,
+      DownloadMenuItem: () => <></>,
+      Print: () => <></>,
+      PrintMenuItem: () => <></>,
+      Open: () => <></>,
+      OpenMenuItem: () => <></>,
+      MoreActions: () => <></>,
+      MoreActionsPopover: () => <></>,
+    }),
+  });
 
   // Create secure default layout plugin instance
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
@@ -13,7 +29,40 @@ const PDFTest = ({ pdfUrl }) => {
       // Only keep thumbnail tab, remove others to prevent file access
       defaultTabs[0], // thumbnail tab
     ],
+    toolbarPlugin: secureToolbarPluginInstance,
   });
+
+  // Hide toolbar buttons dynamically
+  useEffect(() => {
+    if (!isLoading) {
+      const hideToolbarButtons = () => {
+        const selectors = [
+          'button[title*="Download"]',
+          'button[title*="Print"]', 
+          'button[title*="Open"]',
+          '[data-testid="toolbar__download-button"]',
+          '[data-testid="toolbar__print-button"]',
+          '[data-testid="toolbar__open-button"]',
+          '.rpv-download',
+          '.rpv-print',
+          '.rpv-open'
+        ];
+
+        selectors.forEach(selector => {
+          const elements = document.querySelectorAll(selector);
+          elements.forEach(el => {
+            el.style.display = 'none';
+            el.style.visibility = 'hidden';
+          });
+        });
+      };
+
+      hideToolbarButtons();
+      const timer = setTimeout(hideToolbarButtons, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   if (!pdfUrl) {
     return <div className="p-4 text-red-500">No PDF URL provided for test</div>;

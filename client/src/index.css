@@ -52,8 +52,27 @@
 /* Hide download/print buttons from PDF.js toolbar */
 .pdf-viewer-container button[title*="Download"],
 .pdf-viewer-container button[title*="Print"],
+.pdf-viewer-container button[title*="Open"],
+.pdf-viewer-container button[title*="Save"],
 .pdf-viewer-container .rpv-download,
-.pdf-viewer-container .rpv-print {
+.pdf-viewer-container .rpv-print,
+.pdf-viewer-container .rpv-open,
+.pdf-viewer-container .rpv-toolbar__item--download,
+.pdf-viewer-container .rpv-toolbar__item--print,
+.pdf-viewer-container .rpv-toolbar__item--open,
+.pdf-viewer-container [data-testid="toolbar__download-button"],
+.pdf-viewer-container [data-testid="toolbar__print-button"],
+.pdf-viewer-container [data-testid="toolbar__open-button"],
+.pdf-viewer-container [data-testid="more-actions__menu"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide any buttons with download/print/open icons or text */
+.pdf-viewer-container button:has(svg[data-testid*="download"]),
+.pdf-viewer-container button:has(svg[data-testid*="print"]),
+.pdf-viewer-container button:has(svg[data-testid*="open"]),
+.pdf-viewer-container .rpv-core__display--hidden {
   display: none !important;
 }
 

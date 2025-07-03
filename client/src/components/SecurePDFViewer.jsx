@@ -304,7 +304,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
               }}
               className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             >
-              {/* {useIframeFallback ? 'Use PDF Viewer' : 'Use Iframe'} */}
+              {useIframeFallback ? 'Use PDF Viewer' : 'Use Iframe'}
             </button>
             
             <button

@@ -108,3 +108,5 @@ temp/
 package-lock.json
 analyzeStorage.js
 /docs
+keystore.txt
+my-release-key.jks

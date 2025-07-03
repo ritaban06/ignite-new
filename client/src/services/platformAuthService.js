@@ -33,18 +33,10 @@ class PlatformAuthService {
 
   async initializeNativeGoogleAuth() {
     try {
-      // Initialize Google Auth for native platforms with appropriate client ID
-      const clientId = this.getGoogleClientId();
-      
-      if (!clientId) {
-        throw new Error('Google Client ID not configured for this platform');
-      }
-      
-      await GoogleAuth.initialize({
-        clientId,
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      });
+      // For @codetrix-studio/capacitor-google-auth, the plugin configuration
+      // is handled automatically through capacitor.config.json
+      // We just need to initialize without extra parameters
+      await GoogleAuth.initialize();
       console.log('✅ Native Google Auth initialized');
     } catch (error) {
       console.error('❌ Failed to initialize native Google Auth:', error);

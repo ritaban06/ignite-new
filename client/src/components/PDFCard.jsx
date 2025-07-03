@@ -21,10 +21,10 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
   return (
     <div className="bg-primary-100/60 backdrop-blur-sm rounded-lg shadow-sm border border-primary-200 hover:shadow-lg hover:border-primary-300 transition-all duration-200 overflow-hidden group">
       {/* Header */}
-      <div className="p-4 border-b border-primary-200">
-        <div className="flex items-start justify-between">
+      <div className="p-3 sm:p-4 border-b border-primary-200">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-primary-800 truncate group-hover:text-primary-900 transition-colors">
+            <h3 className="text-base sm:text-lg font-semibold text-primary-800 truncate group-hover:text-primary-900 transition-colors">
               {pdf.title}
             </h3>
             <p className="text-sm text-primary-600 mt-1">
@@ -34,16 +34,16 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
           
           <button
             onClick={() => onView(pdf._id)}
-            className="ml-4 flex items-center space-x-1 px-3 py-2 gradient-accent text-white rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
+            className="flex-shrink-0 flex items-center space-x-1 px-2 sm:px-3 py-2 gradient-accent text-white rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
           >
             <Eye className="h-4 w-4" />
-            <span className="text-sm font-medium">View</span>
+            <span className="text-sm font-medium hidden sm:inline">View</span>
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         {/* Description */}
         {pdf.description && (
           <p className="text-primary-700 text-sm mb-4 line-clamp-2">
@@ -52,29 +52,29 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
         )}
 
         {/* Metadata Grid */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
           <div className="flex items-center space-x-2 text-primary-600">
-            <Tag className="h-4 w-4" />
+            <Tag className="h-4 w-4 flex-shrink-0" />
             <span>{pdf.department}</span>
           </div>
           
           <div className="flex items-center space-x-2 text-primary-600">
-            <Calendar className="h-4 w-4" />
+            <Calendar className="h-4 w-4 flex-shrink-0" />
             <span>Year {pdf.year}</span>
           </div>
 
           {showDetails && (
             <>
               <div className="flex items-center space-x-2 text-primary-600">
-                <User className="h-4 w-4" />
+                <User className="h-4 w-4 flex-shrink-0" />
                 <span className="truncate">
                   {pdf.uploadedBy?.name || 'Unknown'}
                 </span>
               </div>
               
               <div className="flex items-center space-x-2 text-primary-600">
-                <Clock className="h-4 w-4" />
-                <span>{formatDate(pdf.createdAt)}</span>
+                <Clock className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{formatDate(pdf.createdAt)}</span>
               </div>
             </>
           )}
@@ -101,21 +101,24 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
           </div>
         )}
 
-        {/* Footer Stats */}
+        {/* File info - responsive layout */}
         {showDetails && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-primary-200 text-xs text-primary-600">
-            <div className="flex items-center space-x-4">
-              <span>{pdf.viewCount || 0} views</span>
-              {pdf.fileSize && (
-                <span>{formatSize(pdf.fileSize)}</span>
+          <div className="mt-4 pt-3 border-t border-primary-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-primary-600">
+              <div className="flex items-center space-x-4">
+                <span>Size: {formatSize(pdf.fileSize || 0)}</span>
+                {pdf.viewCount !== undefined && (
+                  <span>{pdf.viewCount} views</span>
+                )}
+              </div>
+              
+              {pdf.lastAccessed && (
+                <span className="flex items-center space-x-1">
+                  <Clock className="h-3 w-3" />
+                  <span>Last viewed {formatDate(pdf.lastAccessed)}</span>
+                </span>
               )}
             </div>
-            
-            {pdf.lastAccessed && (
-              <span>
-                Last viewed {formatDate(pdf.lastAccessed)}
-              </span>
-            )}
           </div>
         )}
       </div>

@@ -275,25 +275,25 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      style={{ userSelect: 'none' }} // Disable text selection
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+      style={{ userSelect: 'none' }}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-6xl max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-xl font-semibold text-gray-800">
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b">
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+            <h2 className="text-base sm:text-xl font-semibold text-gray-800 truncate">
               {pdfInfo?.title || `PDF Document ${pdfId}`}
             </h2>
             {pdfInfo && (
-              <span className="text-sm text-gray-500">
+              <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">
                 {pdfInfo.pages ? `${pdfInfo.pages} pages` : ''}
               </span>
             )}
           </div>
           
-          <div className="flex items-center space-x-2">
-            <div className="text-xs text-red-600 mr-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <div className="text-xs text-red-600 mr-1 sm:mr-4 hidden sm:inline">
               🔒 Viewing Only - Download & Print Disabled
             </div>
             
@@ -302,16 +302,16 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                 setUseIframeFallback(prev => !prev);
                 console.log('Switched fallback mode:', !useIframeFallback);
               }}
-              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             >
-              {useIframeFallback ? 'Use PDF Viewer' : 'Use Iframe'}
+              {useIframeFallback ? 'PDF View' : 'Iframe'}
             </button>
             
             <button
               onClick={onClose}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors touch-target"
             >
-              <X size={20} />
+              <X size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>

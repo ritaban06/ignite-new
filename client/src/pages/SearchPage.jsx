@@ -74,15 +74,15 @@ const SearchPage = () => {
 
   return (
     <div className="min-h-screen bg-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent mb-2">Search PDFs</h1>
-          <p className="text-purple-700">Find the educational resources you need</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent mb-2">Search PDFs</h1>
+          <p className="text-sm sm:text-base text-purple-700">Find the educational resources you need</p>
         </div>
 
         {/* Search Form */}
-        <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 mb-8 border border-primary-200">
+        <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 mb-6 sm:mb-8 border border-primary-200">
           <form onSubmit={handleSearch} className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
@@ -93,18 +93,18 @@ const SearchPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title, subject, description, or tags..."
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
+                placeholder="Search by title, subject, or tags..."
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
                 autoFocus
               />
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <select
                 value={filters.department}
                 onChange={(e) => handleFilterChange('department', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
               >
                 <option value="">All Departments</option>
                 {departments.map((dept) => (
@@ -115,7 +115,7 @@ const SearchPage = () => {
               <select
                 value={filters.year}
                 onChange={(e) => handleFilterChange('year', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
               >
                 <option value="">All Years</option>
                 {years.map((year) => (
@@ -123,18 +123,18 @@ const SearchPage = () => {
                 ))}
               </select>
 
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 sm:col-span-2 lg:col-span-1">
                 <button
                   type="submit"
                   disabled={isLoading || !searchQuery.trim()}
-                  className="flex-1 gradient-accent text-white px-4 py-2 rounded-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+                  className="flex-1 gradient-accent text-white px-4 py-2 rounded-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
                 >
                   {isLoading ? 'Searching...' : 'Search'}
                 </button>
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="px-4 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-200 hover:border-primary-400 hover:text-primary-800 transition-colors"
+                  className="p-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-200 hover:border-primary-400 hover:text-primary-800 transition-colors touch-target"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -146,8 +146,8 @@ const SearchPage = () => {
         {/* Search Results */}
         <div>
           {searchQuery && (
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-primary-700 mb-2">
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-primary-700 mb-2">
                 Search Results for "{searchQuery}"
               </h2>
               {pagination.totalCount > 0 && (
@@ -159,10 +159,10 @@ const SearchPage = () => {
           )}
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-primary-100/60 backdrop-blur-sm rounded-lg shadow-sm h-64 animate-pulse border border-primary-200">
-                  <div className="p-4">
+                <div key={i} className="bg-primary-100/60 backdrop-blur-sm rounded-lg shadow-sm h-48 sm:h-64 animate-pulse border border-primary-200">
+                  <div className="p-3 sm:p-4">
                     <div className="h-4 bg-primary-200 rounded w-3/4 mb-2"></div>
                     <div className="h-3 bg-primary-200 rounded w-1/2 mb-4"></div>
                     <div className="h-3 bg-primary-200 rounded w-full mb-2"></div>
@@ -172,7 +172,7 @@ const SearchPage = () => {
               ))}
             </div>
           ) : searchResults.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {searchResults.map((pdf) => (
                 <PDFCard
                   key={pdf._id}
@@ -182,18 +182,18 @@ const SearchPage = () => {
               ))}
             </div>
           ) : searchQuery ? (
-            <div className="text-center py-12">
-              <Search className="h-12 w-12 text-primary-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-primary-700 mb-2">No results found</h3>
-              <p className="text-primary-600">
+            <div className="text-center py-8 sm:py-12">
+              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-primary-500 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-primary-700 mb-2">No results found</h3>
+              <p className="text-sm sm:text-base text-primary-600">
                 Try adjusting your search terms or filters.
               </p>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Search className="h-12 w-12 text-primary-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-primary-700 mb-2">Start your search</h3>
-              <p className="text-primary-600">
+            <div className="text-center py-8 sm:py-12">
+              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-primary-500 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-primary-700 mb-2">Start your search</h3>
+              <p className="text-sm sm:text-base text-primary-600 px-4">
                 Enter keywords to find PDFs across all subjects and departments.
               </p>
             </div>

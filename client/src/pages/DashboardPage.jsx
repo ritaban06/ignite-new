@@ -163,31 +163,31 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-purple-50">
       {/* Welcome Header */}
       <div className="gradient-accent shadow-sm border-b border-primary-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-white">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
               Welcome back, {user?.name}
             </h1>
-            <p className="mt-2 text-primary-100">
+            <p className="mt-2 text-sm sm:text-base text-primary-100">
               {user?.department} Department • Year {user?.year}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 border border-primary-200 hover:border-primary-300 transition-colors">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 border border-primary-200 hover:border-primary-300 transition-colors">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg flex items-center justify-center">
+                  <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-primary-700">Available PDFs</p>
-                <p className="text-2xl font-bold text-primary-600">{pagination.totalCount}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-primary-700">Available PDFs</p>
+                <p className="text-xl sm:text-2xl font-bold text-primary-600">{pagination.totalCount}</p>
               </div>
             </div>
           </div>
@@ -244,7 +244,7 @@ const DashboardPage = () => {
         */}
 
         {/* Search and Filters */}
-        <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 mb-8 border border-primary-200">
+        <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 mb-6 sm:mb-8 border border-primary-200">
           <form onSubmit={handleSearch} className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
@@ -255,17 +255,17 @@ const DashboardPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search PDFs by title, subject, or tags..."
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Search PDFs..."
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
               />
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <select
                 value={filters.department}
                 onChange={(e) => handleFilterChange('department', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
               >
                 <option value="">All Departments</option>
                 {departments.map((dept) => (
@@ -276,7 +276,7 @@ const DashboardPage = () => {
               <select
                 value={filters.year}
                 onChange={(e) => handleFilterChange('year', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
               >
                 <option value="">All Years</option>
                 {years.map((year) => (
@@ -323,10 +323,10 @@ const DashboardPage = () => {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-primary-100/60 backdrop-blur-sm rounded-lg shadow-sm h-64 animate-pulse border border-primary-200">
-                  <div className="p-4">
+                <div key={i} className="bg-primary-100/60 backdrop-blur-sm rounded-lg shadow-sm h-48 sm:h-64 animate-pulse border border-primary-200">
+                  <div className="p-3 sm:p-4">
                     <div className="h-4 bg-primary-200 rounded w-3/4 mb-2"></div>
                     <div className="h-3 bg-primary-200 rounded w-1/2 mb-4"></div>
                     <div className="h-3 bg-primary-200 rounded w-full mb-2"></div>
@@ -337,7 +337,7 @@ const DashboardPage = () => {
             </div>
           ) : pdfs.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {pdfs.map((pdf) => (
                   <PDFCard
                     key={pdf._id}

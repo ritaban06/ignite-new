@@ -30,22 +30,22 @@ const GoogleLoginComponent = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-3 sm:space-y-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
             Sign in to Ignite
           </h2>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Only approved users can access this platform
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+          <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-200">
             <div className="flex items-start space-x-2">
-              <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-red-700">{error}</p>
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs sm:text-sm text-red-700">{error}</p>
             </div>
           </div>
         )}

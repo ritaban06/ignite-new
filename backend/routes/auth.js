@@ -21,8 +21,15 @@ router.options('*', (req, res) => {
   res.sendStatus(200);
 });
 
-// Initialize Google OAuth2 client
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// Initialize Google OAuth2 client with multiple client IDs
+const GOOGLE_WEB_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_WEB_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_ANDROID_CLIENT_ID = process.env.GOOGLE_ANDROID_CLIENT_ID;
+const GOOGLE_ANDROID_CLIENT_SECRET = process.env.GOOGLE_ANDROID_CLIENT_SECRET;
+
+// Create OAuth2 clients for each platform
+const googleWebClient = new OAuth2Client(GOOGLE_WEB_CLIENT_ID, GOOGLE_WEB_CLIENT_SECRET);
+const googleAndroidClient = new OAuth2Client(GOOGLE_ANDROID_CLIENT_ID, GOOGLE_ANDROID_CLIENT_SECRET);
 
 // Generate device ID from user agent and other factors
 const generateDeviceId = (req) => {
@@ -518,15 +525,34 @@ router.post('/google-verify', [
 
     const { credential } = req.body;
 
-    // Verify the Google token
+    // Verify the Google token - try both web and Android client IDs
     let ticket;
+    let verifiedClientId = null;
+    
     try {
-      ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID
-      });
+      // First try web client ID
+      try {
+        ticket = await googleWebClient.verifyIdToken({
+          idToken: credential,
+          audience: GOOGLE_WEB_CLIENT_ID
+        });
+        verifiedClientId = GOOGLE_WEB_CLIENT_ID;
+        console.log('Token verified with web client ID');
+      } catch (webError) {
+        // If web client fails, try Android client ID
+        if (GOOGLE_ANDROID_CLIENT_ID !== GOOGLE_WEB_CLIENT_ID) {
+          ticket = await googleAndroidClient.verifyIdToken({
+            idToken: credential,
+            audience: GOOGLE_ANDROID_CLIENT_ID
+          });
+          verifiedClientId = GOOGLE_ANDROID_CLIENT_ID;
+          console.log('Token verified with Android client ID');
+        } else {
+          throw webError;
+        }
+      }
     } catch (error) {
-      console.error('Google token verification failed:', error);
+      console.error('Google token verification failed for both client IDs:', error);
       return res.status(401).json({
         error: 'Invalid Google token',
         message: 'Failed to verify Google authentication token'
@@ -661,7 +687,12 @@ router.get('/test', (req, res) => {
       'GET /api/auth/admin/me',
       'GET /api/auth/test'
     ],
-    googleClientConfigured: !!process.env.GOOGLE_CLIENT_ID
+    googleClientConfigured: {
+      web: !!GOOGLE_WEB_CLIENT_ID,
+      android: !!GOOGLE_ANDROID_CLIENT_ID,
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+      androidClientId: GOOGLE_ANDROID_CLIENT_ID
+    }
   });
 });
 

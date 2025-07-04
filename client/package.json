@@ -8,12 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "android:dev": "pnpm run build && pnpm cap sync android && pnpm cap run android",
-    "android:build": "pnpm run build && pnpm cap sync android && pnpm cap build android",
-    "ios:dev": "npm run build && npx cap sync ios && npx cap run ios",
-    "ios:build": "npm run build && npx cap sync ios && npx cap build ios",
-    "mobile:sync": "pnpm run build && pnpm cap sync"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@headlessui/react": "^2.1.10",

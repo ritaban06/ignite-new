@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { Capacitor } from '@capacitor/core';
+// import { Capacitor } from '@capacitor/core';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -14,7 +14,7 @@ import AuthDebug from './components/AuthDebug';
 
 // Get the appropriate Google OAuth Client ID based on platform
 const getGoogleClientId = () => {
-  const isAndroid = Capacitor.getPlatform() === 'android';
+  // const isAndroid = Capacitor.getPlatform() === 'android';
   
   if (isAndroid) {
     // For Android, use Android-specific client ID if available, fallback to web client ID

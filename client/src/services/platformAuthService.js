@@ -94,24 +94,40 @@ class PlatformAuthService {
       return credentials;
     } catch (error) {
       console.error('❌ Native Google sign-in failed:', error);
-      console.error('❌ Error details:', {
+      console.error('❌ Detailed error information:', {
         message: error.message,
         code: error.code,
         stack: error.stack,
+        name: error.name,
         fullError: JSON.stringify(error, null, 2)
       });
       
-      // Provide user-friendly error messages
-      if (error.message?.includes('12501')) {
-        throw new Error('Google sign-in was cancelled. Please try again.');
-      } else if (error.message?.includes('10')) {
-        throw new Error('Google Play Services not available or outdated. Please update Google Play Services.');
-      } else if (error.message?.includes('7')) {
-        throw new Error('Network error - please check your internet connection');
+      // Log current configuration for debugging
+      console.error('🔧 Current configuration:', {
+        clientId: this.getGoogleClientId(),
+        isAndroid: this.isAndroid,
+        platform: Capacitor.getPlatform(),
+        hasGoogleClientId: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        hasAndroidClientId: !!import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID
+      });
+      
+      // Map specific error codes to user-friendly messages
+      const errorCode = error.code || (error.message?.match(/\d+/) && parseInt(error.message.match(/\d+/)[0]));
+      
+      if (errorCode === 12501 || error.message?.includes('12501')) {
+        throw new Error('OAUTH_ERROR: Sign-in was cancelled or SHA-1 fingerprint mismatch. Please check Google Cloud Console SHA-1 configuration.');
+      } else if (errorCode === 10 || error.message?.includes('10')) {
+        throw new Error('OAUTH_ERROR: Google Play Services not available. Please update Google Play Services on your device.');
+      } else if (errorCode === 7 || error.message?.includes('7')) {
+        throw new Error('OAUTH_ERROR: Network error. Please check your internet connection and try again.');
       } else if (error.message?.includes('DEVELOPER_ERROR')) {
-        throw new Error('Configuration error - please check SHA-1 fingerprint in Google Cloud Console');
+        throw new Error('OAUTH_ERROR: Configuration error. Please verify SHA-1 fingerprint and OAuth client setup in Google Cloud Console.');
+      } else if (error.message?.includes('API_NOT_AVAILABLE')) {
+        throw new Error('OAUTH_ERROR: Google APIs not available. Please enable Google+ API and Google Identity API in Google Cloud Console.');
+      } else if (error.message?.includes('INTERNAL_ERROR')) {
+        throw new Error('OAUTH_ERROR: Internal Google error. Please try again or contact support.');
       } else {
-        throw new Error(`Google OAuth Error: ${error.message || 'Unknown error occurred'}`);
+        throw new Error(`OAUTH_ERROR: ${error.message || 'Something went wrong with Google authentication. Please check your configuration.'}`);
       }
     }
   }

@@ -16,10 +16,6 @@
     "mobile:sync": "pnpm run build && pnpm cap sync"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.0",
-    "@capacitor/cli": "^7.4.0",
-    "@capacitor/core": "^7.4.0",
-    "@codetrix-studio/capacitor-google-auth": "3.4.0-rc.4",
     "@headlessui/react": "^2.1.10",
     "@react-oauth/google": "^0.12.2",
     "@react-pdf-viewer/core": "^3.12.0",

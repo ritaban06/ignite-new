@@ -33,13 +33,22 @@ class PlatformAuthService {
 
   async initializeNativeGoogleAuth() {
     try {
+      console.log('🚀 Initializing native Google Auth...');
+      console.log('📱 Platform:', Capacitor.getPlatform());
+      console.log('🔑 Client ID:', this.getGoogleClientId());
+      
       // For @codetrix-studio/capacitor-google-auth, the plugin configuration
       // is handled automatically through capacitor.config.json
       // We just need to initialize without extra parameters
       await GoogleAuth.initialize();
-      console.log('✅ Native Google Auth initialized');
+      console.log('✅ Native Google Auth initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize native Google Auth:', error);
+      console.error('❌ Initialization error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
     }
   }
 
@@ -59,6 +68,12 @@ class PlatformAuthService {
   async nativeGoogleSignIn() {
     try {
       console.log('🔐 Starting native Google sign-in...');
+      console.log('📱 Platform info:', {
+        isNative: this.isNative,
+        isAndroid: this.isAndroid,
+        platform: Capacitor.getPlatform()
+      });
+      console.log('🔑 Using client ID:', this.getGoogleClientId());
       
       // Sign in with Google on native platform
       const result = await GoogleAuth.signIn();
@@ -66,7 +81,8 @@ class PlatformAuthService {
       console.log('✅ Native Google sign-in successful:', {
         email: result.email,
         name: result.name,
-        hasIdToken: !!result.authentication?.idToken
+        hasIdToken: !!result.authentication?.idToken,
+        result: JSON.stringify(result, null, 2)
       });
 
       // Convert to format compatible with existing backend
@@ -78,16 +94,24 @@ class PlatformAuthService {
       return credentials;
     } catch (error) {
       console.error('❌ Native Google sign-in failed:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        fullError: JSON.stringify(error, null, 2)
+      });
       
       // Provide user-friendly error messages
       if (error.message?.includes('12501')) {
-        throw new Error('Google sign-in was cancelled');
+        throw new Error('Google sign-in was cancelled. Please try again.');
       } else if (error.message?.includes('10')) {
-        throw new Error('Google Play Services not available or outdated');
+        throw new Error('Google Play Services not available or outdated. Please update Google Play Services.');
       } else if (error.message?.includes('7')) {
         throw new Error('Network error - please check your internet connection');
+      } else if (error.message?.includes('DEVELOPER_ERROR')) {
+        throw new Error('Configuration error - please check SHA-1 fingerprint in Google Cloud Console');
       } else {
-        throw new Error(error.message || 'Failed to sign in with Google');
+        throw new Error(`Google OAuth Error: ${error.message || 'Unknown error occurred'}`);
       }
     }
   }

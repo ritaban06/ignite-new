@@ -94,30 +94,36 @@ class PlatformAuthService {
       return credentials;
     } catch (error) {
       console.error('❌ Native Google sign-in failed:', error);
-      console.error('❌ Detailed error information:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-        name: error.name,
-        fullError: JSON.stringify(error, null, 2)
-      });
+      
+      // Enhanced error logging to see actual error details
+      console.error('❌ Error Message:', error.message);
+      console.error('❌ Error Code:', error.code);
+      console.error('❌ Error Name:', error.name);
+      console.error('❌ Full Error Object:', error);
+      
+      // Try to extract more error details
+      if (error.originalError) {
+        console.error('❌ Original Error:', error.originalError);
+      }
+      if (error.details) {
+        console.error('❌ Error Details:', error.details);
+      }
       
       // Log current configuration for debugging
-      console.error('🔧 Current configuration:', {
-        clientId: this.getGoogleClientId(),
-        isAndroid: this.isAndroid,
-        platform: Capacitor.getPlatform(),
-        hasGoogleClientId: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        hasAndroidClientId: !!import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID
-      });
+      console.error('🔧 Client ID:', this.getGoogleClientId());
+      console.error('🔧 Platform:', Capacitor.getPlatform());
+      console.error('🔧 Has Google Client ID:', !!import.meta.env.VITE_GOOGLE_CLIENT_ID);
+      console.error('🔧 Has Android Client ID:', !!import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID);
       
       // Map specific error codes to user-friendly messages
       const errorCode = error.code || (error.message?.match(/\d+/) && parseInt(error.message.match(/\d+/)[0]));
       
+      console.error('🎯 Identified Error Code:', errorCode);
+      
       if (errorCode === 12501 || error.message?.includes('12501')) {
         throw new Error('OAUTH_ERROR: Sign-in was cancelled or SHA-1 fingerprint mismatch. Please check Google Cloud Console SHA-1 configuration.');
       } else if (errorCode === 10 || error.message?.includes('10')) {
-        throw new Error('OAUTH_ERROR: Google Play Services not available. Please update Google Play Services on your device.');
+        throw new Error('OAUTH_ERROR: Google Play Services not available or outdated. Please update Google Play Services on your Samsung device and try again.');
       } else if (errorCode === 7 || error.message?.includes('7')) {
         throw new Error('OAUTH_ERROR: Network error. Please check your internet connection and try again.');
       } else if (error.message?.includes('DEVELOPER_ERROR')) {

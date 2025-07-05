@@ -1,5 +1,7 @@
 # Ignite - Samarth's Study Material Platform
 
+[![Website](https://img.shields.io/website-up-down-green-red/http/shields.io.svg)](https://ignite-client.ritaban.me)
+
 A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. Perfect for educational institutions and organizations that need to protect PDF content while providing seamless access to authorized users.
 
 ## 🏗️ Project Structure

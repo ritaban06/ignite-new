@@ -69,43 +69,28 @@ jobs:
     - name: Set NDK_HOME environment variable
       run: echo "NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
 
-    - name: Add Rust Android target
-      run: rustup target add aarch64-linux-android
-
-    - name: Build Tauri Android project
-      run: pnpm exec tauri android build --target aarch64
-      working-directory: client
-
     - name: Set up Java
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Make gradlew executable
-      run: chmod +x gradlew
-      working-directory: client/android
+    - name: Add Rust Android target
+      run: rustup target add aarch64-linux-android
 
     - name: Decode keystore for release signing
       run: |
         if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > client/android/app/release.keystore
+          mkdir -p client/src-tauri/app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > client/src-tauri/app/release.keystore
           echo "✅ Keystore created for release signing"
         else
           echo "⚠️ No keystore secret found, will only build debug APK"
         fi
-        
-    - name: Build Debug and Release APKs
-      run: |
-        echo "🔨 Building APKs..."
-        ./gradlew assembleDebug
-        if [ -f "app/release.keystore" ]; then
-          echo "🔐 Building signed release APK..."
-          ./gradlew assembleRelease
-        else
-          echo "⚠️ No keystore found, skipping release APK"
-        fi
-      working-directory: client/android
+
+    - name: Build Tauri Android project
+      run: pnpm exec tauri android build --target aarch64
+      working-directory: client
       env:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -115,10 +100,10 @@ jobs:
 
     - name: List generated APK files
       run: |
-        echo "📱 Generated APK files:"
-        find client/android/app/build/outputs/apk -name "*.apk" -type f
-        ls -la client/android/app/build/outputs/apk/debug/ || echo "Debug folder not found"
-        ls -la client/android/app/build/outputs/apk/release/ || echo "Release folder not found"
+        echo "📱 Generated APK files from Tauri build:" 
+        find client/src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -type f
+        ls -la client/src-tauri/gen/android/app/build/outputs/apk/debug/ || echo "Debug folder not found"
+        ls -la client/src-tauri/gen/android/app/build/outputs/apk/release/ || echo "Release folder not found"
 
     - name: Upload Both APKs to GitHub Release
       uses: softprops/action-gh-release@v2
@@ -126,7 +111,7 @@ jobs:
         tag_name: v1.0.${{ github.run_number }}
         name: Android APKs v1.0.${{ github.run_number }}
         files: |
-          client/android/app/build/outputs/apk/**/*.apk
+          client/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
         fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

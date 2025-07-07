@@ -75,8 +75,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Add Rust Android target
-      run: rustup target add aarch64-linux-android
+    - name: Add Rust Android targets
+      run: |
+        rustup target add aarch64-linux-android
+        rustup target add armv7-linux-androideabi
+        rustup target add x86_64-linux-android
 
     - name: Decode keystore for release signing
       run: |
@@ -88,8 +91,11 @@ jobs:
           echo "⚠️ No keystore secret found, will only build debug APK"
         fi
 
-    - name: Build Tauri Android project
-      run: pnpm exec tauri android build --target aarch64
+    - name: Build Tauri Android project (all major ABIs)
+      run: |
+        pnpm exec tauri android build --target aarch64
+        pnpm exec tauri android build --target armv7
+        pnpm exec tauri android build --target x86_64
       working-directory: client
       env:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

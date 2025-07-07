@@ -9,7 +9,11 @@ const accessLogSchema = new mongoose.Schema({
   pdf: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'PDF',
-    required: [true, 'PDF is required']
+    required: function() {
+      // PDF is required for PDF-related actions, but not for auth actions
+      const authActions = ['login', 'logout', 'register', 'forced_logout', 'google_login'];
+      return !authActions.includes(this.action);
+    }
   },
   action: {
     type: String,
@@ -24,6 +28,9 @@ const accessLogSchema = new mongoose.Schema({
       'delete',
       'login',
       'logout',
+      'register',
+      'forced_logout',
+      'google_login',
       'unauthorized_access_attempt'
     ]
   },
@@ -72,9 +79,8 @@ accessLogSchema.index({ pdf: 1, action: 1, success: 1 });
 
 // Static method to log access
 accessLogSchema.statics.logAccess = function(data) {
-  return this.create({
+  const logData = {
     user: data.userId,
-    pdf: data.pdfId,
     action: data.action,
     ipAddress: data.ipAddress,
     userAgent: data.userAgent,
@@ -83,7 +89,14 @@ accessLogSchema.statics.logAccess = function(data) {
     success: data.success !== false,
     errorMessage: data.errorMessage,
     metadata: data.metadata || {}
-  });
+  };
+
+  // Only include PDF if provided (for auth actions, there's no PDF)
+  if (data.pdfId) {
+    logData.pdf = data.pdfId;
+  }
+
+  return this.create(logData);
 };
 
 // Static method to get user activity summary

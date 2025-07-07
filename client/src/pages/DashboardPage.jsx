@@ -255,7 +255,7 @@ const DashboardPage = () => {
                   key={pdf._id}
                   pdf={pdf}
                   onView={handleViewPDF}
-                  showDetails={false}
+                  showDetails={true}
                 />
               ))}
             </div>

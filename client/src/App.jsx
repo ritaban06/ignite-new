@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-// import { Capacitor } from '@capacitor/core';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -14,14 +13,15 @@ import AuthDebug from './components/AuthDebug';
 
 // Get the appropriate Google OAuth Client ID based on platform
 const getGoogleClientId = () => {
-  // const isAndroid = Capacitor.getPlatform() === 'android';
+  // Check if we're running in Tauri
+  const isTauri = typeof window !== 'undefined' && window.__TAURI__;
   
-  // if (isAndroid) {
-  //   // For Android, use Android-specific client ID if available, fallback to web client ID
-  //   return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
-  // }
+  if (isTauri) {
+    // For Tauri apps, use the native client ID if available
+    return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  }
   
-  // For web and iOS, use web client ID
+  // For web, use web client ID
   return import.meta.env.VITE_GOOGLE_CLIENT_ID;
 };
 

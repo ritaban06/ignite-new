@@ -69,6 +69,14 @@ jobs:
       run: pnpm add -g @tauri-apps/cli
       working-directory: client
 
+    - name: Install Android SDK & NDK
+      uses: android-actions/setup-android@v3
+      with:
+        ndk: '29.0.13599879'
+
+    - name: Set NDK_HOME environment variable
+      run: echo "NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+
     - name: Build Tauri Android project
       run: pnpm exec tauri android build --target aarch64
       working-directory: client

@@ -219,13 +219,13 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button
+                        {/* <button
                           onClick={() => handleRoleToggle(user._id, user.role)}
                           className="text-primary-600 hover:text-primary-900"
                           title={`Make ${user.role === 'admin' ? 'User' : 'Admin'}`}
                         >
                           <Shield className="h-4 w-4" />
-                        </button>
+                        </button> */}
                         <button
                           onClick={() => handleDeleteUser(user._id)}
                           className="text-red-600 hover:text-red-900"

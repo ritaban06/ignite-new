@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { pdfAPI } from '../api';
 import { useAuth } from '../contexts/AuthContext';
+import SecurePDFViewer from './SecurePDFViewer';
 import toast from 'react-hot-toast';
 
 const R2PDFManager = () => {
@@ -28,6 +29,8 @@ const R2PDFManager = () => {
     accessibleFiles: 0,
     userAccess: null
   });
+  const [selectedPdfId, setSelectedPdfId] = useState(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   const departments = ['AIML', 'CSE', 'ECE', 'EEE', 'IT'];
   const years = [1, 2, 3, 4];
@@ -94,8 +97,19 @@ const R2PDFManager = () => {
   };
 
   const handleViewPDF = (pdf) => {
-    // Open PDF in new tab
-    window.open(pdf.viewUrl, '_blank');
+    // Use the secure PDF viewer with the PDF ID
+    if (pdf.id) {
+      setSelectedPdfId(pdf.id);
+      setIsViewerOpen(true);
+    } else {
+      // Fallback for PDFs without database records
+      toast.error('This PDF cannot be viewed securely - no database record found');
+    }
+  };
+
+  const handleCloseViewer = () => {
+    setIsViewerOpen(false);
+    setSelectedPdfId(null);
   };
 
   // Download functionality disabled for security
@@ -158,13 +172,13 @@ const R2PDFManager = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-primary-100 p-4 rounded-lg border border-primary-200">
+          {/* <div className="bg-primary-100 p-4 rounded-lg border border-primary-200">
             <div className="flex items-center space-x-2">
               <Database className="h-5 w-5 text-primary-600" />
               <span className="text-sm font-medium text-primary-800">Total Files in Bucket</span>
             </div>
             <p className="text-2xl font-bold text-primary-600">{stats.totalFiles}</p>
-          </div>
+          </div> */}
           
           <div className="bg-green-100 p-4 rounded-lg border border-green-200">
             <div className="flex items-center space-x-2">
@@ -382,6 +396,13 @@ const R2PDFManager = () => {
           </div>
         )}
       </div>
+
+      {/* PDF Viewer Modal */}
+      <SecurePDFViewer
+        pdfId={selectedPdfId}
+        isOpen={isViewerOpen}
+        onClose={handleCloseViewer}
+      />
     </div>
   );
 };

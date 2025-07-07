@@ -305,7 +305,7 @@ const R2PDFManager = () => {
                             {pdf.title}
                           </p>
                           <p className="text-sm text-primary-600">{pdf.subject}</p>
-                          <p className="text-xs text-primary-500 mt-1">{pdf.fileKey}</p>
+                          {/* <p className="text-xs text-primary-500 mt-1">{pdf.fileKey}</p> */}
                         </div>
                       </td>
                       

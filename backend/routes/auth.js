@@ -201,7 +201,7 @@ router.post('/login', [
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
         deviceId: user.deviceId,
-        details: `Forced logout due to login from new device: ${deviceId}`
+        metadata: { details: `Forced logout due to login from new device: ${deviceId}` }
       });
       
       console.log(`User ${user.email} automatically logged out from device ${user.deviceId} due to login from new device ${deviceId}`);
@@ -623,14 +623,13 @@ router.post('/google-verify', [
       // For clients, automatically logout from previous device if different
       if (wasDeviceSwitch) {
         // Log the forced logout from previous device
-        await AccessLog.create({
+        await AccessLog.logAccess({
           userId: user._id,
           action: 'forced_logout',
           ipAddress: req.ip,
           userAgent: req.get('User-Agent'),
           deviceId: user.deviceId,
-          timestamp: new Date(),
-          details: `Forced logout due to Google login from new device: ${deviceId}`
+          metadata: { details: `Forced logout due to Google login from new device: ${deviceId}` }
         });
         
         console.log(`User ${user.email} automatically logged out from device ${user.deviceId} due to Google login from new device ${deviceId}`);
@@ -660,13 +659,12 @@ router.post('/google-verify', [
 
     // Log access
     try {
-      await AccessLog.create({
+      await AccessLog.logAccess({
         userId: user._id,
         action: 'google_login',
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
-        deviceId: deviceId,
-        timestamp: new Date()
+        deviceId: deviceId
       });
     } catch (logError) {
       console.error('Access log error:', logError);

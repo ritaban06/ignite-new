@@ -49,7 +49,7 @@ function AppContent() {
     <div className="min-h-screen bg-purple-50">
       <Header />
       {/* <AuthDebug /> */}
-      <main>
+      <main className="pt-16">
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />

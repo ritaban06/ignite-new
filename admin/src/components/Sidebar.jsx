@@ -18,8 +18,8 @@ const navigation = [
   { name: 'Manage PDFs', href: '/pdfs', icon: FileText },
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
-  // { name: 'Debug', href: '/debug', icon: Bug },
+  // { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Debug', href: '/debug', icon: Bug },
 ];
 
 export default function Sidebar() {

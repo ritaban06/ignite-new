@@ -3,15 +3,16 @@ import { Search, Filter, X } from 'lucide-react';
 import { pdfAPI } from '../api';
 import PDFCard from '../components/PDFCard';
 import SecurePDFViewer from '../components/SecurePDFViewer';
+import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 const SearchPage = () => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({
-    department: '',
-    year: ''
+    // Remove department and year filters since backend will handle user restrictions
   });
   const [selectedPdfId, setSelectedPdfId] = useState(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
@@ -21,45 +22,63 @@ const SearchPage = () => {
     totalCount: 0
   });
 
-  const departments = ['AIML', 'CSE', 'ECE', 'EEE', 'IT'];
-  const years = [1, 2, 3, 4];
-
+  // Remove unused filter variables since backend handles user restrictions
+  
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      toast.error('Please enter a search term');
+      return;
+    }
 
     try {
       setIsLoading(true);
-      const response = await pdfAPI.searchPDFs({
-        q: searchQuery,
-        ...filters,
+      
+      // Only send search query and pagination - let backend handle department/year restrictions
+      const searchParams = {
+        q: searchQuery.trim(),
         page: 1,
         limit: 20
-      });
+      };
+      
+      console.log('Searching with params:', searchParams);
+      
+      const response = await pdfAPI.searchPDFs(searchParams);
 
-      if (response.data.pdfs) {
+      console.log('Search response:', response.data);
+
+      if (response.data && response.data.pdfs) {
         setSearchResults(response.data.pdfs);
-        setPagination(response.data.pagination);
+        setPagination(response.data.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: response.data.pdfs.length
+        });
+        
+        if (response.data.pdfs.length === 0) {
+          toast.info('No PDFs found matching your search criteria');
+        } else {
+          toast.success(`Found ${response.data.pdfs.length} PDF(s)`);
+        }
+      } else {
+        console.log('Unexpected response format:', response.data);
+        setSearchResults([]);
+        toast.info('No results found');
       }
     } catch (error) {
       console.error('Search error:', error);
-      toast.error('Search failed');
+      const errorMessage = error.response?.data?.error || error.message || 'Search failed';
+      toast.error(`Search failed: ${errorMessage}`);
+      setSearchResults([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFilterChange = (filterKey, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterKey]: value
-    }));
-  };
-
   const clearSearch = () => {
     setSearchQuery('');
     setSearchResults([]);
-    setFilters({ department: '', year: '' });
+    setFilters({});
   };
 
   const handleViewPDF = (pdfId) => {
@@ -78,7 +97,7 @@ const SearchPage = () => {
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent mb-2">Search PDFs</h1>
-          <p className="text-sm sm:text-base text-purple-700">Find the educational resources you need</p>
+          <p className="text-sm sm:text-base text-purple-700">Find educational resources for {user?.department} Department - Year {user?.year}</p>
         </div>
 
         {/* Search Form */}
@@ -93,48 +112,26 @@ const SearchPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title, subject, or tags..."
+                placeholder="Search by title, subject, or tags in your department..."
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
                 autoFocus
               />
             </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              <select
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
-              >
-                <option value="">All Departments</option>
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-
-              <select
-                value={filters.year}
-                onChange={(e) => handleFilterChange('year', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
-              >
-                <option value="">All Years</option>
-                {years.map((year) => (
-                  <option key={year} value={year}>Year {year}</option>
-                ))}
-              </select>
-
-              <div className="flex space-x-2 sm:col-span-2 lg:col-span-1">
+            {/* Filters - Removed department and year filters since backend handles user restrictions */}
+            <div className="flex justify-end">
+              <div className="flex space-x-2">
                 <button
                   type="submit"
                   disabled={isLoading || !searchQuery.trim()}
-                  className="flex-1 gradient-accent text-white px-4 py-2 rounded-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
+                  className="gradient-accent text-white px-6 py-2 rounded-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
                 >
                   {isLoading ? 'Searching...' : 'Search'}
                 </button>
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="p-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-200 hover:border-primary-400 hover:text-primary-800 transition-colors touch-target"
+                  className="p-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-200 hover:border-primary-400 hover:text-primary-800 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -194,7 +191,7 @@ const SearchPage = () => {
               <Search className="h-10 w-10 sm:h-12 sm:w-12 text-primary-500 mx-auto mb-4" />
               <h3 className="text-base sm:text-lg font-medium text-primary-700 mb-2">Start your search</h3>
               <p className="text-sm sm:text-base text-primary-600 px-4">
-                Enter keywords to find PDFs across all subjects and departments.
+                Enter keywords to find PDFs in your department ({user?.department}) and year ({user?.year}).
               </p>
             </div>
           )}

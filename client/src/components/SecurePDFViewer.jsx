@@ -214,7 +214,28 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
         e.keyCode === 123
       ) {
         e.preventDefault();
-        toast.error('This action is disabled for security reasons');
+        
+        // Determine which key combination was pressed
+        let keyDescription = '';
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+          keyDescription = 'Ctrl+Shift+I (Developer Tools)';
+        } else if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+          keyDescription = 'Ctrl+Shift+J (Console)';
+        } else if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+          keyDescription = 'Ctrl+Shift+C (Inspect Element)';
+        } else if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+          keyDescription = 'Ctrl+S (Save)';
+        } else if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+          keyDescription = 'Ctrl+P (Print)';
+        } else if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) {
+          keyDescription = 'Ctrl+A (Select All)';
+        } else if (e.key === 'F12' || e.keyCode === 123) {
+          keyDescription = 'F12 (Developer Tools)';
+        } else {
+          keyDescription = `${e.ctrlKey ? 'Ctrl+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.key}`;
+        }
+        
+        toast.error(`${keyDescription} is disabled for security reasons`);
         return false;
       }
     };

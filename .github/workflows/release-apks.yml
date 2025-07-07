@@ -115,7 +115,7 @@ jobs:
       run: |
         echo "🔍 Verifying APK signature for app-universal-release.apk..."
         sudo apt-get update && sudo apt-get install -y apksigner
-        apksigner verify --print-certs client/src-tauri/gen/android/app/build/outputs/apk/release/app-universal-release.apk || echo "APK signature verification failed"
+        apksigner verify --print-certs client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk || echo "APK signature verification failed"
 
     - name: Upload Both APKs to GitHub Release
       uses: softprops/action-gh-release@v2

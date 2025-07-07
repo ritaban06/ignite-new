@@ -13,7 +13,10 @@
     "tauri:dev": "pnpm exec tauri dev",
     "tauri:build": "pnpm exec tauri build",
     "tauri:android": "pnpm exec tauri android dev",
-    "tauri:android:build": "pnpm exec tauri android build"
+    "tauri:android:build": "pnpm exec tauri android build",
+    "tauri:android:no-symlinks": ".\\build-android-no-symlinks.bat",
+    "android:quick": ".\\build-android-no-symlinks.bat",
+    "android:status": "echo 'Android build: Web-based protection active. See STATUS.md for native FLAG_SECURE setup.'"
   },
   "dependencies": {
     "@headlessui/react": "^2.1.10",

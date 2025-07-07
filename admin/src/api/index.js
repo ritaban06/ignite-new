@@ -47,6 +47,7 @@ export const pdfAPI = {
   deletePdf: (id) => api.delete(`/admin/pdfs/${id}`),
   updatePdf: (id, data) => api.put(`/admin/pdfs/${id}`, data),
   getAnalytics: () => api.get('/admin/analytics'),
+  fixOrphanedUploaders: () => api.post('/admin/fix-orphaned-uploaders'),
 };
 
 export const userAPI = {

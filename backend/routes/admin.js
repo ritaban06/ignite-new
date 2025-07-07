@@ -323,12 +323,26 @@ router.get('/pdfs', [
 
     const [pdfs, totalCount] = await Promise.all([
       PDF.find(query)
-        .populate('uploadedBy', 'name email')
+        .populate({
+          path: 'uploadedBy',
+          select: 'name email',
+          // Handle case where user might have been deleted
+          options: { strictPopulate: false }
+        })
         .sort(sort)
         .skip(skip)
         .limit(limit),
       PDF.countDocuments(query)
     ]);
+
+    // Debug: Log any PDFs with missing or problematic uploader info
+    const pdfsWithIssues = pdfs.filter(pdf => !pdf.uploadedBy || typeof pdf.uploadedBy === 'string');
+    if (pdfsWithIssues.length > 0) {
+      console.log(`Found ${pdfsWithIssues.length} PDFs with uploader issues:`);
+      pdfsWithIssues.forEach(pdf => {
+        console.log(`- PDF: ${pdf.title} (ID: ${pdf._id}), uploadedBy: ${pdf.uploadedBy}`);
+      });
+    }
 
     res.json({
       pdfs,
@@ -1072,6 +1086,57 @@ router.post('/upload-simple', authenticate, requireAdmin, upload.single('pdf'), 
       error: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Fix orphaned PDF uploader references
+router.post('/fix-orphaned-uploaders', [
+  authenticate,
+  requireAdmin
+], async (req, res) => {
+  try {
+    // Find PDFs with invalid uploadedBy references
+    const pdfs = await PDF.find({}).populate('uploadedBy');
+    const orphanedPdfs = pdfs.filter(pdf => !pdf.uploadedBy);
+    
+    console.log(`Found ${orphanedPdfs.length} PDFs with orphaned uploader references`);
+    
+    // Find the first admin user to assign as default uploader
+    const adminUser = await User.findOne({ role: 'admin' });
+    
+    if (!adminUser) {
+      return res.status(400).json({
+        error: 'No admin user found to assign as default uploader'
+      });
+    }
+    
+    // Update orphaned PDFs to have a valid uploader
+    const updateResult = await PDF.updateMany(
+      { 
+        _id: { $in: orphanedPdfs.map(pdf => pdf._id) }
+      },
+      { 
+        uploadedBy: adminUser._id 
+      }
+    );
+    
+    res.json({
+      message: 'Fixed orphaned uploader references',
+      orphanedCount: orphanedPdfs.length,
+      updatedCount: updateResult.modifiedCount,
+      assignedTo: {
+        id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email
+      }
+    });
+    
+  } catch (error) {
+    console.error('Fix orphaned uploaders error:', error);
+    res.status(500).json({
+      error: 'Failed to fix orphaned uploaders',
+      message: error.message
     });
   }
 });

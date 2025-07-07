@@ -51,7 +51,7 @@ export default function PDFManagementPage() {
       
       const response = await pdfAPI.getAllPdfs(params);
       setPdfs(response.data.pdfs);
-      setTotalPages(response.data.totalPages);
+      setTotalPages(response.data.pagination.totalPages);
     } catch (error) {
       console.error('Failed to fetch PDFs:', error);
       toast.error('Failed to load PDFs');
@@ -88,6 +88,19 @@ export default function PDFManagementPage() {
     } catch (error) {
       console.error('Update error:', error);
       toast.error('Failed to update PDF');
+    }
+  };
+
+  const handleFixOrphanedUploaders = async () => {
+    if (!confirm('This will assign orphaned PDFs to an admin user. Continue?')) return;
+    
+    try {
+      const response = await pdfAPI.fixOrphanedUploaders();
+      toast.success(`Fixed ${response.data.orphanedCount} orphaned PDFs`);
+      fetchPdfs(); // Refresh the list
+    } catch (error) {
+      console.error('Fix orphaned uploaders error:', error);
+      toast.error('Failed to fix orphaned uploaders');
     }
   };
 
@@ -154,6 +167,14 @@ export default function PDFManagementPage() {
                 </option>
               ))}
             </select>
+            
+            <button
+              onClick={handleFixOrphanedUploaders}
+              className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md text-sm font-medium transition-colors"
+              title="Fix missing uploader information"
+            >
+              Fix Uploaders
+            </button>
           </div>
         </div>
       </div>
@@ -232,8 +253,13 @@ export default function PDFManagementPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-white">
                         <User className="h-4 w-4 mr-1" />
-                        {pdf.uploadedBy?.name || 'Unknown'}
+                        {pdf.uploadedBy?.name || (
+                          <span className="text-yellow-400 italic">System Admin</span>
+                        )}
                       </div>
+                      {pdf.uploadedBy?.email && (
+                        <div className="text-xs text-gray-400">{pdf.uploadedBy.email}</div>
+                      )}
                       <div className="flex items-center text-sm text-gray-400">
                         <Calendar className="h-4 w-4 mr-1" />
                         {formatDate(pdf.createdAt)}

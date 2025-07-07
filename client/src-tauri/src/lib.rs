@@ -1,6 +1,27 @@
 use tauri::Manager;
 
 #[tauri::command]
+fn get_platform_info() -> String {
+    #[cfg(target_os = "android")]
+    return "android".to_string();
+    
+    #[cfg(target_os = "ios")]
+    return "ios".to_string();
+    
+    #[cfg(target_os = "windows")]
+    return "windows".to_string();
+    
+    #[cfg(target_os = "macos")]
+    return "macos".to_string();
+    
+    #[cfg(target_os = "linux")]
+    return "linux".to_string();
+    
+    #[cfg(not(any(target_os = "android", target_os = "ios", target_os = "windows", target_os = "macos", target_os = "linux")))]
+    return "unknown".to_string();
+}
+
+#[tauri::command]
 fn enable_secure_mode(window: tauri::Window) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
@@ -95,7 +116,7 @@ fn disable_secure_mode(window: tauri::Window) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![enable_secure_mode, disable_secure_mode])
+    .invoke_handler(tauri::generate_handler![get_platform_info, enable_secure_mode, disable_secure_mode])
     .setup(|app| {
       // Set FLAG_SECURE globally on Android when app starts
       #[cfg(target_os = "android")]

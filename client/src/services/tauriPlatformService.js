@@ -1,5 +1,4 @@
-import { platform } from '@tauri-apps/api/os';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 
 class TauriPlatformService {
   constructor() {
@@ -10,7 +9,7 @@ class TauriPlatformService {
     console.log('🔍 Platform Detection:', {
       isTauri: this.isTauri,
       isWeb: this.isWeb,
-      platform: this.getPlatform()
+      userAgent: navigator.userAgent
     });
 
     // Initialize platform info if in Tauri
@@ -21,11 +20,24 @@ class TauriPlatformService {
 
   async initializePlatformInfo() {
     try {
-      this.platformInfo = await platform();
+      // Use a custom Rust command to get platform info
+      this.platformInfo = await invoke('get_platform_info');
       console.log('📱 Tauri Platform Info:', this.platformInfo);
     } catch (error) {
-      console.error('❌ Failed to get platform info:', error);
+      console.log('ℹ️ Platform info not available, using fallback detection');
+      // Fallback to user agent detection
+      this.platformInfo = this.detectPlatformFromUserAgent();
     }
+  }
+
+  detectPlatformFromUserAgent() {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('android')) return 'android';
+    if (ua.includes('iphone') || ua.includes('ipad')) return 'ios';
+    if (ua.includes('windows')) return 'windows';
+    if (ua.includes('macintosh')) return 'macos';
+    if (ua.includes('linux')) return 'linux';
+    return 'unknown';
   }
 
   // Get the current platform
@@ -34,12 +46,12 @@ class TauriPlatformService {
     
     try {
       if (!this.platformInfo) {
-        this.platformInfo = await platform();
+        await this.initializePlatformInfo();
       }
-      return this.platformInfo;
+      return this.platformInfo || 'tauri';
     } catch (error) {
       console.error('❌ Error getting platform:', error);
-      return 'tauri';
+      return this.detectPlatformFromUserAgent();
     }
   }
 

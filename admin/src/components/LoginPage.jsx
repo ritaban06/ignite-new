@@ -50,7 +50,7 @@ export default function LoginPage() {
                 Username
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-20">
                   <User className="h-5 w-5 text-primary-400" />
                 </div>
                 <input
@@ -59,7 +59,7 @@ export default function LoginPage() {
                   type="text"
                   autoComplete="username"
                   required
-                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                   placeholder="Enter your username"
                   value={formData.username}
                   onChange={handleChange}
@@ -72,7 +72,7 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-20">
                   <Lock className="h-5 w-5 text-primary-400" />
                 </div>
                 <input
@@ -81,14 +81,14 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-600 placeholder-gray-400 text-white bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-600 placeholder-gray-400 text-white bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center z-20"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (

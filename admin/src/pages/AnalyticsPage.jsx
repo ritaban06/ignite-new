@@ -204,73 +204,37 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Top PDFs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Most Popular PDFs */}
-        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
-          <h2 className="text-lg font-medium text-white mb-4">Most Popular PDFs</h2>
-          {analytics?.topPdfs && analytics.topPdfs.length > 0 ? (
-            <div className="space-y-4">
-              {analytics.topPdfs.map((pdf, index) => (
-                <div key={pdf._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-primary-600">#{index + 1}</span>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-white">{pdf.title}</p>
-                      <p className="text-xs text-gray-400">{pdf.department} • Year {pdf.year}</p>
-                      <p className="text-xs text-gray-500">by {pdf.uploadedBy}</p>
-                    </div>
+      <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6 mb-8">
+        <h2 className="text-lg font-medium text-white mb-4">Most Popular PDFs</h2>
+        {analytics?.topPdfs && analytics.topPdfs.length > 0 ? (
+          <div className="space-y-4">
+            {analytics.topPdfs.map((pdf, index) => (
+              <div key={pdf._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-primary-600">#{index + 1}</span>
                   </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-400">
-                    <div className="flex items-center">
-                      <Eye className="h-4 w-4 mr-1" />
-                      {pdf.viewCount}
-                    </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-white">{pdf.title}</p>
+                    <p className="text-xs text-gray-400">{pdf.department} • Year {pdf.year}</p>
+                    <p className="text-xs text-gray-500">by {pdf.uploadedBy}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-400">No PDF data available</p>
-            </div>
-          )}
-        </div>
-
-        {/* Top Uploaders */}
-        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
-          <h2 className="text-lg font-medium text-white mb-4">Top Uploaders</h2>
-          {analytics?.topUploaders && analytics.topUploaders.length > 0 ? (
-            <div className="space-y-4">
-              {analytics.topUploaders.map((uploader, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-4 text-sm text-gray-400">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-green-600">#{index + 1}</span>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-white">{uploader.name}</p>
-                      <p className="text-xs text-gray-400">{uploader.pdfCount} PDFs uploaded</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-400">
-                    <div className="flex items-center">
-                      <Eye className="h-4 w-4 mr-1" />
-                      {uploader.totalViews}
-                    </div>
+                    <Eye className="h-4 w-4 mr-1" />
+                    {pdf.viewCount}
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-400">No uploader data available</p>
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-400">No PDF data available</p>
+          </div>
+        )}
       </div>
     </div>
   );

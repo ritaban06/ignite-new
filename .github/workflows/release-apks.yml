@@ -65,12 +65,12 @@ jobs:
         VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         NODE_ENV: production
 
-    - name: Install Capacitor CLI
-      run: pnpm install @capacitor/cli
+    - name: Install Tauri CLI
+      run: pnpm add -g @tauri-apps/cli
       working-directory: client
 
-    - name: Sync Capacitor Android
-      run: pnpm exec cap sync android
+    - name: Build Tauri Android project
+      run: pnpm exec tauri android build --target aarch64
       working-directory: client
 
     - name: Set up Java

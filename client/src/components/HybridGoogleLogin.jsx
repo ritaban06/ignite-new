@@ -157,7 +157,7 @@ const HybridGoogleLogin = () => {
               <li>Sign in with your Google account</li>
               <li>We verify you're in the approved users list</li>
               <li>If approved, you get access to the platform</li>
-              <li>Your profile info comes from the approved users sheet</li>
+              <li>Your profile info comes from the approved users list</li>
             </ul>
           </div>
         </div>

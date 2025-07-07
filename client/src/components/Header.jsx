@@ -22,7 +22,7 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center">
+          <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
             <img
               src="/newlogo.webp"
               alt="Ignite"
@@ -31,7 +31,7 @@ const Header = () => {
             <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
               Ignite
             </span>
-          </div>
+          </Link>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-4">
@@ -59,7 +59,7 @@ const Header = () => {
               <span>Search</span>
             </Link>
             
-            {/* <Link
+            <Link
               to="/r2-manager"
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/r2-manager')
@@ -69,7 +69,7 @@ const Header = () => {
             >
               <Cloud className="h-4 w-4" />
               <span>R2 Manager</span>
-            </Link> */}
+            </Link>
           </nav>
 
           {/* Desktop User Info and Actions */}

@@ -634,7 +634,10 @@ router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
       recentUploads,
       departmentStats,
       yearStats,
-      recentActivity
+      recentActivity,
+      totalViews,
+      topPdfs,
+      uploaderStats
     ] = await Promise.all([
       User.countDocuments({ role: 'client', isActive: true }),
       PDF.countDocuments(),
@@ -656,7 +659,37 @@ router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
         .populate('user', 'name email department year')
         .populate('pdf', 'title department year')
         .sort({ createdAt: -1 })
-        .limit(50)
+        .limit(50),
+      PDF.aggregate([
+        { $match: { isActive: true } },
+        { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
+      ]),
+      PDF.find({ isActive: true })
+        .populate('uploadedBy', 'name email')
+        .sort({ viewCount: -1 })
+        .limit(10)
+        .select('title department year viewCount uploadedBy'),
+      PDF.aggregate([
+        { $match: { isActive: true } },
+        { 
+          $lookup: {
+            from: 'users',
+            localField: 'uploadedBy',
+            foreignField: '_id',
+            as: 'uploader'
+          }
+        },
+        { $unwind: { path: '$uploader', preserveNullAndEmptyArrays: true } },
+        { 
+          $group: { 
+            _id: '$uploader.name', 
+            count: { $sum: 1 },
+            totalViews: { $sum: '$viewCount' }
+          } 
+        },
+        { $sort: { count: -1 } },
+        { $limit: 10 }
+      ])
     ]);
 
     res.json({
@@ -664,13 +697,27 @@ router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
         totalUsers,
         totalPdfs,
         activePdfs,
-        recentUploads
+        recentUploads,
+        totalViews: totalViews[0]?.totalViews || 0
       },
       distribution: {
         byDepartment: departmentStats,
         byYear: yearStats
       },
-      recentActivity
+      recentActivity,
+      topPdfs: topPdfs.map(pdf => ({
+        _id: pdf._id,
+        title: pdf.title,
+        department: pdf.department,
+        year: pdf.year,
+        viewCount: pdf.viewCount || 0,
+        uploadedBy: pdf.uploadedBy?.name || 'System Admin'
+      })),
+      topUploaders: uploaderStats.map(uploader => ({
+        name: uploader._id || 'System Admin',
+        pdfCount: uploader.count,
+        totalViews: uploader.totalViews || 0
+      }))
     });
   } catch (error) {
     console.error('Get analytics error:', error);

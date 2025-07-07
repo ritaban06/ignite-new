@@ -18,12 +18,13 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [timeRange]);
+  }, []);
 
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const response = await pdfAPI.getAnalytics({ timeRange });
+      const response = await pdfAPI.getAnalytics();
+      console.log('Analytics data received:', response.data);
       setAnalytics(response.data);
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
@@ -69,51 +70,46 @@ export default function AnalyticsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white">Analytics</h1>
           <p className="mt-2 text-gray-300">
             Insights and statistics about your PDF repository
           </p>
         </div>
-        
-        <select
-          className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
-        >
-          <option value="7d" className="bg-gray-700 text-white">Last 7 days</option>
-          <option value="30d" className="bg-gray-700 text-white">Last 30 days</option>
-          <option value="90d" className="bg-gray-700 text-white">Last 90 days</option>
-          <option value="1y" className="bg-gray-700 text-white">Last year</option>
-        </select>
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total PDFs"
-          value={analytics?.totalPdfs || 0}
-          icon={FileText}
-          color="primary"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <StatCard
           title="Total Users"
-          value={analytics?.totalUsers || 0}
+          value={analytics?.overview?.totalUsers || 0}
           icon={Users}
           color="green"
         />
         <StatCard
-          title="Total Downloads"
-          value={analytics?.totalDownloads || 0}
-          icon={Download}
+          title="Total PDFs"
+          value={analytics?.overview?.totalPdfs || 0}
+          icon={FileText}
+          color="primary"
+        />
+        <StatCard
+          title="Active PDFs"
+          value={analytics?.overview?.activePdfs || 0}
+          icon={Activity}
           color="blue"
         />
         <StatCard
           title="Total Views"
-          value={analytics?.totalViews || 0}
+          value={analytics?.overview?.totalViews || 0}
           icon={Eye}
           color="purple"
+        />
+        <StatCard
+          title="Recent Uploads (7d)"
+          value={analytics?.overview?.recentUploads || 0}
+          icon={TrendingUp}
+          color="orange"
         />
       </div>
 
@@ -122,21 +118,21 @@ export default function AnalyticsPage() {
         {/* Department Distribution */}
         <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
           <h2 className="text-lg font-medium text-white mb-4">PDFs by Department</h2>
-          {analytics?.departmentStats ? (
+          {analytics?.distribution?.byDepartment && analytics.distribution.byDepartment.length > 0 ? (
             <div className="space-y-3">
-              {Object.entries(analytics.departmentStats).map(([dept, count]) => (
-                <div key={dept} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-300">{dept}</span>
+              {analytics.distribution.byDepartment.map((dept) => (
+                <div key={dept._id} className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-300">{dept._id}</span>
                   <div className="flex items-center">
                     <div className="w-32 bg-gray-600 rounded-full h-2 mr-3">
                       <div 
                         className="bg-primary-500 h-2 rounded-full" 
                         style={{ 
-                          width: `${(count / Math.max(...Object.values(analytics.departmentStats))) * 100}%` 
+                          width: `${(dept.count / Math.max(...analytics.distribution.byDepartment.map(d => d.count))) * 100}%` 
                         }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-400 w-8 text-right">{count}</span>
+                    <span className="text-sm text-gray-400 w-8 text-right">{dept.count}</span>
                   </div>
                 </div>
               ))}
@@ -149,21 +145,21 @@ export default function AnalyticsPage() {
         {/* Year Distribution */}
         <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
           <h2 className="text-lg font-medium text-white mb-4">PDFs by Year</h2>
-          {analytics?.yearStats ? (
+          {analytics?.distribution?.byYear && analytics.distribution.byYear.length > 0 ? (
             <div className="space-y-3">
-              {Object.entries(analytics.yearStats).map(([year, count]) => (
-                <div key={year} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-300">Year {year}</span>
+              {analytics.distribution.byYear.map((year) => (
+                <div key={year._id} className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-300">Year {year._id}</span>
                   <div className="flex items-center">
                     <div className="w-32 bg-gray-600 rounded-full h-2 mr-3">
                       <div 
                         className="bg-green-500 h-2 rounded-full" 
                         style={{ 
-                          width: `${(count / Math.max(...Object.values(analytics.yearStats))) * 100}%` 
+                          width: `${(year.count / Math.max(...analytics.distribution.byYear.map(y => y.count))) * 100}%` 
                         }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-400 w-8 text-right">{count}</span>
+                    <span className="text-sm text-gray-400 w-8 text-right">{year.count}</span>
                   </div>
                 </div>
               ))}
@@ -179,16 +175,21 @@ export default function AnalyticsPage() {
         <h2 className="text-lg font-medium text-white mb-4">Recent Activity</h2>
         {analytics?.recentActivity && analytics.recentActivity.length > 0 ? (
           <div className="space-y-4">
-            {analytics.recentActivity.map((activity, index) => (
+            {analytics.recentActivity.slice(0, 10).map((activity, index) => (
               <div key={index} className="flex items-center p-4 bg-gray-700 rounded-lg">
                 <div className="flex-shrink-0">
                   <Activity className="h-5 w-5 text-gray-400" />
                 </div>
                 <div className="ml-4 flex-1">
-                  <p className="text-sm font-medium text-white">{activity.description}</p>
+                  <p className="text-sm font-medium text-white">
+                    {activity.user?.name || 'Unknown User'} {activity.action}
+                    {activity.pdf ? ` "${activity.pdf.title}"` : ''}
+                  </p>
                   <div className="flex items-center mt-1">
                     <Calendar className="h-4 w-4 text-gray-400 mr-1" />
-                    <p className="text-xs text-gray-400">{activity.timestamp}</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(activity.createdAt).toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -203,40 +204,73 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Top PDFs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Most Popular PDFs</h2>
-        {analytics?.topPdfs && analytics.topPdfs.length > 0 ? (
-          <div className="space-y-4">
-            {analytics.topPdfs.map((pdf, index) => (
-              <div key={pdf._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-primary-600">#{index + 1}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Most Popular PDFs */}
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
+          <h2 className="text-lg font-medium text-white mb-4">Most Popular PDFs</h2>
+          {analytics?.topPdfs && analytics.topPdfs.length > 0 ? (
+            <div className="space-y-4">
+              {analytics.topPdfs.map((pdf, index) => (
+                <div key={pdf._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-primary-600">#{index + 1}</span>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-white">{pdf.title}</p>
+                      <p className="text-xs text-gray-400">{pdf.department} • Year {pdf.year}</p>
+                      <p className="text-xs text-gray-500">by {pdf.uploadedBy}</p>
+                    </div>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">{pdf.title}</p>
-                    <p className="text-xs text-gray-500">{pdf.department} • Year {pdf.year}</p>
+                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    <div className="flex items-center">
+                      <Eye className="h-4 w-4 mr-1" />
+                      {pdf.viewCount}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-400">No PDF data available</p>
+            </div>
+          )}
+        </div>
+
+        {/* Top Uploaders */}
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
+          <h2 className="text-lg font-medium text-white mb-4">Top Uploaders</h2>
+          {analytics?.topUploaders && analytics.topUploaders.length > 0 ? (
+            <div className="space-y-4">
+              {analytics.topUploaders.map((uploader, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
                   <div className="flex items-center">
-                    <Download className="h-4 w-4 mr-1" />
-                    {pdf.downloadCount || 0}
+                    <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-green-600">#{index + 1}</span>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-white">{uploader.name}</p>
+                      <p className="text-xs text-gray-400">{uploader.pdfCount} PDFs uploaded</p>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <Eye className="h-4 w-4 mr-1" />
-                    {pdf.viewCount || 0}
+                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    <div className="flex items-center">
+                      <Eye className="h-4 w-4 mr-1" />
+                      {uploader.totalViews}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No PDF data available</p>
-          </div>
-        )}
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-400">No uploader data available</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

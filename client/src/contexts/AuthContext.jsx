@@ -38,7 +38,14 @@ export const AuthProvider = ({ children }) => {
           } catch (error) {
             // Token is invalid, clear auth state
             console.error('Token validation failed:', error);
-            logout();
+            
+            // Check if this is a device switch error
+            if (error.response?.data?.code === 'DEVICE_SWITCHED') {
+              console.log('Session was terminated due to login from another device');
+              // Don't show error toast for device switches as it's expected behavior
+            }
+            
+            logout(true); // true indicates this is an automatic logout
           }
         }
       } catch (error) {
@@ -68,8 +75,13 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         setIsAuthenticated(true);
         
-        toast.success(`Welcome back, ${userData.name}!`);
-        return { success: true, user: userData };
+        // Show appropriate welcome message based on device switch
+        const welcomeMessage = response.data.deviceSwitched 
+          ? `Welcome back, ${userData.name}! You've been logged out from your previous device.`
+          : `Welcome back, ${userData.name}!`;
+        
+        toast.success(welcomeMessage);
+        return { success: true, user: userData, deviceSwitched: response.data.deviceSwitched };
       } else {
         throw new Error('Invalid response format');
       }
@@ -100,7 +112,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         
         toast.success(`Welcome to Ignite, ${newUser.name}!`);
-        return { success: true, user: newUser };
+        return { success: true, user: newUser, deviceSwitched: false };
       } else {
         throw new Error('Invalid response format');
       }
@@ -114,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = async (isAutomatic = false) => {
     try {
       // Call logout API to invalidate token on server
       await authAPI.logout();
@@ -127,7 +139,11 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       setUser(null);
       setIsAuthenticated(false);
-      toast.success('Logged out successfully');
+      
+      // Only show success message for manual logouts
+      if (!isAutomatic) {
+        toast.success('Logged out successfully');
+      }
     }
   };
 
@@ -156,8 +172,13 @@ export const AuthProvider = ({ children }) => {
         setUser(backendUser);
         setIsAuthenticated(true);
         
-        toast.success(`Welcome, ${backendUser.name}!`);
-        return { success: true, user: backendUser };
+        // Show appropriate welcome message based on device switch
+        const welcomeMessage = response.data.deviceSwitched 
+          ? `Welcome, ${backendUser.name}! You've been logged out from your previous device.`
+          : `Welcome, ${backendUser.name}!`;
+        
+        toast.success(welcomeMessage);
+        return { success: true, user: backendUser, deviceSwitched: response.data.deviceSwitched };
       } else {
         throw new Error('Invalid response format');
       }

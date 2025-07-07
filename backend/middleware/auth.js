@@ -99,9 +99,12 @@ const authenticate = async (req, res, next) => {
     
     // Check device restriction for clients
     if (user.role === 'client' && user.deviceId && user.deviceId !== decoded.deviceId) {
+      // If device mismatch, it means the user was logged out from this device
+      // due to login from another device. Clear this session.
       ensureCORS(req, res);
-      return res.status(403).json({ 
-        error: 'This account is already logged in on another device.' 
+      return res.status(401).json({ 
+        error: 'Your session has been terminated due to login from another device. Please login again.',
+        code: 'DEVICE_SWITCHED'
       });
     }
     

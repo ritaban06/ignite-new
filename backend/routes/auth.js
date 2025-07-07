@@ -189,11 +189,22 @@ router.post('/login', [
     // Generate device ID
     const deviceId = generateDeviceId(req);
 
-    // For clients, check device restriction
-    if (user.role === 'client' && user.deviceId && user.deviceId !== deviceId) {
-      return res.status(403).json({ 
-        error: 'This account is already logged in on another device. Please logout from the other device first.' 
+    // Check if this is a device switch before updating
+    const wasDeviceSwitch = user.role === 'client' && user.deviceId && user.deviceId !== deviceId;
+
+    // For clients, automatically logout from previous device if different
+    if (wasDeviceSwitch) {
+      // Log the forced logout from previous device
+      await AccessLog.logAccess({
+        userId: user._id,
+        action: 'forced_logout',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        deviceId: user.deviceId,
+        details: `Forced logout due to login from new device: ${deviceId}`
       });
+      
+      console.log(`User ${user.email} automatically logged out from device ${user.deviceId} due to login from new device ${deviceId}`);
     }
 
     // Reset failed login attempts
@@ -224,8 +235,13 @@ router.post('/login', [
       deviceId
     });
 
+    // Determine login message
+    const loginMessage = wasDeviceSwitch ? 
+      'Login successful. Previous device session has been automatically logged out.' : 
+      'Login successful';
+
     res.json({
-      message: 'Login successful',
+      message: loginMessage,
       token,
       user: {
         id: user._id,
@@ -236,7 +252,8 @@ router.post('/login', [
         role: user.role,
         picture: user.picture,
         lastLogin: user.lastLogin
-      }
+      },
+      deviceSwitched: wasDeviceSwitch
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -597,13 +614,26 @@ router.post('/google-verify', [
     };
 
     let user = await User.findOne({ email }).select('+deviceId');
+    let wasDeviceSwitch = false;
     
     if (user) {
-      // Check device restriction for existing users
-      if (user.role === 'client' && user.deviceId && user.deviceId !== deviceId) {
-        return res.status(403).json({ 
-          error: 'This account is already logged in on another device. Please logout from the other device first.' 
+      // Check if this is a device switch before updating
+      wasDeviceSwitch = user.role === 'client' && user.deviceId && user.deviceId !== deviceId;
+      
+      // For clients, automatically logout from previous device if different
+      if (wasDeviceSwitch) {
+        // Log the forced logout from previous device
+        await AccessLog.create({
+          userId: user._id,
+          action: 'forced_logout',
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent'),
+          deviceId: user.deviceId,
+          timestamp: new Date(),
+          details: `Forced logout due to Google login from new device: ${deviceId}`
         });
+        
+        console.log(`User ${user.email} automatically logged out from device ${user.deviceId} due to Google login from new device ${deviceId}`);
       }
       
       // Update existing user
@@ -642,8 +672,13 @@ router.post('/google-verify', [
       console.error('Access log error:', logError);
     }
 
+    // Determine login message
+    const loginMessage = wasDeviceSwitch ? 
+      'Google OAuth verification successful. Previous device session has been automatically logged out.' : 
+      'Google OAuth verification successful';
+
     res.json({
-      message: 'Google OAuth verification successful',
+      message: loginMessage,
       token,
       user: {
         id: user._id,
@@ -654,7 +689,8 @@ router.post('/google-verify', [
         picture: user.picture,
         role: user.role,
         loginMethod: user.loginMethod
-      }
+      },
+      deviceSwitched: wasDeviceSwitch
     });
 
   } catch (error) {

@@ -68,7 +68,9 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
               <div className="flex items-center space-x-2 text-primary-600">
                 <User className="h-4 w-4 flex-shrink-0" />
                 <span className="truncate">
-                  {pdf.uploadedBy?.name || 'Unknown'}
+                  {pdf.uploadedBy?.name || (
+                    <span className="italic text-primary-500">System Admin</span>
+                  )}
                 </span>
               </div>
               

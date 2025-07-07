@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   FileText, 
   Users, 
@@ -13,11 +14,17 @@ import { pdfAPI } from '../api';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
-    totalPdfs: 0,
-    totalUsers: 0,
-    totalDownloads: 0,
-    todayUploads: 0,
-    recentActivity: [],
+    overview: {
+      totalUsers: 0,
+      totalPdfs: 0,
+      activePdfs: 0,
+      recentUploads: 0
+    },
+    distribution: {
+      byDepartment: [],
+      byYear: []
+    },
+    recentActivity: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -83,26 +90,26 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          title="Total PDFs"
-          value={stats.totalPdfs}
-          icon={FileText}
-          color="primary"
-        />
-        <StatCard
           title="Total Users"
-          value={stats.totalUsers}
+          value={stats.overview.totalUsers}
           icon={Users}
           color="green"
         />
         <StatCard
-          title="Total Downloads"
-          value={stats.totalDownloads}
-          icon={Download}
+          title="Total PDFs"
+          value={stats.overview.totalPdfs}
+          icon={FileText}
+          color="primary"
+        />
+        <StatCard
+          title="Active PDFs"
+          value={stats.overview.activePdfs}
+          icon={Activity}
           color="blue"
         />
         <StatCard
-          title="Today's Uploads"
-          value={stats.todayUploads}
+          title="Recent Uploads (7 days)"
+          value={stats.overview.recentUploads}
           icon={Upload}
           color="purple"
         />
@@ -114,34 +121,34 @@ export default function DashboardPage() {
         <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
           <h2 className="text-lg font-medium text-white mb-4">Quick Actions</h2>
           <div className="space-y-3">
-            <a
-              href="/upload"
+            <Link
+              to="/upload"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
             >
               <Upload className="h-5 w-5 text-primary-400 mr-3" />
               Upload New PDF
-            </a>
-            <a
-              href="/pdfs"
+            </Link>
+            <Link
+              to="/pdfs"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
             >
               <FileText className="h-5 w-5 text-green-400 mr-3" />
               Manage PDFs
-            </a>
-            <a
-              href="/users"
+            </Link>
+            <Link
+              to="/users"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
             >
               <Users className="h-5 w-5 text-blue-400 mr-3" />
               Manage Users
-            </a>
-            <a
-              href="/analytics"
+            </Link>
+            <Link
+              to="/analytics"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
             >
               <BarChart3 className="h-5 w-5 text-purple-400 mr-3" />
               View Analytics
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -154,8 +161,13 @@ export default function DashboardPage() {
                 <div key={index} className="flex items-center p-3 bg-gray-700 rounded-lg">
                   <Activity className="h-4 w-4 text-gray-400 mr-3" />
                   <div className="flex-1">
-                    <p className="text-sm text-white">{activity.description}</p>
-                    <p className="text-xs text-gray-400">{activity.timestamp}</p>
+                    <p className="text-sm text-white">
+                      {activity.user?.name || 'Unknown User'} {activity.action} 
+                      {activity.pdf ? ` "${activity.pdf.title}"` : ''}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(activity.createdAt).toLocaleString()}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -172,13 +184,37 @@ export default function DashboardPage() {
       {/* Department Distribution */}
       <div className="mt-8 bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
         <h2 className="text-lg font-medium text-white mb-4">Department Distribution</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-          {stats.departmentStats && Object.entries(stats.departmentStats).map(([dept, count]) => (
-            <div key={dept} className="text-center p-3 bg-gray-700 rounded-lg">
-              <p className="text-2xl font-bold text-primary-400">{count}</p>
-              <p className="text-sm text-gray-400">{dept}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {stats.distribution.byDepartment && stats.distribution.byDepartment.length > 0 ? (
+            stats.distribution.byDepartment.map((dept) => (
+              <div key={dept._id} className="text-center p-3 bg-gray-700 rounded-lg">
+                <p className="text-2xl font-bold text-primary-400">{dept.count}</p>
+                <p className="text-sm text-gray-400">{dept._id}</p>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-400">No department data available</p>
             </div>
-          ))}
+          )}
+        </div>
+        
+        {/* Year Distribution */}
+        <h3 className="text-md font-medium text-white mt-6 mb-4">Year Distribution</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.distribution.byYear && stats.distribution.byYear.length > 0 ? (
+            stats.distribution.byYear.map((year) => (
+              <div key={year._id} className="text-center p-3 bg-gray-700 rounded-lg">
+                <p className="text-2xl font-bold text-blue-400">{year.count}</p>
+                <p className="text-sm text-gray-400">Year {year._id}</p>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-4">
+              <p className="text-gray-400">No year data available</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -13,8 +13,7 @@ const DashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
-    department: '',
-    year: '',
+    // Removed department and year filters since backend handles user restrictions
     subject: ''
   });
   const [selectedPdfId, setSelectedPdfId] = useState(null);
@@ -25,9 +24,8 @@ const DashboardPage = () => {
     totalCount: 0
   });
 
-  const departments = ['AIML', 'CSE', 'ECE', 'EEE', 'IT'];
-  const years = [1, 2, 3, 4];
-
+  // Remove unused filter variables since backend handles user department/year restrictions
+  
   // Load initial data
   useEffect(() => {
     loadDashboardData();
@@ -68,16 +66,15 @@ const DashboardPage = () => {
     try {
       const params = {
         page: pagination.currentPage,
-        limit: 12,
-        ...filters
+        limit: 12
       };
 
-      // Remove empty filters
-      Object.keys(params).forEach(key => {
-        if (params[key] === '' || params[key] === null || params[key] === undefined) {
-          delete params[key];
-        }
-      });
+      // Only add subject filter if it has a value
+      if (filters.subject && filters.subject.trim()) {
+        params.subject = filters.subject.trim();
+      }
+
+      console.log('Loading PDFs with params:', params);
 
       const response = await pdfAPI.getPDFs(params);
       
@@ -93,24 +90,47 @@ const DashboardPage = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      toast.error('Please enter a search term');
+      return;
+    }
 
     try {
       setIsLoading(true);
-      const response = await pdfAPI.searchPDFs({
-        q: searchQuery,
-        ...filters,
+      
+      // Only send search query and pagination - let backend handle department/year restrictions
+      const searchParams = {
+        q: searchQuery.trim(),
         page: 1,
         limit: 12
-      });
+      };
+      
+      console.log('Dashboard searching with params:', searchParams);
+      
+      const response = await pdfAPI.searchPDFs(searchParams);
 
-      if (response.data.pdfs) {
+      if (response.data && response.data.pdfs) {
         setPdfs(response.data.pdfs);
-        setPagination(response.data.pagination);
+        setPagination(response.data.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: response.data.pdfs.length
+        });
+        
+        if (response.data.pdfs.length === 0) {
+          toast.info('No PDFs found matching your search criteria');
+        } else {
+          toast.success(`Found ${response.data.pdfs.length} PDF(s)`);
+        }
+      } else {
+        setPdfs([]);
+        toast.info('No results found');
       }
     } catch (error) {
       console.error('Search error:', error);
-      toast.error('Search failed');
+      const errorMessage = error.response?.data?.error || error.message || 'Search failed';
+      toast.error(`Search failed: ${errorMessage}`);
+      setPdfs([]);
     } finally {
       setIsLoading(false);
     }
@@ -126,12 +146,12 @@ const DashboardPage = () => {
 
   const clearFilters = () => {
     setFilters({
-      department: '',
-      year: '',
       subject: ''
     });
     setSearchQuery('');
     setPagination(prev => ({ ...prev, currentPage: 1 }));
+    // Reload the default PDFs
+    loadDashboardData();
   };
 
   const handleViewPDF = (pdfId) => {
@@ -255,40 +275,18 @@ const DashboardPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search PDFs..."
+                placeholder="Search PDFs in your department..."
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
               />
             </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <select
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
-              >
-                <option value="">All Departments</option>
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-
-              <select
-                value={filters.year}
-                onChange={(e) => handleFilterChange('year', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
-              >
-                <option value="">All Years</option>
-                {years.map((year) => (
-                  <option key={year} value={year}>Year {year}</option>
-                ))}
-              </select>
-
+            {/* Filters - Removed department and year filters since backend handles user restrictions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <input
                 type="text"
                 value={filters.subject}
                 onChange={(e) => handleFilterChange('subject', e.target.value)}
-                placeholder="Subject"
+                placeholder="Filter by subject (optional)"
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
 
@@ -309,6 +307,11 @@ const DashboardPage = () => {
               </div>
             </div>
           </form>
+          
+          {/* Info text */}
+          <div className="mt-3 text-sm text-primary-600 text-center">
+            Showing PDFs for {user?.department} Department - Year {user?.year}
+          </div>
         </div>
 
         {/* PDF Grid */}
@@ -379,7 +382,7 @@ const DashboardPage = () => {
               <BookOpen className="h-12 w-12 text-primary-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-primary-700 mb-2">No PDFs found</h3>
               <p className="text-primary-600">
-                {searchQuery ? 'Try adjusting your search terms or filters.' : 'No PDFs are available for your department and year.'}
+                {searchQuery ? 'Try adjusting your search terms.' : `No PDFs are available for ${user?.department} Department - Year ${user?.year}.`}
               </p>
             </div>
           )}

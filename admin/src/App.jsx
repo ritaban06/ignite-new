@@ -44,7 +44,7 @@ function AppContent() {
             <Route path="/pdfs" element={<PDFManagementPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            {/* <Route path="/settings" element={<SettingsPage />} /> */}
             <Route path="/debug" element={<DebugPage />} />
           </Routes>
         </main>

@@ -1,8 +1,13 @@
 # Ignite - Samarth's Study Material Platform
 
-[![Website](https://img.shields.io/website-up-down-green-red/http/shields.io.svg)](https://ignite-client.ritaban.me)
+[![PNPM](https://img.shields.io/badge/PNPM-10.12.1-orange?logo=pnpm)](https://pnpm.io/)
+[![React](https://img.shields.io/badge/React-19.1.0-blue?logo=react)](https://reactjs.org/)
+[![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)](https://www.mongodb.com/atlas)
+[![Vite](https://img.shields.io/badge/Vite-7.0.0-646CFF?logo=vite)](https://vitejs.dev/)
+[![Vercel](https://img.shields.io/badge/Vercel-Full%20Stack-black?logo=vercel)](https://vercel.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. Perfect for educational institutions and organizations that need to protect PDF content while providing seamless access to authorized users.
+A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. 
 
 ## 🏗️ Project Structure
 

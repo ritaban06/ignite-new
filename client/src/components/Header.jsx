@@ -59,7 +59,7 @@ const Header = () => {
               <span>Search</span>
             </Link>
             
-            <Link
+            {/* <Link
               to="/r2-manager"
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/r2-manager')
@@ -69,7 +69,7 @@ const Header = () => {
             >
               <Cloud className="h-4 w-4" />
               <span>R2 Manager</span>
-            </Link>
+            </Link> */}
           </nav>
 
           {/* Desktop User Info and Actions */}

@@ -176,7 +176,7 @@ export default function UploadPage() {
                   />
                 </label>
               </div>
-              <p className="text-sm text-gray-400 mt-2">PDF files only, up to 100MB</p>
+              <p className="text-sm text-gray-400 mt-2">PDF files only, up to 50MB</p>
             </div>
           ) : (
             <div className="flex items-center justify-between p-4 bg-green-900 bg-opacity-20 border border-green-700 rounded-lg">

@@ -77,6 +77,9 @@ jobs:
     - name: Set NDK_HOME environment variable
       run: echo "NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
 
+    - name: Add Rust Android target
+      run: rustup target add aarch64-linux-android
+
     - name: Build Tauri Android project
       run: pnpm exec tauri android build --target aarch64
       working-directory: client

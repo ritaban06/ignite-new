@@ -324,9 +324,12 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [startPoint, setStartPoint] = useState(null);
   const [region, setRegion] = useState(null); // {left, top, width, height}
 
+  // --- Annotation mode toggle ---
+  const [annotationMode, setAnnotationMode] = useState(false);
+
   // Mouse events for region drawing
   const handleMouseDown = (e) => {
-    if (!isOpen || isLoading || error) return;
+    if (!annotationMode || !isOpen || isLoading || error) return;
     // Only left click
     if (e.button !== 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -416,22 +419,17 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
               </span>
             )}
           </div>
-          
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <button
+              onClick={() => setAnnotationMode((m) => !m)}
+              className={`px-2 py-1 text-xs rounded ${annotationMode ? 'bg-yellow-200 text-yellow-900 border border-yellow-400' : 'bg-gray-200 text-gray-700'}`}
+              title="Toggle annotation mode"
+            >
+              {annotationMode ? 'Annotation Mode: ON' : 'Annotate'}
+            </button>
             <div className="text-xs text-red-600 mr-1 sm:mr-4 hidden sm:inline">
               🔒 Viewing Only - Download & Print Disabled
             </div>
-            
-            {/* <button
-              onClick={() => {
-                setUseIframeFallback(prev => !prev);
-                console.log('Switched fallback mode:', !useIframeFallback);
-              }}
-              className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            >
-              {useIframeFallback ? 'PDF View' : 'Iframe'}
-            </button> */}
-            
             <button
               onClick={onClose}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors touch-target"

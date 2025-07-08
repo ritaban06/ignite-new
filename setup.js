@@ -41,19 +41,19 @@ console.log();
 
 const ENV_FILES_CONFIG = [
   {
-    fileId: process.env.BACKEND_ENV_FILE_ID || 'YOUR_GDRIVE_FILE_ID_BACKEND_ENV',
+    fileId: process.env.BACKEND_ENV_FILE_ID || '1Pnrmf9vJT1BIxnVUuDkomQWu5c7rRhc8',
     fileName: '.env',
     destination: 'backend/.env',
     description: 'Backend Environment'
   },
   {
-    fileId: process.env.CLIENT_ENV_FILE_ID || 'YOUR_GDRIVE_FILE_ID_CLIENT_ENV',
+    fileId: process.env.CLIENT_ENV_FILE_ID || '12mMFAY0qGgcK6dqufkYnVTnxS-1B-PfZ',
     fileName: '.env',
     destination: 'client/.env',
     description: 'Client Environment'
   },
   {
-    fileId: process.env.ADMIN_ENV_FILE_ID || 'YOUR_GDRIVE_FILE_ID_ADMIN_ENV',
+    fileId: process.env.ADMIN_ENV_FILE_ID || '1yuYUUVfab_qbcOxNJYElsFpIx7Thh4ZT',
     fileName: '.env',
     destination: 'admin/.env',
     description: 'Admin Environment'

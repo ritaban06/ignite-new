@@ -320,7 +320,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
               🔒 Viewing Only - Download & Print Disabled
             </div>
             
-            <button
+            {/* <button
               onClick={() => {
                 setUseIframeFallback(prev => !prev);
                 console.log('Switched fallback mode:', !useIframeFallback);
@@ -328,7 +328,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
               className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             >
               {useIframeFallback ? 'PDF View' : 'Iframe'}
-            </button>
+            </button> */}
             
             <button
               onClick={onClose}

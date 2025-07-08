@@ -15,6 +15,7 @@
     "dev:admin": "pnpm --filter admin dev",
     "dev:client": "pnpm --filter client dev",
     "build:all": "pnpm --filter admin build && pnpm --filter client build",
+    "build:android": "cd client && pnpm build && pnpm exec cap sync android && cd android && ./gradlew assembleDebug ",
     "start:backend": "pnpm --filter backend start",
     "clean": "pnpm --filter admin clean && pnpm --filter client clean && pnpm --filter backend clean",
     "lint": "pnpm --filter admin lint && pnpm --filter client lint && pnpm --filter backend lint"

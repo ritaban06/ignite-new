@@ -180,9 +180,9 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 bg-primary-50 animate-fade-in duration-700">
+    <div className="min-h-screen bg-primary-50 animate-fade-in duration-700">
       {/* Welcome Header */}
-      <div className="gradient-accent shadow-sm border-b border-primary-400">
+      <div className="gradient-accent shadow-sm border-b border-primary-400 mt-[-1px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="text-center">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
@@ -213,22 +213,20 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Recently Viewed Stats Card - Commented Out */}
-            {/*
-            <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 border border-green-200 hover:border-green-300 transition-colors">
+            {/* User Year Quick Stats */}
+            <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 border border-purple-200 hover:border-purple-300 transition-colors">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-400 rounded-lg flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-600 to-purple-500 rounded-lg flex items-center justify-center">
+                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-green-700">Recently Viewed</p>
-                  <p className="text-2xl font-bold text-green-600">{recentPdfs.length}</p>
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-purple-700">Year</p>
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600">{user?.year}</p>
                 </div>
               </div>
             </div>
-            */}
 
             <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-6 border border-blue-200 hover:border-blue-300 transition-colors">
               <div className="flex items-center">
@@ -245,7 +243,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Recent PDFs Section - Commented Out */}
+          {/* Recent PDFs Section */}
           {/*
           {recentPdfs.length > 0 && (
             <div className="mb-8">

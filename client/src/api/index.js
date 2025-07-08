@@ -97,4 +97,12 @@ export const userAPI = {
   getActivity: (params = {}) => api.get('/users/activity', { params }),
 };
 
+// Annotation API
+export const annotationAPI = {
+  // Get annotations for a PDF for the current user
+  getAnnotations: (pdfId) => api.get(`/annotations/${pdfId}`),
+  // Save or update annotations for a PDF for the current user
+  saveAnnotations: (pdfId, annotationData) => api.post(`/annotations/${pdfId}`, { annotationData }),
+};
+
 export default api;

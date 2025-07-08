@@ -12,6 +12,7 @@ const authRoutes = require('./routes/auth');
 const pdfRoutes = require('./routes/pdfs');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
+const annotationRoutes = require('./routes/annotations');
 
 const app = express();
 
@@ -116,6 +117,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/pdfs', pdfRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/annotations', annotationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -171,7 +173,8 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       pdfs: '/api/pdfs',
       users: '/api/users',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      annotations: '/api/annotations'
     }
   });
 });

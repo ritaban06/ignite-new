@@ -3,7 +3,7 @@ import { Viewer, Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { toolbarPlugin, MoreActionsPopover } from '@react-pdf-viewer/toolbar';
 import { X } from 'lucide-react';
-import { pdfAPI } from '../api';
+import { pdfAPI, annotationAPI } from '../api';
 import toast from 'react-hot-toast';
 
 
@@ -13,6 +13,11 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [pdfInfo, setPdfInfo] = useState(null);
   const [useIframeFallback, setUseIframeFallback] = useState(false);
+  const [annotations, setAnnotations] = useState([]); // [{page, type, rect, text, note}]
+  const [selectedText, setSelectedText] = useState(null);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [noteInput, setNoteInput] = useState('');
+  const viewerRef = useRef();
   
   // Refs to track state and prevent infinite loops
   const fetchingRef = useRef(false);
@@ -32,7 +37,6 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       PrintMenuItem: () => <></>,
       // Remove open file button
       Open: () => <></>,
-      OpenMenuItem: () => <></>,
       // Remove more actions that might contain download/print
       MoreActions: () => <></>,
       MoreActionsPopover: () => <></>,
@@ -294,13 +298,111 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     }
   }, [pdfUrl, isLoading, error]);
 
+  // Load annotations when PDF is opened
+  useEffect(() => {
+    if (isOpen && pdfId) {
+      annotationAPI.getAnnotations(pdfId)
+        .then(res => setAnnotations(res.data || []))
+        .catch(() => setAnnotations([]));
+    }
+  }, [isOpen, pdfId]);
+
+  // Save annotations to backend
+  const saveAnnotations = async (newAnnotations) => {
+    setAnnotations(newAnnotations);
+    await annotationAPI.saveAnnotations(pdfId, newAnnotations);
+  };
+
+  // Delete annotation by index
+  const deleteAnnotation = (index) => {
+    const newAnn = annotations.filter((_, i) => i !== index);
+    saveAnnotations(newAnn);
+  };
+
+  // --- Region-based annotation state ---
+  const [drawing, setDrawing] = useState(false);
+  const [startPoint, setStartPoint] = useState(null);
+  const [region, setRegion] = useState(null); // {left, top, width, height}
+
+  // Mouse events for region drawing
+  const handleMouseDown = (e) => {
+    if (!isOpen || isLoading || error) return;
+    // Only left click
+    if (e.button !== 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDrawing(true);
+    setStartPoint({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+    setRegion(null);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!drawing || !startPoint) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setRegion({
+      left: Math.min(startPoint.x, x),
+      top: Math.min(startPoint.y, y),
+      width: Math.abs(x - startPoint.x),
+      height: Math.abs(y - startPoint.y)
+    });
+  };
+
+  const getPageFromRegion = (region) => {
+    // Try to map region.top to a page by using the rendered PDF pages
+    const pages = document.querySelectorAll('.rpv-core__page-layer');
+    for (let i = 0; i < pages.length; i++) {
+      const pageRect = pages[i].getBoundingClientRect();
+      // region.top is relative to the viewer container
+      if (
+        region.top >= pageRect.top - viewerRef.current.getBoundingClientRect().top &&
+        region.top < pageRect.bottom - viewerRef.current.getBoundingClientRect().top
+      ) {
+        return i + 1; // Pages are 1-indexed
+      }
+    }
+    return 1; // fallback
+  };
+
+  const handleMouseUp = (e) => {
+    if (!drawing || !region) return;
+    setDrawing(false);
+    const page = getPageFromRegion(region);
+    setSelectedText({
+      rect: region,
+      page
+    });
+    setRegion(null);
+  };
+
+  // Fetch PDF URL and annotations when component mounts or pdfId changes
+  useEffect(() => {
+    if (isOpen && pdfId && pdfId !== currentPdfIdRef.current && !fetchingRef.current) {
+      currentPdfIdRef.current = pdfId;
+      fetchPDFUrl();
+    }
+  }, [isOpen, pdfId, fetchPDFUrl]);
+
+  // Effect to handle text selection and annotation actions
+  useEffect(() => {
+    if (isOpen && pdfUrl) {
+      const viewer = viewerRef.current;
+      if (viewer) {
+        viewer.addEventListener('mouseup', handleTextSelection);
+      }
+      return () => {
+        if (viewer) viewer.removeEventListener('mouseup', handleTextSelection);
+      };
+    }
+  }, [isOpen, pdfUrl]);
+
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
-      style={{ userSelect: 'none' }}
-    >
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4" style={{ userSelect: 'none' }}>
       <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b">
@@ -340,7 +442,12 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden" ref={viewerRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          style={{ position: 'relative', cursor: drawing ? 'crosshair' : 'default' }}
+        >
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center h-full">
@@ -368,7 +475,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
           {/* React PDF Viewer */}
           {!useIframeFallback && pdfUrl && !isLoading && !error && (
-            <div className="h-full pdf-viewer-container" style={{ userSelect: 'none' }}>
+            <div className="h-full pdf-viewer-container" style={{ userSelect: 'none', position: 'relative' }}>
               <Worker workerUrl="/pdfjs/pdf.worker.min.js">
                 <Viewer
                   fileUrl={pdfUrl}
@@ -385,6 +492,101 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     console.log('Zoom changed to:', e.scale);
                   }}
                 />
+                {/* Render highlights */}
+                {annotations.filter(a => a.type === 'highlight').map((a, i) => {
+                  // Find the index in the original array for correct deletion
+                  const annIndex = annotations.findIndex((ann) => ann === a);
+                  return (
+                    <div key={i} style={{
+                      position: 'absolute',
+                      top: a.rect.top,
+                      left: a.rect.left,
+                      width: a.rect.width,
+                      height: a.rect.height,
+                      background: 'yellow',
+                      opacity: 0.4,
+                      pointerEvents: 'auto',
+                      zIndex: 10,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => deleteAnnotation(annIndex)}
+                    title="Click to delete highlight"
+                    />
+                  );
+                })}
+                {/* Render notes */}
+                {annotations.filter(a => a.type === 'note').map((a, i) => {
+                  const annIndex = annotations.findIndex((ann) => ann === a);
+                  return (
+                    <div key={i} style={{
+                      position: 'absolute',
+                      top: a.rect.top,
+                      left: a.rect.left,
+                      width: a.rect.width,
+                      height: a.rect.height,
+                      zIndex: 20,
+                      background: 'rgba(255,255,0,0.7)',
+                      border: '1px solid #aaa',
+                      padding: 2,
+                      borderRadius: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 18,
+                      cursor: 'pointer'
+                    }}
+                    title={a.note + ' (Click to delete note)'}
+                    onClick={() => deleteAnnotation(annIndex)}
+                    >
+                      📝
+                    </div>
+                  );
+                })}
+                {/* Draw region while dragging */}
+                {drawing && region && (
+                  <div style={{
+                    position: 'absolute',
+                    top: region.top,
+                    left: region.left,
+                    width: region.width,
+                    height: region.height,
+                    border: '2px dashed #1976d2',
+                    background: 'rgba(25, 118, 210, 0.1)',
+                    zIndex: 50,
+                    pointerEvents: 'none'
+                  }} />
+                )}
+                {/* Show highlight/note actions for region */}
+                {selectedText && selectedText.rect && (
+                  <div style={{
+                    position: 'absolute',
+                    top: selectedText.rect.top - 40,
+                    left: selectedText.rect.left,
+                    zIndex: 60,
+                    background: '#fff',
+                    border: '1px solid #ccc',
+                    padding: 4,
+                    borderRadius: 4
+                  }}>
+                    <button onClick={addHighlight} className="mr-2 text-yellow-700">Highlight</button>
+                    <button onClick={() => setShowNoteInput(true)} className="text-blue-700">Add Note</button>
+                  </div>
+                )}
+                {showNoteInput && selectedText && selectedText.rect && (
+                  <div style={{
+                    position: 'absolute',
+                    top: selectedText.rect.top - 80,
+                    left: selectedText.rect.left,
+                    zIndex: 70,
+                    background: '#fff',
+                    border: '1px solid #ccc',
+                    padding: 8,
+                    borderRadius: 4
+                  }}>
+                    <textarea value={noteInput} onChange={e => setNoteInput(e.target.value)} placeholder="Enter note..." />
+                    <button onClick={addNote} className="ml-2 text-green-700">Save Note</button>
+                  </div>
+                )}
               </Worker>
             </div>
           )}

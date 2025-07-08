@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { AlertCircle, CheckCircle, Loader2, Smartphone, Globe } from 'lucide-react';
-// import PlatformAuthService from '../services/platformAuthService';
+import PlatformAuthService from '../services/platformAuthService';
 import { useAuth } from '../contexts/AuthContext';
 
 const HybridGoogleLogin = () => {
@@ -12,9 +12,9 @@ const HybridGoogleLogin = () => {
 
   useEffect(() => {
     // Get platform information
-    // const info = PlatformAuthService.getPlatformInfo();
-    // setPlatformInfo(info);
-    // console.log('🔍 Platform Info:', info);
+    const info = PlatformAuthService.getPlatformInfo();
+    setPlatformInfo(info);
+    console.log('🔍 Platform Info:', info);
   }, []);
 
   const handleWebGoogleSuccess = async (credentialResponse) => {
@@ -37,7 +37,7 @@ const HybridGoogleLogin = () => {
 
     try {
       // Use native Google Auth service
-      // const credentials = await PlatformAuthService.signInWithGoogle();
+      const credentials = await PlatformAuthService.signInWithGoogle();
       
       // Send to backend using the same flow as web
       await googleSignIn(credentials);
@@ -53,13 +53,13 @@ const HybridGoogleLogin = () => {
     setError('Google sign-in was cancelled or failed. Please try again.');
   };
 
-  // if (!platformInfo) {
-  //   return (
-  //     <div className="flex items-center justify-center py-8">
-  //       <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
-  //     </div>
-  //   );
-  // }
+  if (!platformInfo) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -73,7 +73,7 @@ const HybridGoogleLogin = () => {
           </p>
           
           {/* Platform indicator */}
-          {/* <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
+          <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
             {platformInfo.isNative ? (
               <>
                 <Smartphone className="h-3 w-3" />
@@ -85,7 +85,7 @@ const HybridGoogleLogin = () => {
                 <span>Web Browser</span>
               </>
             )}
-          </div> */}
+          </div>
         </div>
 
         {error && (
@@ -118,7 +118,7 @@ const HybridGoogleLogin = () => {
         </div>
 
         {/* Debug info for development - commented out since platformInfo is disabled */}
-        {/* {import.meta.env.DEV && (
+        {import.meta.env.DEV && (
           <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
             <p className="font-semibold">Debug Info:</p>
             <p>Platform: {platformInfo.platform}</p>
@@ -144,7 +144,7 @@ const HybridGoogleLogin = () => {
               </div>
             )}
           </div>
-        )} */}
+        )}
       </div>
 
       {/* Information Box */}

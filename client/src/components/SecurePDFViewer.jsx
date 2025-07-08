@@ -5,7 +5,7 @@ import { toolbarPlugin, MoreActionsPopover } from '@react-pdf-viewer/toolbar';
 import { X } from 'lucide-react';
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
-import screenshotProtection from '../services/screenshotProtectionService.js';
+
 
 const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [pdfUrl, setPdfUrl] = useState(null);
@@ -13,38 +13,11 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [pdfInfo, setPdfInfo] = useState(null);
   const [useIframeFallback, setUseIframeFallback] = useState(false);
-  const [protectionStatus, setProtectionStatus] = useState('');
   
   // Refs to track state and prevent infinite loops
   const fetchingRef = useRef(false);
   const currentPdfIdRef = useRef(null);
 
-  // Enable screenshot protection when PDF opens
-  useEffect(() => {
-    const enableProtection = async () => {
-      if (isOpen && pdfId) {
-        const result = await screenshotProtection.enableForSensitiveContent();
-        const message = await screenshotProtection.getProtectionMessage();
-        setProtectionStatus(message);
-        
-        if (result.success) {
-          toast.success('🔒 Screenshot protection enabled');
-        }
-      }
-    };
-
-    enableProtection();
-  }, [isOpen, pdfId]);
-
-  // Disable protection when PDF closes
-  useEffect(() => {
-    return () => {
-      if (!isOpen) {
-        screenshotProtection.disableProtection();
-        setProtectionStatus('');
-      }
-    };
-  }, [isOpen]);
 
   // Create secure toolbar plugin that disables download, print, and open
   const secureToolbarPluginInstance = toolbarPlugin({
@@ -343,11 +316,6 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           </div>
           
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            {protectionStatus && (
-              <div className="text-xs text-green-600 mr-1 sm:mr-2 hidden sm:inline" title={protectionStatus}>
-                {protectionStatus.includes('🔒') ? '🔒' : '🔓'} Protected
-              </div>
-            )}
             <div className="text-xs text-red-600 mr-1 sm:mr-4 hidden sm:inline">
               🔒 Viewing Only - Download & Print Disabled
             </div>

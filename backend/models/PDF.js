@@ -56,9 +56,9 @@ const pdfSchema = new mongoose.Schema({
     ref: 'User',
     required: [true, 'Uploader is required']
   },
-  cloudflareKey: {
+  googleDriveFileId: {
     type: String,
-    required: [true, 'Cloudflare R2 key is required']
+    required: [true, 'Google Drive file ID is required']
   },
   isActive: {
     type: Boolean,
@@ -154,7 +154,7 @@ pdfSchema.statics.findForUser = function(user, filters = {}) {
 // Remove sensitive data from JSON output
 pdfSchema.methods.toJSON = function() {
   const pdf = this.toObject();
-  delete pdf.cloudflareKey; // Don't expose R2 key in API responses
+  delete pdf.googleDriveFileId; // Don't expose Google Drive file ID in API responses
   return pdf;
 };
 

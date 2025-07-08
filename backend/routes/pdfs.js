@@ -3,7 +3,11 @@ const multer = require('multer');
 const { body, query, validationResult } = require('express-validator');
 const PDF = require('../models/PDF');
 const AccessLog = require('../models/AccessLog');
-const r2Service = require('../services/r2Service');
+const GoogleDriveService = require('../services/googleDriveService');
+const googleDriveService = new GoogleDriveService(
+  process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
+  process.env.GOOGLE_DRIVE_FOLDER_ID
+);
 const { 
   authenticate, 
   validatePdfAccess, 
@@ -128,7 +132,7 @@ router.get('/:pdfId', [
   }
 });
 
-// Get signed URL for viewing PDF
+// Get signed URL for viewing PDF (Google Drive version)
 router.post('/:pdfId/view', [
   authenticate,
   validatePdfAccess,
@@ -137,41 +141,20 @@ router.post('/:pdfId/view', [
 ], async (req, res) => {
   try {
     const pdf = req.pdf;
-    
-    // Increment view count
     await pdf.incrementViewCount();
-    
-    // Generate signed URL with temporary access token
     const jwt = require('jsonwebtoken');
-    const accessToken = jwt.sign(
-      { 
-        userId: req.user._id, 
-        userRole: req.user.role,
-        userDepartment: req.user.department,
-        userYear: req.user.year,
-        pdfId: pdf._id,
-        fileKey: pdf.cloudflareKey,
-        exp: Math.floor(Date.now() / 1000) + (5 * 60) // 5 minutes
+    const token = jwt.sign(
+      {
+        fileId: pdf.googleDriveFileId,
+        userId: req.user._id,
+        role: req.user.role,
+        exp: Math.floor(Date.now() / 1000) + (5 * 60) // 5 min
       },
       process.env.JWT_SECRET
     );
-    
-    const urlResult = r2Service.getViewUrl(
-      pdf.cloudflareKey,
-      req.user._id,
-      300, // 5 minutes
-      accessToken // Pass the access token
-    );
-    
-    if (!urlResult.success) {
-      return res.status(500).json({ 
-        error: 'Failed to generate view URL' 
-      });
-    }
-
+    const proxyUrl = `/api/pdfs/proxy/${pdf.googleDriveFileId}?token=${token}`;
     res.json({
-      viewUrl: urlResult.url,
-      expiresIn: urlResult.expiresIn,
+      proxyUrl,
       pdf: {
         id: pdf._id,
         title: pdf.title,
@@ -181,11 +164,7 @@ router.post('/:pdfId/view', [
       }
     });
   } catch (error) {
-    console.error('Generate view URL error:', error);
-    res.status(500).json({ 
-      error: 'Failed to generate view URL', 
-      message: error.message 
-    });
+    res.status(500).json({ error: 'Failed to generate proxy URL', message: error.message });
   }
 });
 
@@ -384,7 +363,7 @@ router.get('/r2/list', [
 ], async (req, res) => {
   try {
     // List all files in the R2 bucket
-    const r2Result = await r2Service.listFiles();
+    const r2Result = await googleDriveService.listFiles();
     
     if (!r2Result.success) {
       return res.status(500).json({
@@ -412,7 +391,7 @@ router.get('/r2/list', [
               department: pdf.department,
               year: pdf.year,
               fileKey: fileKey,
-              viewUrl: r2Service.getViewUrl(fileKey).url,
+              viewUrl: googleDriveService.getViewUrl(fileKey).url,
               createdAt: pdf.createdAt,
               fileSize: pdf.fileSize,
               viewCount: pdf.viewCount
@@ -428,7 +407,7 @@ router.get('/r2/list', [
               department: 'Unknown',
               year: 'Unknown',
               fileKey: fileKey,
-              viewUrl: r2Service.getViewUrl(fileKey).url,
+              viewUrl: googleDriveService.getViewUrl(fileKey).url,
               createdAt: null,
               fileSize: null,
               viewCount: 0,
@@ -459,6 +438,56 @@ router.get('/r2/list', [
       error: 'Failed to list R2 files',
       message: error.message
     });
+  }
+});
+
+// Proxy route to serve PDFs from Google Drive with token validation
+router.get('/proxy/:fileId', [
+  pdfSecurityHeaders,
+  disablePdfCaching,
+  async (req, res, next) => {
+    // Token validation (JWT in query)
+    const token = req.query.token;
+    if (!token) {
+      return res.status(401).json({ error: 'Token required' });
+    }
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.fileId !== req.params.fileId) {
+        return res.status(403).json({ error: 'Invalid token for this file' });
+      }
+      req.user = decoded; // Attach user info if needed
+      next();
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+  }
+], async (req, res) => {
+  try {
+    // Stream PDF from Google Drive
+    const fileId = req.params.fileId;
+    const driveResult = await googleDriveService.downloadPdf(fileId);
+    if (!driveResult.success) {
+      return res.status(500).json({ error: 'Failed to fetch PDF from Google Drive', message: driveResult.error });
+    }
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'inline; filename="secured.pdf"',
+      'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-Download-Options': 'noopen',
+      'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
+    });
+    driveResult.stream.pipe(res);
+    driveResult.stream.on('error', (err) => {
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error streaming PDF' });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to serve PDF', message: error.message });
   }
 });
 
@@ -572,7 +601,7 @@ router.get('/proxy/:fileKey', [
     console.log('Access granted for PDF:', pdf.title);
     
     // Use the R2 service to get PDF stream or signed URL
-    const pdfResult = await r2Service.getPdfStream(fileKey);
+    const pdfResult = await googleDriveService.getPdfStream(fileKey);
     
     if (!pdfResult.success) {
       console.error('Failed to get PDF from R2:', pdfResult.error);
@@ -731,7 +760,7 @@ router.get('/test-r2-connection', authenticate, async (req, res) => {
     console.log('R2 Config:', configTest);
 
     // Test listing files
-    const listResult = await r2Service.listFiles();
+    const listResult = await googleDriveService.listFiles();
     
     let testResults = {
       config: configTest,
@@ -747,7 +776,7 @@ router.get('/test-r2-connection', authenticate, async (req, res) => {
       const firstFile = listResult.files[0];
       console.log('Testing signed URL for:', firstFile);
       
-      const signedUrlResult = await r2Service.getSignedViewUrl(firstFile, 60);
+      const signedUrlResult = await googleDriveService.getSignedViewUrl(firstFile, 60);
       testResults.signedUrl = {
         success: signedUrlResult.success,
         hasUrl: !!signedUrlResult.url,
@@ -756,7 +785,7 @@ router.get('/test-r2-connection', authenticate, async (req, res) => {
 
       // Test PDF stream
       console.log('Testing PDF stream for:', firstFile);
-      const streamResult = await r2Service.getPdfStream(firstFile);
+      const streamResult = await googleDriveService.getPdfStream(firstFile);
       testResults.pdfStream = {
         success: streamResult.success,
         useSignedUrl: streamResult.useSignedUrl,
@@ -799,7 +828,7 @@ router.post('/:pdfId/view-base64', [
     console.log('Getting PDF as base64 for:', pdf.title);
     
     // Get PDF stream from R2
-    const pdfResult = await r2Service.getPdfStream(pdf.cloudflareKey);
+    const pdfResult = await googleDriveService.getPdfStream(pdf.cloudflareKey);
     
     if (!pdfResult.success) {
       console.error('Failed to get PDF from R2:', pdfResult.error);
@@ -879,6 +908,59 @@ router.post('/:pdfId/view-base64', [
       error: 'Failed to get PDF as base64', 
       message: error.message 
     });
+  }
+});
+
+// PDF upload route (new, using Google Drive)
+router.post('/upload', [
+  authenticate,
+  upload.single('pdf'),
+  body('title').notEmpty(),
+  body('department').isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  body('year').isInt({ min: 1, max: 4 }),
+  body('subject').notEmpty(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Validation failed', details: errors.array() });
+    }
+    const { title, department, year, subject, tags, description } = req.body;
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No PDF file uploaded' });
+    }
+    // Upload to Google Drive
+    const uploadResult = await googleDriveService.uploadPdf(
+      file.buffer,
+      file.originalname,
+      department,
+      year,
+      subject,
+      file.mimetype
+    );
+    if (!uploadResult.success) {
+      return res.status(500).json({ error: 'Failed to upload PDF', message: uploadResult.error });
+    }
+    // Save PDF metadata to DB
+    const pdf = await PDF.create({
+      title,
+      description,
+      fileName: file.filename || file.originalname,
+      originalName: file.originalname,
+      fileSize: file.size,
+      mimeType: file.mimetype,
+      department,
+      year,
+      subject,
+      tags: tags || [],
+      uploadedBy: req.user._id,
+      googleDriveFileId: uploadResult.fileId,
+    });
+    res.status(201).json({ success: true, pdf });
+  } catch (error) {
+    console.error('PDF upload error:', error);
+    res.status(500).json({ error: 'Failed to upload PDF', message: error.message });
   }
 });
 

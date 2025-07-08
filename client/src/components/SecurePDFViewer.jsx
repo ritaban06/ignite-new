@@ -130,7 +130,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       console.log('PDF URL response:', response.data);
       
       if (response.data.viewUrl) {
-        console.log('Fetching PDF content from proxy URL:', response.data.viewUrl);
+        // console.log('Fetching PDF content from proxy URL:', response.data.viewUrl);
         
         try {
           const pdfResponse = await fetch(response.data.viewUrl, {

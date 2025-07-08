@@ -141,6 +141,9 @@ importers:
 
   client:
     dependencies:
+      '@capacitor/android':
+        specifier: ^7.4.1
+        version: 7.4.1(@capacitor/core@7.4.1)
       '@capacitor/cli':
         specifier: ^7.4.1
         version: 7.4.1
@@ -572,6 +575,11 @@ packages:
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+
+  '@capacitor/android@7.4.1':
+    resolution: {integrity: sha512-/LxreKsXt6oZnS7gOpHz2WvRuZzwaLpGOKqomvBTliISTQaKEwqLkX1k665fqZquuJjP8RKnkz8thO6UZJTfbg==}
+    peerDependencies:
+      '@capacitor/core': ^7.4.0
 
   '@capacitor/cli@7.4.1':
     resolution: {integrity: sha512-pN5SCj5SAA54yHj8XKJNhRXjjHNKrSfUuSS7a8GKQl/+OeaG0aA2hNJmM5RQJMBQ5MtU0sQqSLWpTkSW9nd7YA==}
@@ -4586,6 +4594,10 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
 
   '@bcoe/v8-coverage@0.2.3': {}
+
+  '@capacitor/android@7.4.1(@capacitor/core@7.4.1)':
+    dependencies:
+      '@capacitor/core': 7.4.1
 
   '@capacitor/cli@7.4.1':
     dependencies:

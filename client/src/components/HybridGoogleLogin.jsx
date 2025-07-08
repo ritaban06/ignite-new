@@ -103,8 +103,15 @@ const HybridGoogleLogin = () => {
               <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
               <span className="text-gray-600">Verifying approval status...</span>
             </div>
+          ) : platformInfo.isNative ? (
+            <button
+              onClick={handleNativeGoogleSignIn}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow"
+            >
+              <Smartphone className="h-5 w-5" />
+              <span>Sign in with Google (Mobile)</span>
+            </button>
           ) : (
-            // Always use Web Google OAuth button since platform detection is disabled
             <GoogleLogin
               onSuccess={handleWebGoogleSuccess}
               onError={handleGoogleError}

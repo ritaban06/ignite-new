@@ -58,11 +58,12 @@ jobs:
         NODE_ENV: production
 
     - name: Install Capacitor CLI
-      run: pnpm install @capacitor/cli
+      run: pnpm install --save-dev @capacitor/cli
       working-directory: client
 
     - name: Sync Capacitor Android
-      run: pnpm cap sync android
+      run: pnpm exec cap sync android
+      working-directory: client
 
     - name: Set up Java
       uses: actions/setup-java@v3

@@ -90,8 +90,8 @@ jobs:
         else
            echo "⚠️ No keystore found, skipping release APK"
         fi
-        working-directory: client/android
-        env:
+      working-directory: client/android
+      env:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}

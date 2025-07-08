@@ -62,7 +62,7 @@ jobs:
       working-directory: client
 
     - name: Sync Capacitor Android
-      run: pnpm exec cap sync android
+      run: pnpm cap sync android
 
     - name: Set up Java
       uses: actions/setup-java@v3

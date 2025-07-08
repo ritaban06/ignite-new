@@ -366,27 +366,6 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             </div>
           )}
 
-          {/* Iframe Fallback */}
-          {useIframeFallback && pdfUrl && !isLoading && !error && (
-            <div className="h-full w-full" style={{ userSelect: 'none' }}>
-              <iframe
-                src={pdfUrl}
-                width="100%"
-                height="100%"
-                style={{ 
-                  border: 'none',
-                  backgroundColor: 'white',
-                  userSelect: 'none'
-                }}
-                title="PDF Document"
-                sandbox="allow-same-origin allow-scripts"
-                referrerPolicy="no-referrer"
-                onLoad={() => console.log('✅ Iframe PDF loaded successfully')}
-                onError={() => console.error('❌ Iframe PDF failed to load')}
-              />
-            </div>
-          )}
-
           {/* React PDF Viewer */}
           {!useIframeFallback && pdfUrl && !isLoading && !error && (
             <div className="h-full pdf-viewer-container" style={{ userSelect: 'none' }}>

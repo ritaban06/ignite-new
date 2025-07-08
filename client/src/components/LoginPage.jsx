@@ -3,13 +3,13 @@ import HybridGoogleLogin from './HybridGoogleLogin';
 
 const LoginPage = () => {
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen gradient-bg flex items-center justify-center py-6 px-4 sm:py-12 sm:px-6 lg:px-8 animate-fade-in">
       <div className="max-w-md w-full space-y-6 sm:space-y-8">
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-32 h-32 sm:w-64 sm:h-64 bg-primary-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-32 h-32 sm:w-64 sm:h-64 bg-primary-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-32 h-32 sm:w-64 sm:h-64 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-1/3 right-1/4 w-32 h-32 sm:w-64 sm:h-64 bg-primary-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob [animation-delay:2s]"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-32 h-32 sm:w-64 sm:h-64 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob [animation-delay:4s]"></div>
         </div>
         
         {/* Logo and Header */}

@@ -35,6 +35,26 @@ export default {
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui'],
       },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'slide-down': {
+          '0%': { transform: 'translateY(-40px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        blob: {
+          '0%, 100%': { transform: 'translateY(0) scale(1)' },
+          '33%': { transform: 'translateY(-20px) scale(1.1)' },
+          '66%': { transform: 'translateY(10px) scale(0.9)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.7s ease-out',
+        'slide-down': 'slide-down 0.7s cubic-bezier(0.4,0,0.2,1)',
+        blob: 'blob 7s infinite ease-in-out',
+      },
     },
   },
   plugins: [],

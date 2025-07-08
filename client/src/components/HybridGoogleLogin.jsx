@@ -125,7 +125,7 @@ const HybridGoogleLogin = () => {
         </div>
 
         {/* Debug info for development - commented out since platformInfo is disabled */}
-        {import.meta.env.DEV && (
+        {/* {import.meta.env.DEV && (
           <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
             <p className="font-semibold">Debug Info:</p>
             <p>Platform: {platformInfo.platform}</p>
@@ -151,7 +151,7 @@ const HybridGoogleLogin = () => {
               </div>
             )}
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Information Box */}

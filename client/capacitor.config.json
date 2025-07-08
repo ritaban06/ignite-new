@@ -1,6 +1,6 @@
 {
-  "appId": "com.ignite.samarthtmsl",
-  "appName": "Ingite",
+  "appId": "com.samarth.ignite",
+  "appName": "Ignite",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.ignite.samarthtmsl"
+    namespace "com.samarth.ignite"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.ignite.samarthtmsl"
+        applicationId "com.samarth.ignite"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,4 +1,4 @@
-package com.ignite.samarthtmsl;
+package com.samarth.ignite;
 
 import com.getcapacitor.BridgeActivity;
 

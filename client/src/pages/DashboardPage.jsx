@@ -180,9 +180,9 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 bg-primary-50 animate-fade-in duration-700">
+    <div className="min-h-screen bg-primary-50 animate-fade-in duration-700">
       {/* Welcome Header */}
-      <div className="gradient-accent shadow-sm border-b border-primary-400">
+      <div className="gradient-accent shadow-sm border-b border-primary-400 mt-[-1px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="text-center">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">

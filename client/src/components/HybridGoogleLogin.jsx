@@ -103,6 +103,8 @@ const HybridGoogleLogin = () => {
               <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
               <span className="text-gray-600">Verifying approval status...</span>
             </div>
+          ) : import.meta.env.DEV ? (
+            <div className="text-gray-500 text-center text-sm">Google login is disabled in development mode.</div>
           ) : platformInfo.isNative ? (
             <button
               onClick={handleNativeGoogleSignIn}

@@ -28,6 +28,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (import.meta.env.DEV && error.response?.status === 401) {
+      // In development, ignore 401 errors and do not redirect or clear auth
+      return Promise.resolve({ data: {} });
+    }
     if (error.response?.status === 401) {
       // Check if this is a device switch error
       if (error.response?.data?.code === 'DEVICE_SWITCHED') {

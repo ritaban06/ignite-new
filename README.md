@@ -1,4 +1,4 @@
-# Ignite - Samarth's Study Material Platform  
+# Ignite - Samarth's Study Material Platform 
 
 [![PNPM](https://img.shields.io/badge/PNPM-10.12.1-orange?logo=pnpm)](https://pnpm.io/)
 [![React](https://img.shields.io/badge/React-19.1.0-blue?logo=react)](https://reactjs.org/)

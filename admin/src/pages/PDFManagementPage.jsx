@@ -44,14 +44,15 @@ export default function PDFManagementPage() {
       const params = {
         page: currentPage,
         limit: 10,
-        search: searchTerm,
+        // Only add department/year if not 'All'
         ...(filters.department !== 'All' && { department: filters.department }),
         ...(filters.year !== 'All' && { year: filters.year }),
       };
-      
+      // Only add search if not empty
+      if (searchTerm.trim()) params.search = searchTerm.trim();
       const response = await pdfAPI.getAllPdfs(params);
       setPdfs(response.data.pdfs);
-      setTotalPages(response.data.pagination.totalPages);
+      setTotalPages(response.data.pagination ? response.data.pagination.totalPages : 1);
     } catch (error) {
       console.error('Failed to fetch PDFs:', error);
       toast.error('Failed to load PDFs');

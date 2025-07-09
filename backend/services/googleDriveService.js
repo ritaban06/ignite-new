@@ -3,10 +3,11 @@ const fs = require('fs');
 
 // GoogleDriveService class for handling PDF uploads/downloads to Google Drive
 class GoogleDriveService {
-  constructor(serviceAccountKeyPath, folderId) {
+  constructor(serviceAccountCredentials, folderId) {
     this.folderId = folderId;
+    // Accept credentials object directly
     this.auth = new google.auth.GoogleAuth({
-      keyFile: serviceAccountKeyPath,
+      credentials: serviceAccountCredentials,
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
     this.drive = google.drive({ version: 'v3', auth: this.auth });
@@ -22,11 +23,11 @@ class GoogleDriveService {
       };
       const media = {
         mimeType,
-        body: Buffer.isBuffer(fileBuffer) ? fs.createReadStream(fileBuffer) : fileBuffer,
+        body: fileBuffer,
       };
       const response = await this.drive.files.create({
         resource: fileMetadata,
-        media: { mimeType, body: fileBuffer },
+        media,
         fields: 'id, webViewLink, webContentLink',
       });
       return {
@@ -71,13 +72,49 @@ class GoogleDriveService {
     try {
       const response = await this.drive.files.list({
         q: `'${this.folderId}' in parents and mimeType='application/pdf' and trashed=false`,
-        fields: 'files(id, name, webViewLink, webContentLink)',
+        fields: 'files(id, name, webViewLink, webContentLink, createdTime, size)',
+        orderBy: 'createdTime desc',
       });
       return { success: true, files: response.data.files };
     } catch (error) {
       console.error('Google Drive list error:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  // Recursively list all PDF files in a folder and its subfolders
+  async listFilesRecursive(folderId = this.folderId) {
+    let allFiles = [];
+    try {
+      // List PDF files in the current folder
+      const response = await this.drive.files.list({
+        q: `'${folderId}' in parents and mimeType='application/pdf' and trashed=false`,
+        fields: 'files(id, name, webViewLink, webContentLink, createdTime, size, parents)',
+        orderBy: 'createdTime desc',
+      });
+      allFiles = response.data.files || [];
+
+      // List subfolders in the current folder
+      const subfoldersRes = await this.drive.files.list({
+        q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: 'files(id, name)',
+      });
+      const subfolders = subfoldersRes.data.files || [];
+
+      // Recursively list files in subfolders
+      for (const subfolder of subfolders) {
+        const subFiles = await this.listFilesRecursive(subfolder.id);
+        allFiles = allFiles.concat(subFiles);
+      }
+    } catch (error) {
+      console.error('Google Drive recursive list error:', error);
+    }
+    return allFiles;
+  }
+
+  // Get a view URL for a PDF
+  getViewUrl(fileId) {
+    return `https://drive.google.com/file/d/${fileId}/view`;
   }
 }
 

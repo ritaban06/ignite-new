@@ -151,6 +151,24 @@ pdfSchema.statics.findForUser = function(user, filters = {}) {
     .sort({ createdAt: -1 });
 };
 
+// Static method to find all PDFs for admin
+pdfSchema.statics.findAllForAdmin = function(filters = {}) {
+  const query = {};
+  // Apply filters if provided
+  if (filters.subject) {
+    query.subject = new RegExp(filters.subject, 'i');
+  }
+  if (filters.tags && filters.tags.length > 0) {
+    query.tags = { $in: filters.tags };
+  }
+  if (filters.search) {
+    query.$text = { $search: filters.search };
+  }
+  return this.find(query)
+    .populate('uploadedBy', 'name email')
+    .sort({ createdAt: -1 });
+};
+
 // Remove sensitive data from JSON output
 pdfSchema.methods.toJSON = function() {
   const pdf = this.toObject();

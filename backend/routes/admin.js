@@ -6,6 +6,7 @@ const User = require('../models/User');
 const AccessLog = require('../models/AccessLog');
 const r2Service = require('../services/r2Service');
 const googleSheetsService = require('../services/googleSheetsService');
+const googleDriveService = require('../services/googleDriveService');
 const { 
   authenticate, 
   requireAdmin, 
@@ -205,8 +206,8 @@ router.post('/upload', [
 
     const { title, description, department, year, subject, tags } = req.body;
 
-    // Upload to R2
-    const uploadResult = await r2Service.uploadPdf(
+    // Upload to Google Drive
+    const uploadResult = await googleDriveService.uploadPdf(
       req.file.buffer,
       req.file.originalname,
       department,
@@ -217,7 +218,8 @@ router.post('/upload', [
 
     if (!uploadResult.success) {
       return res.status(500).json({ 
-        error: 'Failed to upload file to storage' 
+        error: 'Failed to upload file to Google Drive',
+        message: uploadResult.error
       });
     }
 
@@ -225,7 +227,7 @@ router.post('/upload', [
     const pdf = new PDF({
       title,
       description,
-      fileName: uploadResult.fileKey,
+      fileName: uploadResult.name,
       originalName: req.file.originalname,
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
@@ -234,7 +236,7 @@ router.post('/upload', [
       subject,
       tags: tags || [],
       uploadedBy: req.user._id,
-      cloudflareKey: uploadResult.fileKey
+      googleDriveFileId: uploadResult.fileId
     });
 
     await pdf.save();
@@ -262,12 +264,6 @@ router.post('/upload', [
     });
   } catch (error) {
     console.error('Upload error:', error);
-    
-    // Try to cleanup uploaded file if database save failed
-    if (error.cloudflareKey) {
-      r2Service.deletePdf(error.cloudflareKey).catch(console.error);
-    }
-    
     res.status(500).json({ 
       error: 'Upload failed', 
       message: error.message 

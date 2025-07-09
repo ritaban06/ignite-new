@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import { pdfAPI } from '../api';
 import PDFCard from '../components/PDFCard';
@@ -11,9 +11,6 @@ const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [filters, setFilters] = useState({
-    // Remove department and year filters since backend will handle user restrictions
-  });
   const [selectedPdfId, setSelectedPdfId] = useState(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [pagination, setPagination] = useState({
@@ -22,8 +19,6 @@ const SearchPage = () => {
     totalCount: 0
   });
 
-  // Remove unused filter variables since backend handles user restrictions
-  
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) {
@@ -78,7 +73,6 @@ const SearchPage = () => {
   const clearSearch = () => {
     setSearchQuery('');
     setSearchResults([]);
-    setFilters({});
   };
 
   const handleViewPDF = (pdfId) => {
@@ -92,46 +86,48 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] animate-fade-in duration-700 overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto mt-8 sm:mt-12 lg:mt-20 px-2 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 bg-[rgba(27,11,66,0.7)] backdrop-blur-md rounded-xl sm:rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)]">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent mb-2">Search PDFs</h1>
-          <p className="text-sm sm:text-base text-purple-700">Find educational resources for {user?.department} Department - Year {user?.year}</p>
+          <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+            Search PDFs
+          </h1>
+          <p className="text-xs sm:text-base text-white/80">
+            Find educational resources for {user?.department} Department - Year {user?.year}
+          </p>
         </div>
 
         {/* Search Form */}
-        <div className="bg-primary-100/80 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 mb-6 sm:mb-8 border border-primary-200">
+        <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-[rgba(255,255,255,0.15)]">
           <form onSubmit={handleSearch} className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <Search className="h-5 w-5 text-white/60" />
               </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by title, subject, or tags in your department..."
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
+                className="block w-full pl-10 pr-3 py-3 bg-transparent border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/60"
                 autoFocus
               />
             </div>
-
-            {/* Filters - Removed department and year filters since backend handles user restrictions */}
             <div className="flex justify-end">
               <div className="flex space-x-2">
                 <button
                   type="submit"
                   disabled={isLoading || !searchQuery.trim()}
-                  className="gradient-accent text-white px-6 py-2 rounded-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
                 >
                   {isLoading ? 'Searching...' : 'Search'}
                 </button>
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="p-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-200 hover:border-primary-400 hover:text-primary-800 transition-colors"
+                  className="p-2 border border-white/20 text-white/80 rounded-lg hover:bg-white/10 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -144,11 +140,11 @@ const SearchPage = () => {
         <div>
           {searchQuery && (
             <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-primary-700 mb-2">
+              <h2 className="text-lg sm:text-xl font-semibold text-white mb-2">
                 Search Results for "{searchQuery}"
               </h2>
               {pagination.totalCount > 0 && (
-                <p className="text-primary-600">
+                <p className="text-white/80">
                   Found {pagination.totalCount} PDF{pagination.totalCount !== 1 ? 's' : ''}
                 </p>
               )}
@@ -158,14 +154,7 @@ const SearchPage = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-primary-100/60 backdrop-blur-sm rounded-lg shadow-sm h-48 sm:h-64 animate-pulse border border-primary-200">
-                  <div className="p-3 sm:p-4">
-                    <div className="h-4 bg-primary-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-primary-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-3 bg-primary-200 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-primary-200 rounded w-2/3"></div>
-                  </div>
-                </div>
+                <div key={i} className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg h-48 sm:h-64 animate-pulse border border-[rgba(255,255,255,0.15)]"></div>
               ))}
             </div>
           ) : searchResults.length > 0 ? (
@@ -180,17 +169,17 @@ const SearchPage = () => {
             </div>
           ) : searchQuery ? (
             <div className="text-center py-8 sm:py-12">
-              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-primary-500 mx-auto mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-primary-700 mb-2">No results found</h3>
-              <p className="text-sm sm:text-base text-primary-600">
+              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-white/60 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-white mb-2">No results found</h3>
+              <p className="text-sm sm:text-base text-white/80">
                 Try adjusting your search terms or filters.
               </p>
             </div>
           ) : (
             <div className="text-center py-8 sm:py-12">
-              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-primary-500 mx-auto mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-primary-700 mb-2">Start your search</h3>
-              <p className="text-sm sm:text-base text-primary-600 px-4">
+              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-white/60 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-white mb-2">Start your search</h3>
+              <p className="text-sm sm:text-base text-white/80 px-4">
                 Enter keywords to find PDFs in your department ({user?.department}) and year ({user?.year}).
               </p>
             </div>

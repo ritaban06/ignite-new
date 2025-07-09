@@ -13,7 +13,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [pdfInfo, setPdfInfo] = useState(null);
   const [useIframeFallback, setUseIframeFallback] = useState(false);
-  const [annotations, setAnnotations] = useState([]); // [{page, type, rect, text, note}]
+  // const [annotations, setAnnotations] = useState([]); // [{page, type, rect, text, note}]
   const [selectedText, setSelectedText] = useState(null);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [noteInput, setNoteInput] = useState('');
@@ -299,25 +299,25 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   }, [pdfUrl, isLoading, error]);
 
   // Load annotations when PDF is opened
-  useEffect(() => {
-    if (isOpen && pdfId) {
-      annotationAPI.getAnnotations(pdfId)
-        .then(res => setAnnotations(res.data || []))
-        .catch(() => setAnnotations([]));
-    }
-  }, [isOpen, pdfId]);
+  // useEffect(() => {
+  //   if (isOpen && pdfId) {
+  //     annotationAPI.getAnnotations(pdfId)
+  //       .then(res => setAnnotations(res.data || []))
+  //       .catch(() => setAnnotations([]));
+  //   }
+  // }, [isOpen, pdfId]);
 
   // Save annotations to backend
-  const saveAnnotations = async (newAnnotations) => {
-    setAnnotations(newAnnotations);
-    await annotationAPI.saveAnnotations(pdfId, newAnnotations);
-  };
+  // const saveAnnotations = async (newAnnotations) => {
+  //   setAnnotations(newAnnotations);
+  //   await annotationAPI.saveAnnotations(pdfId, newAnnotations);
+  // };
 
   // Delete annotation by index
-  const deleteAnnotation = (index) => {
-    const newAnn = annotations.filter((_, i) => i !== index);
-    saveAnnotations(newAnn);
-  };
+  // const deleteAnnotation = (index) => {
+  //   const newAnn = annotations.filter((_, i) => i !== index);
+  //   saveAnnotations(newAnn);
+  // };
 
   // --- Region-based annotation state ---
   const [drawing, setDrawing] = useState(false);
@@ -494,7 +494,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                   }}
                 />
                 {/* Render highlights */}
-                {annotations.filter(a => a.type === 'highlight').map((a, i) => {
+                {/* {annotations.filter(a => a.type === 'highlight').map((a, i) => {
                   // Find the index in the original array for correct deletion
                   const annIndex = annotations.findIndex((ann) => ann === a);
                   return (
@@ -514,9 +514,9 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     title="Click to delete highlight"
                     />
                   );
-                })}
+                })} */}
                 {/* Render notes */}
-                {annotations.filter(a => a.type === 'note').map((a, i) => {
+                {/* {annotations.filter(a => a.type === 'note').map((a, i) => {
                   const annIndex = annotations.findIndex((ann) => ann === a);
                   return (
                     <div key={i} style={{
@@ -542,7 +542,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                       📝
                     </div>
                   );
-                })}
+                })} */}
                 {/* Draw region while dragging */}
                 {drawing && region && (
                   <div style={{

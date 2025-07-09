@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-// const Annotation = require('../models/Annotation');
-// const { ensureAuthenticated } = require('../middleware/auth');
+const Annotation = require('../models/Annotation');
+const { ensureAuthenticated } = require('../middleware/auth');
 
-// // Get annotations for a user and PDF
+// Get annotations for a user and PDF
 // router.get('/:pdfId', ensureAuthenticated, async (req, res) => {
 //   try {
 //     const annotation = await Annotation.findOne({
@@ -16,7 +16,7 @@ const router = express.Router();
 //   }
 // });
 
-// // Save or update annotations for a user and PDF
+// Save or update annotations for a user and PDF
 // router.post('/:pdfId', ensureAuthenticated, async (req, res) => {
 //   try {
 //     const { annotationData } = req.body;

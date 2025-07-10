@@ -37,7 +37,7 @@ const Header = () => {
   }, [isMobileMenuOpen]);
 
   return (
-   <header className="fixed top-0 left-0 right-0 z-50 bg-[rgba(27,11,66,0.7)] backdrop-blur-md shadow-lg border-b border-white/10 animate-slide-down duration-700">
+   <header className="fixed top-0 left-0 right-0 z-50 bg-purple-700/100 backdrop-blur-md shadow-lg border-b border-purple-200/20 animate-slide-down duration-700">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="flex justify-between items-center h-16">
       
@@ -55,8 +55,8 @@ const Header = () => {
           to="/dashboard"
           className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             isActive('/dashboard') || isActive('/')
-              ? 'bg-white/10 text-white'
-              : 'text-white/80 hover:text-white hover:bg-white/10'
+              ? 'bg-purple-500/20 text-white'
+              : 'text-white/80 hover:text-white hover:bg-purple-500/20'
           }`}
         >
           <Home className="h-4 w-4" />
@@ -67,8 +67,8 @@ const Header = () => {
           to="/search"
           className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             isActive('/search')
-              ? 'bg-white/10 text-white'
-              : 'text-white/80 hover:text-white hover:bg-white/10'
+              ? 'bg-purple-500/20 text-white'
+              : 'text-white/80 hover:text-white hover:bg-purple-500/20'
           }`}
         >
           <Search className="h-4 w-4" />
@@ -79,8 +79,8 @@ const Header = () => {
           to="/r2-manager"
           className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             isActive('/r2-manager')
-              ? 'bg-white/10 text-white'
-              : 'text-white/80 hover:text-white hover:bg-white/10'
+              ? 'bg-purple-500/20 text-white'
+              : 'text-white/80 hover:text-white hover:bg-purple-500/20'
           }`}
         >
           <Cloud className="h-4 w-4" />
@@ -121,7 +121,7 @@ const Header = () => {
 
         <div className="flex items-center space-x-2">
           <button
-            className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+            className="p-2 text-white/70 hover:text-white hover:bg-purple-500/20 rounded-md transition-colors"
             title="Settings"
           >
             <Settings className="h-4 w-4" />
@@ -156,7 +156,7 @@ const Header = () => {
 
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+          className="p-2 text-white/70 hover:text-white hover:bg-purple-500/20 rounded-md transition-colors"
         >
           {isMobileMenuOpen ? (
             <X className="h-5 w-5" />
@@ -169,7 +169,7 @@ const Header = () => {
 
     {/* Mobile Menu */}
     {isMobileMenuOpen && (
-      <div className="md:hidden bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] backdrop-blur-md border border-[rgba(255,255,255,0.12)] ">
+      <div className="md:hidden bg-gradient-to-br from-purple-800 via-purple-700 to-purple-900 backdrop-blur-md border border-purple-200/20 ">
         <div className="px-2 pt-2 pb-3 space-y-1">
           {/* User Info */}
           <div className="px-3 py-2 text-center border-b border-white/10 mb-2">
@@ -185,8 +185,8 @@ const Header = () => {
             onClick={() => setIsMobileMenuOpen(false)}
             className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
               isActive('/dashboard') || isActive('/')
-                ? 'bg-white/10 text-white'
-                : 'text-white/80 hover:text-white hover:bg-white/10'
+                ? 'bg-purple-500/20 text-white'
+                : 'text-white/80 hover:text-white hover:bg-purple-500/20'
             }`}
           >
             <Home className="h-5 w-5" />
@@ -198,8 +198,8 @@ const Header = () => {
             onClick={() => setIsMobileMenuOpen(false)}
             className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
               isActive('/search')
-                ? 'bg-white/10 text-white'
-                : 'text-white/80 hover:text-white hover:bg-white/10'
+                ? 'bg-purple-500/20 text-white'
+                : 'text-white/80 hover:text-white hover:bg-purple-500/20'
             }`}
           >
             <Search className="h-5 w-5" />
@@ -211,8 +211,8 @@ const Header = () => {
             onClick={() => setIsMobileMenuOpen(false)}
             className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
               isActive('/r2-manager')
-                ? 'bg-white/10 text-white'
-                : 'text-white/80 hover:text-white hover:bg-white/10'
+                ? 'bg-purple-500/20 text-white'
+                : 'text-white/80 hover:text-white hover:bg-purple-500/20'
             }`}
           >
             <Cloud className="h-5 w-5" />
@@ -222,7 +222,7 @@ const Header = () => {
           {/* Actions */}
           <div className="border-t border-white/10 pt-2 mt-2">
             <button
-              className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors w-full text-left"
+              className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-white/80 hover:text-white hover:bg-purple-500/20 transition-colors w-full text-left"
               title="Settings"
             >
               <Settings className="h-5 w-5" />

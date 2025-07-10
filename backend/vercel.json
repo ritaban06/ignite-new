@@ -15,8 +15,5 @@
       "source": "/(.*)",
       "destination": "/server.js"
     }
-  ],
-  "build": {
-    "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)README.md' ':(exclude)setup.js' ':(exclude)package.json' ':(exclude)LICENSE' ':(exclude).github/'"
-  }
+  ]
 }

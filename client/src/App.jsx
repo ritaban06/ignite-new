@@ -42,7 +42,7 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <DashboardPage />;
+    return <LoginPage />;
   }
 
   return (

@@ -3,15 +3,8 @@ import HybridGoogleLogin from './HybridGoogleLogin';
 
 const LoginPage = () => {
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center py-6 px-4 sm:py-12 sm:px-6 lg:px-8 animate-fade-in">
+    <div className="min-h-screen bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] flex items-center justify-center py-6 px-4 sm:py-12 sm:px-6 lg:px-8 animate-fade-in">
       <div className="max-w-md w-full space-y-6 sm:space-y-8">
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-32 h-32 sm:w-64 sm:h-64 bg-primary-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-32 h-32 sm:w-64 sm:h-64 bg-primary-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob [animation-delay:2s]"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-32 h-32 sm:w-64 sm:h-64 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob [animation-delay:4s]"></div>
-        </div>
-        
         {/* Logo and Header */}
         <div className="text-center relative z-10">
           <img
@@ -22,13 +15,13 @@ const LoginPage = () => {
           <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-bold text-white">
             Welcome to Ignite
           </h2>
-          <p className="mt-2 text-sm text-primary-200">
+          <p className="mt-2 text-sm text-white/80">
             Access your PDF library with approved credentials
           </p>
         </div>
 
         {/* Hybrid Google Login Component */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 sm:p-8 border border-white/20 relative z-10">
+        <div className="bg-[rgba(27,11,66,0.7)] backdrop-blur-md rounded-xl shadow-lg border border-[rgba(255,255,255,0.12)] p-6 sm:p-8 relative z-10">
           <HybridGoogleLogin />
         </div>
       </div>

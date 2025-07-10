@@ -21,45 +21,64 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        let token = localStorage.getItem('authToken');
-        let savedUser = localStorage.getItem('user');
+        const token = localStorage.getItem('authToken');
+        const savedUser = localStorage.getItem('user');
+        // let token = localStorage.getItem('authToken');
+        // let savedUser = localStorage.getItem('user');
 
-        // In development, inject a mock user and token if missing
-        if (import.meta.env.DEV && (!token || !savedUser)) {
-          token = 'dev-token';
-          savedUser = JSON.stringify({
-            id: 'dev-user',
-            name: 'Dev User',
-            email: 'dev@example.com',
-            role: 'admin',
-          });
-          localStorage.setItem('authToken', token);
-          localStorage.setItem('user', savedUser);
-        }
+        // // In development, inject a mock user and token if missing
+        // if (import.meta.env.DEV && (!token || !savedUser)) {
+        //   token = 'dev-token';
+        //   savedUser = JSON.stringify({
+        //     id: 'dev-user',
+        //     name: 'Dev User',
+        //     email: 'dev@example.com',
+        //     role: 'admin',
+        //   });
+        //   localStorage.setItem('authToken', token);
+        //   localStorage.setItem('user', savedUser);
+        // }
 
         if (token && savedUser) {
           setUser(JSON.parse(savedUser));
           setIsAuthenticated(true);
 
-          // In development, skip backend token validation
-          if (!import.meta.env.DEV) {
-            // Verify token is still valid
-            try {
-              const response = await authAPI.getProfile();
-              if (response.data.user) {
-                setUser(response.data.user);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-              }
-            } catch (error) {
-              // Token is invalid, clear auth state
-              console.error('Token validation failed:', error);
-              // Check if this is a device switch error
-              if (error.response?.data?.code === 'DEVICE_SWITCHED') {
-                console.log('Session was terminated due to login from another device');
-                // Don't show error toast for device switches as it's expected behavior
-              }
-              logout(true); // true indicates this is an automatic logout
+          // Verify token is still valid
+          try {
+            const response = await authAPI.getProfile();
+            if (response.data.user) {
+              setUser(response.data.user);
+              localStorage.setItem('user', JSON.stringify(response.data.user));
             }
+          } catch (error) {
+            // Token is invalid, clear auth state
+            console.error('Token validation failed:', error);
+            
+            // Check if this is a device switch error
+            if (error.response?.data?.code === 'DEVICE_SWITCHED') {
+              console.log('Session was terminated due to login from another device');
+              // Don't show error toast for device switches as it's expected behavior
+
+          // // In development, skip backend token validation
+          // if (!import.meta.env.DEV) {
+          //   // Verify token is still valid
+          //   try {
+          //     const response = await authAPI.getProfile();
+          //     if (response.data.user) {
+          //       setUser(response.data.user);
+          //       localStorage.setItem('user', JSON.stringify(response.data.user));
+          //     }
+          //   } catch (error) {
+          //     // Token is invalid, clear auth state
+          //     console.error('Token validation failed:', error);
+          //     // Check if this is a device switch error
+          //     if (error.response?.data?.code === 'DEVICE_SWITCHED') {
+          //       console.log('Session was terminated due to login from another device');
+          //       // Don't show error toast for device switches as it's expected behavior
+          //     }
+          //     logout(true); // true indicates this is an automatic logout
+            }
+            logout(true); // true indicates this is an automatic logout
           }
         }
       } catch (error) {
@@ -206,12 +225,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // In development, always treat as authenticated
-  const effectiveIsAuthenticated = import.meta.env.DEV ? true : isAuthenticated;
+  // // In development, always treat as authenticated
+  // const effectiveIsAuthenticated = import.meta.env.DEV ? true : isAuthenticated;
 
   const value = {
     user,
-    isAuthenticated: effectiveIsAuthenticated,
+    // isAuthenticated: effectiveIsAuthenticated,
+    isAuthenticated,
     isLoading,
     login,
     register,

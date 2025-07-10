@@ -65,10 +65,10 @@ const HybridGoogleLogin = () => {
     <div className="space-y-4 sm:space-y-6">
       <div className="space-y-3 sm:space-y-4">
         <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
             Sign in to Ignite
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base text-white">
             Only approved users can access this platform
           </p>
           
@@ -82,7 +82,7 @@ const HybridGoogleLogin = () => {
             ) : (
               <>
                 <Globe className="h-3 w-3" />
-                <span>Web Browser</span>
+                <span className="text-white">Web Browser</span>
               </>
             )}
           </div>
@@ -108,20 +108,24 @@ const HybridGoogleLogin = () => {
           ) : platformInfo.isNative ? (
             <button
               onClick={handleNativeGoogleSignIn}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow"
+              className="flex items-center space-x-2 bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow"
             >
-              <Smartphone className="h-5 w-5" />
-              <span>Sign in with Google (Mobile)</span>
+              <Smartphone className="h-5 w-5 text-white" />
+              <span className="text-white">Sign in with Google (Mobile)</span>
             </button>
           ) : (
             <GoogleLogin
               onSuccess={handleWebGoogleSuccess}
               onError={handleGoogleError}
               size="large"
-              theme="outline"
+              theme="filled_blue"
               text="signin_with"
               shape="rectangular"
               logo_alignment="left"
+              // Custom style for purple background and white text
+              ux_mode="popup"
+              width="100%"
+              style={{ backgroundColor: '#7c3aed', color: '#fff', borderRadius: '0.5rem', fontWeight: '600' }}
             />
           )}
         </div>
@@ -157,10 +161,10 @@ const HybridGoogleLogin = () => {
       </div>
 
       {/* Information Box */}
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+      <div className="bg-purple-700 p-4 rounded-lg border border-purple-800">
         <div className="flex items-start space-x-2">
-          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-gray-700">
+          <CheckCircle className="h-5 w-5 text-white mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-white">
             <p className="font-medium mb-1">How it works:</p>
             <ul className="space-y-1 list-disc list-inside ml-2">
               <li>Sign in with your Google account</li>

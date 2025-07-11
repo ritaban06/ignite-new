@@ -3,15 +3,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
-import ProtectedRoute from './components/ProtectedRoute';
+// import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
-import UploadPage from './pages/UploadPage';
+// import UploadPage from './pages/UploadPage';
 import PDFManagementPage from './pages/PDFManagementPage';
 import UsersPage from './pages/UsersPage';
 import AnalyticsPage from './pages/AnalyticsPage';
-import SettingsPage from './pages/SettingsPage';
+// import SettingsPage from './pages/SettingsPage';
 import DebugPage from './pages/DebugPage';
 
 function AppContent() {
@@ -40,7 +40,7 @@ function AppContent() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<DashboardPage />} />
-            <Route path="/upload" element={<UploadPage />} />
+            {/* <Route path="/upload" element={<UploadPage />} /> */}
             <Route path="/pdfs" element={<PDFManagementPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />

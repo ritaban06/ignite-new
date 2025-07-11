@@ -123,152 +123,10 @@ router.post('/test-auth', authenticate, requireAdmin, (req, res) => {
 // Note: We don't apply this globally to avoid interfering with CORS preflight
 
 // Upload PDF
-router.post('/upload', [
-  (req, res, next) => {
-    console.log('=== UPLOAD ROUTE ACCESSED ===');
-    console.log('Method:', req.method);
-    console.log('Path:', req.path);
-    console.log('Original URL:', req.originalUrl);
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('Content-Type:', req.headers['content-type']);
-    console.log('Content-Length:', req.headers['content-length']);
-    console.log('=== END UPLOAD DEBUG ===');
-    next();
-  },
-  authenticate,
-  requireAdmin,
-  uploadRateLimit,
-  (req, res, next) => {
-    upload.single('pdf')(req, res, (err) => {
-      if (err) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(413).json({ 
-            error: 'File too large', 
-            message: 'PDF file must be smaller than 50MB' 
-          });
-        }
-        if (err.message === 'Only PDF files are allowed') {
-          return res.status(400).json({ 
-            error: 'Invalid file type', 
-            message: 'Only PDF files are allowed' 
-          });
-        }
-        return res.status(400).json({ 
-          error: 'File upload error', 
-          message: err.message 
-        });
-      }
-      next();
-    });
-  },
-  body('title').trim().isLength({ min: 1, max: 200 }),
-  body('description').optional().trim().isLength({ max: 1000 }),
-  body('department').isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
-  body('year').isInt({ min: 1, max: 4 }),
-  body('subject').trim().isLength({ min: 1, max: 100 }),
-  body('tags').optional()
-], async (req, res) => {
-  try {
-    console.log('Upload request - User object:', {
-      _id: req.user._id,
-      username: req.user.username,
-      role: req.user.role,
-      isEnvAdmin: req.user.isEnvAdmin
-    });
-
-    console.log('Upload request body:', req.body);
-    console.log('Upload file info:', req.file ? {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size
-    } : 'No file');
-
-    // Process tags from FormData - when multiple values are sent with same key,
-    // they might not be automatically converted to array
-    if (req.body.tags && !Array.isArray(req.body.tags)) {
-      req.body.tags = [req.body.tags];
-    }
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      console.log('Validation errors:', errors.array());
-      return res.status(400).json({ 
-        error: 'Validation failed', 
-        details: errors.array() 
-      });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ 
-        error: 'PDF file is required' 
-      });
-    }
-
-    const { title, description, department, year, subject, tags } = req.body;
-
-    // Upload to Google Drive
-    const uploadResult = await googleDriveService.uploadPdf(
-      req.file.buffer,
-      req.file.originalname,
-      department,
-      parseInt(year),
-      subject,
-      req.file.mimetype
-    );
-
-    if (!uploadResult.success) {
-      return res.status(500).json({ 
-        error: 'Failed to upload file to Google Drive',
-        message: uploadResult.error
-      });
-    }
-
-    // Create PDF record in database
-    const pdf = new PDF({
-      title,
-      description,
-      fileName: uploadResult.name,
-      originalName: req.file.originalname,
-      fileSize: req.file.size,
-      mimeType: req.file.mimetype,
-      department,
-      year: parseInt(year),
-      subject,
-      tags: tags || [],
-      uploadedBy: req.user._id,
-      googleDriveFileId: uploadResult.fileId
-    });
-
-    await pdf.save();
-
-    // Log upload activity
-    await AccessLog.logAccess({
-      userId: req.user._id,
-      pdfId: pdf._id,
-      action: 'upload',
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent'),
-      deviceId: req.deviceId,
-      metadata: {
-        fileSize: req.file.size,
-        originalName: req.file.originalname,
-        department,
-        year,
-        subject
-      }
-    });
-
-    res.status(201).json({
-      message: 'PDF uploaded successfully',
-      pdf: pdf.toJSON()
-    });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ 
-      error: 'Upload failed', 
-      message: error.message 
-    });
-  }
+router.post('/upload', (req, res) => {
+  return res.status(403).json({
+    error: 'PDF upload is disabled. Google personal accounts do not support admin uploads.'
+  });
 });
 
 // Get all PDFs (admin view)
@@ -789,26 +647,10 @@ router.get('/sheets-status', authenticate, requireAdmin, (req, res) => {
   }
 });
 
-// Test upload with file handling (simplified version)
-router.post('/test-upload-file', authenticate, requireAdmin, upload.single('pdf'), (req, res) => {
-  console.log('=== FILE UPLOAD TEST ===');
-  console.log('User authenticated:', !!req.user);
-  console.log('File received:', !!req.file);
-  console.log('File details:', req.file ? {
-    originalname: req.file.originalname,
-    mimetype: req.file.mimetype,
-    size: req.file.size
-  } : 'No file');
-  console.log('Form data:', req.body);
-  console.log('=== END FILE UPLOAD TEST ===');
-  
-  res.json({
-    message: 'File upload test successful',
-    fileReceived: !!req.file,
-    fileName: req.file?.originalname,
-    fileSize: req.file?.size,
-    formData: req.body,
-    timestamp: new Date().toISOString()
+// Disable all test and debug upload endpoints
+router.post(['/upload-test','/upload-debug','/test-upload-file','/test-upload-minimal','/test-upload-no-validation','/test-upload-no-rate-limit','/test-upload-cors','/upload-no-auth','/upload-simple','/debug-upload','/simple-upload'], (req, res) => {
+  return res.status(403).json({
+    error: 'PDF upload is disabled. Google personal accounts do not support admin uploads.'
   });
 });
 

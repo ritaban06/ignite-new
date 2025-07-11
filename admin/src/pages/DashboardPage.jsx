@@ -136,13 +136,13 @@ export default function DashboardPage() {
         <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
           <h2 className="text-lg font-medium text-white mb-4">Quick Actions</h2>
           <div className="space-y-3">
-            <Link
+            {/* <Link
               to="/upload"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
             >
               <Upload className="h-5 w-5 text-primary-400 mr-3" />
               Upload New PDF
-            </Link>
+            </Link> */}
             <Link
               to="/pdfs"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"

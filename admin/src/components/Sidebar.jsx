@@ -14,7 +14,7 @@ import { userAPI } from '../api';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Upload PDF', href: '/upload', icon: Upload },
+  // { name: 'Upload PDF', href: '/upload', icon: Upload },
   { name: 'Manage PDFs', href: '/pdfs', icon: FileText },
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },

@@ -950,30 +950,30 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     const allFiles = await googleDriveService.listFilesRecursive();
     let cached = 0;
     for (const file of allFiles) {
+      // Only create new PDFs if they don't exist
+      const existingPdf = await PDF.findOne({ googleDriveFileId: file.id });
+      if (existingPdf) continue; // Skip existing PDFs
       // Fetch parent folder ID from Google Drive
       let googleDriveFolderId = null;
       if (file.parents && file.parents.length > 0) {
         googleDriveFolderId = file.parents[0];
       }
-      // Upsert PDF record by googleDriveFileId
-      await PDF.findOneAndUpdate(
-        { googleDriveFileId: file.id },
-        {
-          title: file.name,
-          fileName: file.name,
-          originalName: file.name,
-          fileSize: file.size ? parseInt(file.size) : 0,
-          mimeType: 'application/pdf',
-          department: 'Unknown', // You may want to update this logic
-          year: null, // null to indicate unknown year
-          subject: 'Unknown',
-          tags: [],
-          uploadedBy: req.user._id, // Admin user
-          isActive: true,
-          googleDriveFolderId,
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
+      // Create new PDF record
+      await PDF.create({
+        title: file.name,
+        fileName: file.name,
+        originalName: file.name,
+        fileSize: file.size ? parseInt(file.size) : 0,
+        mimeType: 'application/pdf',
+        department: 'Unknown', // You may want to update this logic
+        year: null, // null to indicate unknown year
+        subject: 'Unknown',
+        tags: [],
+        uploadedBy: req.user._id, // Admin user
+        isActive: true,
+        googleDriveFileId: file.id,
+        googleDriveFolderId,
+      });
       cached++;
     }
     res.json({ message: 'Cache complete', total: allFiles.length, cached });

@@ -285,6 +285,25 @@ export default function PDFManagementPage() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
+                        {/* Always show Google Drive link for debugging */}
+                        <a
+                          href={pdf.googleDriveFolderId
+                            ? `https://drive.google.com/drive/folders/${pdf.googleDriveFolderId}`
+                            : (pdf.googleDriveFileId
+                                ? `https://drive.google.com/file/d/${pdf.googleDriveFileId}/view`
+                                : 'https://drive.google.com/drive/my-drive')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-blue-500 bg-blue-900 text-blue-200 hover:bg-blue-700 hover:text-white transition-colors"
+                          title={pdf.googleDriveFolderId
+                            ? "Open containing folder in Google Drive"
+                            : (pdf.googleDriveFileId
+                                ? "Open file in Google Drive"
+                                : "No linked Drive file. Open Drive.")}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Drive
+                        </a>
                       </div>
                     </td>
                   </tr>

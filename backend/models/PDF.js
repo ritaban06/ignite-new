@@ -61,6 +61,11 @@ const pdfSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Google Drive file ID is required']
   },
+  googleDriveFolderId: {
+    type: String,
+    required: false,
+    default: null,
+  },
   isActive: {
     type: Boolean,
     default: true

@@ -910,6 +910,12 @@ router.post('/upload', [
     if (!uploadResult.success) {
       return res.status(500).json({ error: 'Failed to upload PDF', message: uploadResult.error });
     }
+    // Fetch parent folder ID from Google Drive
+    let googleDriveFolderId = null;
+    const metadata = await googleDriveService.getFileMetadata(uploadResult.fileId);
+    if (metadata && metadata.parents && metadata.parents.length > 0) {
+      googleDriveFolderId = metadata.parents[0];
+    }
     // Save PDF metadata to DB
     const pdf = await PDF.create({
       title,
@@ -924,6 +930,7 @@ router.post('/upload', [
       tags: tags || [],
       uploadedBy: req.user._id,
       googleDriveFileId: uploadResult.fileId,
+      googleDriveFolderId,
     });
     res.status(201).json({ success: true, pdf });
   } catch (error) {
@@ -943,6 +950,11 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     const allFiles = await googleDriveService.listFilesRecursive();
     let cached = 0;
     for (const file of allFiles) {
+      // Fetch parent folder ID from Google Drive
+      let googleDriveFolderId = null;
+      if (file.parents && file.parents.length > 0) {
+        googleDriveFolderId = file.parents[0];
+      }
       // Upsert PDF record by googleDriveFileId
       await PDF.findOneAndUpdate(
         { googleDriveFileId: file.id },
@@ -958,6 +970,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           tags: [],
           uploadedBy: req.user._id, // Admin user
           isActive: true,
+          googleDriveFolderId,
         },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );

@@ -116,6 +116,20 @@ class GoogleDriveService {
   getViewUrl(fileId) {
     return `https://drive.google.com/file/d/${fileId}/view`;
   }
+
+  // Get file metadata from Google Drive
+  async getFileMetadata(fileId) {
+    try {
+      const response = await this.drive.files.get({
+        fileId,
+        fields: 'id, name, parents',
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Google Drive getFileMetadata error:', error);
+      return null;
+    }
+  }
 }
 
 // Usage: new GoogleDriveService('path/to/service-account.json', 'your-folder-id')

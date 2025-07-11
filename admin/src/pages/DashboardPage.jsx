@@ -103,7 +103,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <StatCard
           title="Total Users"
           value={stats.overview.totalUsers}
@@ -116,18 +116,18 @@ export default function DashboardPage() {
           icon={FileText}
           color="primary"
         />
-        <StatCard
+        {/* <StatCard
           title="Active PDFs"
           value={stats.overview.activePdfs}
           icon={Activity}
           color="blue"
-        />
-        <StatCard
+        /> */}
+        {/* <StatCard
           title="Recent Uploads (7 days)"
           value={stats.overview.recentUploads}
           icon={Upload}
           color="purple"
-        />
+        /> */}
       </div>
 
       {/* Charts and Activity */}

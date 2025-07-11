@@ -953,7 +953,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           fileSize: file.size ? parseInt(file.size) : 0,
           mimeType: 'application/pdf',
           department: 'Unknown', // You may want to update this logic
-          year: 1, // Default/fallback
+          year: null, // null to indicate unknown year
           subject: 'Unknown',
           tags: [],
           uploadedBy: req.user._id, // Admin user

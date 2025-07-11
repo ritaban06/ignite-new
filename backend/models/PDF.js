@@ -36,9 +36,10 @@ const pdfSchema = new mongoose.Schema({
   },
   year: {
     type: Number,
-    required: [true, 'Year is required'],
+    required: false, // Allow year to be optional for orphaned/unknown PDFs
     min: [1, 'Year must be between 1 and 4'],
-    max: [4, 'Year must be between 1 and 4']
+    max: [4, 'Year must be between 1 and 4'],
+    default: null // Default to null if not provided
   },
   subject: {
     type: String,

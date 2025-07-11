@@ -253,9 +253,9 @@ export default function PDFManagementPage() {
                       <div className="text-sm text-gray-400">Year {pdf.year}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-white">
+                      <div className="flex items-center text-sm text-green-400">
                         <User className="h-4 w-4 mr-1" />
-                        {pdf.uploadedBy?.name || (
+                        {pdf.uploadedBy?.name || pdf.uploadedByName || (
                           <span className="text-yellow-400 italic">System Admin</span>
                         )}
                       </div>
@@ -264,7 +264,7 @@ export default function PDFManagementPage() {
                       )}
                       <div className="flex items-center text-sm text-gray-400">
                         <Calendar className="h-4 w-4 mr-1" />
-                        {formatDate(pdf.createdAt)}
+                        {pdf.uploadedAt ? formatDate(pdf.uploadedAt) : formatDate(pdf.createdAt)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">

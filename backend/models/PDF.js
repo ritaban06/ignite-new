@@ -81,6 +81,16 @@ const pdfSchema = new mongoose.Schema({
   lastAccessed: {
     type: Date,
     default: null
+  },
+  uploadedByName: {
+    type: String,
+    required: false,
+    default: null,
+  },
+  uploadedAt: {
+    type: Date,
+    required: false,
+    default: null,
   }
 }, {
   timestamps: true

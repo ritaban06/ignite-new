@@ -912,9 +912,13 @@ router.post('/upload', [
     }
     // Fetch parent folder ID from Google Drive
     let googleDriveFolderId = null;
-    const metadata = await googleDriveService.getFileMetadata(uploadResult.fileId);
-    if (metadata && metadata.parents && metadata.parents.length > 0) {
-      googleDriveFolderId = metadata.parents[0];
+    let uploadedByName = null;
+    let uploadedAt = null;
+    const fullMeta = await googleDriveService.getFileFullMetadata(uploadResult.fileId);
+    if (fullMeta) {
+      googleDriveFolderId = fullMeta.parents && fullMeta.parents.length > 0 ? fullMeta.parents[0] : null;
+      uploadedByName = fullMeta.owners && fullMeta.owners.length > 0 ? fullMeta.owners[0].displayName || fullMeta.owners[0].emailAddress : null;
+      uploadedAt = fullMeta.createdTime ? new Date(fullMeta.createdTime) : null;
     }
     // Save PDF metadata to DB
     const pdf = await PDF.create({
@@ -931,6 +935,8 @@ router.post('/upload', [
       uploadedBy: req.user._id,
       googleDriveFileId: uploadResult.fileId,
       googleDriveFolderId,
+      uploadedByName,
+      uploadedAt,
     });
     res.status(201).json({ success: true, pdf });
   } catch (error) {
@@ -958,6 +964,16 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       if (file.parents && file.parents.length > 0) {
         googleDriveFolderId = file.parents[0];
       }
+      // Fetch full metadata from Google Drive
+      let uploadedByName = null;
+      let uploadedAt = null;
+      if (file.id) {
+        const fullMeta = await googleDriveService.getFileFullMetadata(file.id);
+        if (fullMeta) {
+          uploadedByName = fullMeta.owners && fullMeta.owners.length > 0 ? fullMeta.owners[0].displayName || fullMeta.owners[0].emailAddress : null;
+          uploadedAt = fullMeta.createdTime ? new Date(fullMeta.createdTime) : null;
+        }
+      }
       // Create new PDF record
       await PDF.create({
         title: file.name,
@@ -965,7 +981,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
         originalName: file.name,
         fileSize: file.size ? parseInt(file.size) : 0,
         mimeType: 'application/pdf',
-        department: 'Unknown', // You may want to update this logic
+        department: 'IT', // Use a valid department value
         year: null, // null to indicate unknown year
         subject: 'Unknown',
         tags: [],
@@ -973,6 +989,8 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
         isActive: true,
         googleDriveFileId: file.id,
         googleDriveFolderId,
+        uploadedByName,
+        uploadedAt,
       });
       cached++;
     }

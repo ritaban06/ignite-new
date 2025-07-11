@@ -130,6 +130,20 @@ class GoogleDriveService {
       return null;
     }
   }
+
+  // Get file metadata including owner and createdTime
+  async getFileFullMetadata(fileId) {
+    try {
+      const response = await this.drive.files.get({
+        fileId,
+        fields: 'id, name, parents, owners, createdTime',
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Google Drive getFileFullMetadata error:', error);
+      return null;
+    }
+  }
 }
 
 // Usage: new GoogleDriveService('path/to/service-account.json', 'your-folder-id')

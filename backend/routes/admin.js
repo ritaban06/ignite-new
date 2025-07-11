@@ -984,39 +984,33 @@ router.post('/fix-orphaned-uploaders', [
     // Find PDFs with invalid uploadedBy references
     const pdfs = await PDF.find({}).populate('uploadedBy');
     const orphanedPdfs = pdfs.filter(pdf => !pdf.uploadedBy);
-    
     console.log(`Found ${orphanedPdfs.length} PDFs with orphaned uploader references`);
-    
-    // Find the first admin user to assign as default uploader
-    const adminUser = await User.findOne({ role: 'admin' });
-    
-    if (!adminUser) {
-      return res.status(400).json({
-        error: 'No admin user found to assign as default uploader'
-      });
+    let updatedCount = 0;
+    const updatedPdfs = [];
+    for (const pdf of orphanedPdfs) {
+      // Fetch metadata from Google Drive
+      const metadata = await googleDriveService.getFileFullMetadata(pdf.googleDriveFileId);
+      let uploaderName = 'Unknown';
+      let uploadDate = null;
+      if (metadata) {
+        if (metadata.owners && metadata.owners.length > 0) {
+          uploaderName = metadata.owners[0].displayName || metadata.owners[0].email || 'Unknown';
+        }
+        uploadDate = metadata.createdTime || null;
+      }
+      // Store uploader name and upload date in PDF document (custom fields)
+      pdf.uploadedByName = uploaderName;
+      pdf.uploadedAt = uploadDate;
+      await pdf.save();
+      updatedCount++;
+      updatedPdfs.push({ id: pdf._id, uploaderName, uploadDate });
     }
-    
-    // Update orphaned PDFs to have a valid uploader
-    const updateResult = await PDF.updateMany(
-      { 
-        _id: { $in: orphanedPdfs.map(pdf => pdf._id) }
-      },
-      { 
-        uploadedBy: adminUser._id 
-      }
-    );
-    
     res.json({
-      message: 'Fixed orphaned uploader references',
+      message: 'Fixed orphaned uploader references with Google Drive metadata',
       orphanedCount: orphanedPdfs.length,
-      updatedCount: updateResult.modifiedCount,
-      assignedTo: {
-        id: adminUser._id,
-        name: adminUser.name,
-        email: adminUser.email
-      }
+      updatedCount,
+      updatedPdfs
     });
-    
   } catch (error) {
     console.error('Fix orphaned uploaders error:', error);
     res.status(500).json({

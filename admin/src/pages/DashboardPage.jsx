@@ -164,21 +164,6 @@ export default function DashboardPage() {
               <BarChart3 className="h-5 w-5 text-purple-400 mr-3" />
               View Analytics
             </Link>
-            <button
-              onClick={handleCacheDrivePdfs}
-              disabled={cacheLoading}
-              className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-yellow-700 rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-60"
-            >
-              <Download className="h-5 w-5 text-yellow-300 mr-3" />
-              {cacheLoading ? 'Caching PDFs...' : 'Sync PDFs from Google Drive'}
-            </button>
-            {cacheResult && (
-              <div className={`mt-2 text-sm ${cacheResult.success ? 'text-green-400' : 'text-red-400'}`}>
-                {cacheResult.success
-                  ? `Cache complete: ${cacheResult.cached} of ${cacheResult.total} files.`
-                  : `Error: ${cacheResult.error}`}
-              </div>
-            )}
           </div>
         </div>
 

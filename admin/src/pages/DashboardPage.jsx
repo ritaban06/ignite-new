@@ -177,7 +177,7 @@ export default function DashboardPage() {
                   <Activity className="h-4 w-4 text-gray-400 mr-3" />
                   <div className="flex-1">
                     <p className="text-sm text-white">
-                      {activity.user?.name || 'Unknown User'} {activity.action} 
+                      {activity.user?.name || (activity.user?.role === 'admin' ? 'Admin' : 'Unknown User')} {activity.action} 
                       {activity.pdf ? ` "${activity.pdf.title}"` : ''}
                     </p>
                     <p className="text-xs text-gray-400">

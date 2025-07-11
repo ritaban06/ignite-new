@@ -342,19 +342,23 @@ function EditPDFModal({ pdf, onClose, onUpdate }) {
   const [formData, setFormData] = useState({
     title: pdf.title,
     description: pdf.description || '',
-    department: pdf.department,
-    year: pdf.year,
+    department: pdf.department || '',
+    year: (pdf.year === null || pdf.year === undefined) ? '' : String(pdf.year),
     subject: pdf.subject,
     tags: pdf.tags ? pdf.tags.join(', ') : '',
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const updatedData = {
-      ...formData,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-    };
-    onUpdate(updatedData);
+    // Ensure no value is empty before submitting
+    const cleanedData = { ...formData };
+    if (!cleanedData.department) cleanedData.department = DEPARTMENTS[1];
+    if (!cleanedData.year) cleanedData.year = YEARS[1];
+    if (!cleanedData.title) cleanedData.title = pdf.title;
+    if (!cleanedData.subject) cleanedData.subject = pdf.subject;
+    if (!cleanedData.description) cleanedData.description = '';
+    cleanedData.tags = cleanedData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    onUpdate(cleanedData);
   };
 
   const handleChange = (e) => {

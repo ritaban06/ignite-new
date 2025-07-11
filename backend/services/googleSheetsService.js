@@ -122,9 +122,10 @@ class GoogleSheetsService {
     }
     
     // Get headers from first row and normalize them
-    const rawHeaders = lines[0].split(',').map(header => 
-      header.trim().replace(/"/g, '')
-    );
+    const rawHeaders = lines[0]
+    .replace(/^\uFEFF/, '') // remove BOM
+    .split(',')
+    .map(header => header.trim().replace(/"/g, ''));
     
     // Create header mapping from new format to expected format
     const headerMapping = {
@@ -149,6 +150,8 @@ class GoogleSheetsService {
     
     // Validate required headers (using normalized names)
     const requiredHeaders = ['email', 'name', 'year', 'department'];
+    console.log('Raw Headers:', rawHeaders);
+    console.log('Normalized Headers:', headers);
     const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
     
     if (missingHeaders.length > 0) {

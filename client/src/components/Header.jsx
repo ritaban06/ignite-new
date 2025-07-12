@@ -8,7 +8,6 @@ import {
   Search,
   Menu,
   X,
-  // FolderOpen,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -76,19 +75,7 @@ const Header = () => {
           <span>Search</span>
         </Link>
 
-        {/*
-        <Link
-          to="/gdrive-manager"
-          className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            isActive('/gdrive-manager')
-              ? 'bg-purple-500/20 text-white'
-              : 'text-white/80 hover:text-white hover:bg-purple-500/20'
-          }`}
-        >
-          <FolderOpen className="h-4 w-4" />
-          <span>Google Drive Manager</span>
-        </Link>
-        */}
+        
       </nav>
 
       {/* Desktop User Info and Actions */}

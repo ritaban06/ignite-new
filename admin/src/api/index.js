@@ -43,11 +43,12 @@ export const pdfAPI = {
       'Content-Type': 'multipart/form-data',
     },
   }),
-  getAllPdfs: (params) => api.get('/admin/pdfs', { params }),
+  getAllPdfs: (params) => api.get('/pdfs', { params }),
   deletePdf: (id) => api.delete(`/admin/pdfs/${id}`),
   updatePdf: (id, data) => api.put(`/admin/pdfs/${id}`, data),
   getAnalytics: () => api.get('/admin/analytics'),
   fixOrphanedUploaders: () => api.post('/admin/fix-orphaned-uploaders'),
+  cacheDrivePdfs: () => api.post('/pdfs/gdrive/cache'),
 };
 
 export const userAPI = {

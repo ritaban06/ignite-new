@@ -10,7 +10,8 @@ import {
   FileText,
   Calendar,
   User,
-  Tag
+  Tag,
+  ExternalLink
 } from 'lucide-react';
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
@@ -44,14 +45,15 @@ export default function PDFManagementPage() {
       const params = {
         page: currentPage,
         limit: 10,
-        search: searchTerm,
+        // Only add department/year if not 'All'
         ...(filters.department !== 'All' && { department: filters.department }),
         ...(filters.year !== 'All' && { year: filters.year }),
       };
-      
+      // Only add search if not empty
+      if (searchTerm.trim()) params.search = searchTerm.trim();
       const response = await pdfAPI.getAllPdfs(params);
       setPdfs(response.data.pdfs);
-      setTotalPages(response.data.pagination.totalPages);
+      setTotalPages(response.data.pagination ? response.data.pagination.totalPages : 1);
     } catch (error) {
       console.error('Failed to fetch PDFs:', error);
       toast.error('Failed to load PDFs');
@@ -251,9 +253,9 @@ export default function PDFManagementPage() {
                       <div className="text-sm text-gray-400">Year {pdf.year}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-white">
+                      <div className="flex items-center text-sm text-green-400">
                         <User className="h-4 w-4 mr-1" />
-                        {pdf.uploadedBy?.name || (
+                        {pdf.uploadedBy?.name || pdf.uploadedByName || (
                           <span className="text-yellow-400 italic">System Admin</span>
                         )}
                       </div>
@@ -262,7 +264,7 @@ export default function PDFManagementPage() {
                       )}
                       <div className="flex items-center text-sm text-gray-400">
                         <Calendar className="h-4 w-4 mr-1" />
-                        {formatDate(pdf.createdAt)}
+                        {pdf.uploadedAt ? formatDate(pdf.uploadedAt) : formatDate(pdf.createdAt)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
@@ -284,6 +286,23 @@ export default function PDFManagementPage() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
+                        {/* Always show Google Drive link for debugging */}
+                        <a
+                          href={pdf.googleDriveFolderId
+                            ? `https://drive.google.com/drive/folders/${pdf.googleDriveFolderId}`
+                            : (pdf.googleDriveFileId
+                                ? `https://drive.google.com/file/d/${pdf.googleDriveFileId}/view`
+                                : 'https://drive.google.com/drive/my-drive')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={pdf.googleDriveFolderId
+                            ? "Open containing folder in Google Drive"
+                            : (pdf.googleDriveFileId
+                                ? "Open file in Google Drive"
+                                : "No linked Drive file. Open Drive.")}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1 text-yellow-400" />
+                        </a>
                       </div>
                     </td>
                   </tr>
@@ -341,19 +360,23 @@ function EditPDFModal({ pdf, onClose, onUpdate }) {
   const [formData, setFormData] = useState({
     title: pdf.title,
     description: pdf.description || '',
-    department: pdf.department,
-    year: pdf.year,
+    department: pdf.department || '',
+    year: (pdf.year === null || pdf.year === undefined) ? '' : String(pdf.year),
     subject: pdf.subject,
     tags: pdf.tags ? pdf.tags.join(', ') : '',
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const updatedData = {
-      ...formData,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-    };
-    onUpdate(updatedData);
+    // Ensure no value is empty before submitting
+    const cleanedData = { ...formData };
+    if (!cleanedData.department) cleanedData.department = DEPARTMENTS[1];
+    if (!cleanedData.year) cleanedData.year = YEARS[1];
+    if (!cleanedData.title) cleanedData.title = pdf.title;
+    if (!cleanedData.subject) cleanedData.subject = pdf.subject;
+    if (!cleanedData.description) cleanedData.description = '';
+    cleanedData.tags = cleanedData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    onUpdate(cleanedData);
   };
 
   const handleChange = (e) => {

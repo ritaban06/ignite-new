@@ -36,9 +36,10 @@ const pdfSchema = new mongoose.Schema({
   },
   year: {
     type: Number,
-    required: [true, 'Year is required'],
+    required: false, // Allow year to be optional for orphaned/unknown PDFs
     min: [1, 'Year must be between 1 and 4'],
-    max: [4, 'Year must be between 1 and 4']
+    max: [4, 'Year must be between 1 and 4'],
+    default: null // Default to null if not provided
   },
   subject: {
     type: String,
@@ -56,9 +57,14 @@ const pdfSchema = new mongoose.Schema({
     ref: 'User',
     required: [true, 'Uploader is required']
   },
-  cloudflareKey: {
+  googleDriveFileId: {
     type: String,
-    required: [true, 'Cloudflare R2 key is required']
+    required: [true, 'Google Drive file ID is required']
+  },
+  googleDriveFolderId: {
+    type: String,
+    required: false,
+    default: null,
   },
   isActive: {
     type: Boolean,
@@ -75,6 +81,16 @@ const pdfSchema = new mongoose.Schema({
   lastAccessed: {
     type: Date,
     default: null
+  },
+  uploadedByName: {
+    type: String,
+    required: false,
+    default: null,
+  },
+  uploadedAt: {
+    type: Date,
+    required: false,
+    default: null,
   }
 }, {
   timestamps: true
@@ -151,10 +167,28 @@ pdfSchema.statics.findForUser = function(user, filters = {}) {
     .sort({ createdAt: -1 });
 };
 
+// Static method to find all PDFs for admin
+pdfSchema.statics.findAllForAdmin = function(filters = {}) {
+  const query = {};
+  // Apply filters if provided
+  if (filters.subject) {
+    query.subject = new RegExp(filters.subject, 'i');
+  }
+  if (filters.tags && filters.tags.length > 0) {
+    query.tags = { $in: filters.tags };
+  }
+  if (filters.search) {
+    query.$text = { $search: filters.search };
+  }
+  return this.find(query)
+    .populate('uploadedBy', 'name email')
+    .sort({ createdAt: -1 });
+};
+
 // Remove sensitive data from JSON output
 pdfSchema.methods.toJSON = function() {
   const pdf = this.toObject();
-  delete pdf.cloudflareKey; // Don't expose R2 key in API responses
+  delete pdf.googleDriveFileId; // Don't expose Google Drive file ID in API responses
   return pdf;
 };
 

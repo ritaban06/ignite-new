@@ -182,7 +182,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div className="ml-4 flex-1">
                   <p className="text-sm font-medium text-white">
-                    {activity.user?.name || 'Unknown User'} {activity.action}
+                    {activity.user?.name || (activity.user?.role === 'admin' ? 'Admin' : 'Unknown User')} {activity.action} 
                     {activity.pdf ? ` "${activity.pdf.title}"` : ''}
                   </p>
                   <div className="flex items-center mt-1">

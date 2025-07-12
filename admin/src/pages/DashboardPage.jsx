@@ -27,6 +27,8 @@ export default function DashboardPage() {
     recentActivity: []
   });
   const [loading, setLoading] = useState(true);
+  const [cacheLoading, setCacheLoading] = useState(false);
+  const [cacheResult, setCacheResult] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -40,6 +42,19 @@ export default function DashboardPage() {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCacheDrivePdfs = async () => {
+    setCacheLoading(true);
+    setCacheResult(null);
+    try {
+      const res = await pdfAPI.cacheDrivePdfs();
+      setCacheResult({ success: true, ...res.data });
+    } catch (err) {
+      setCacheResult({ success: false, error: err?.response?.data?.error || 'Failed to cache PDFs' });
+    } finally {
+      setCacheLoading(false);
     }
   };
 
@@ -88,7 +103,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <StatCard
           title="Total Users"
           value={stats.overview.totalUsers}
@@ -101,18 +116,18 @@ export default function DashboardPage() {
           icon={FileText}
           color="primary"
         />
-        <StatCard
+        {/* <StatCard
           title="Active PDFs"
           value={stats.overview.activePdfs}
           icon={Activity}
           color="blue"
-        />
-        <StatCard
+        /> */}
+        {/* <StatCard
           title="Recent Uploads (7 days)"
           value={stats.overview.recentUploads}
           icon={Upload}
           color="purple"
-        />
+        /> */}
       </div>
 
       {/* Charts and Activity */}
@@ -121,13 +136,13 @@ export default function DashboardPage() {
         <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
           <h2 className="text-lg font-medium text-white mb-4">Quick Actions</h2>
           <div className="space-y-3">
-            <Link
+            {/* <Link
               to="/upload"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
             >
               <Upload className="h-5 w-5 text-primary-400 mr-3" />
               Upload New PDF
-            </Link>
+            </Link> */}
             <Link
               to="/pdfs"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
@@ -162,7 +177,7 @@ export default function DashboardPage() {
                   <Activity className="h-4 w-4 text-gray-400 mr-3" />
                   <div className="flex-1">
                     <p className="text-sm text-white">
-                      {activity.user?.name || 'Unknown User'} {activity.action} 
+                      {activity.user?.name || (activity.user?.role === 'admin' ? 'Admin' : 'Unknown User')} {activity.action} 
                       {activity.pdf ? ` "${activity.pdf.title}"` : ''}
                     </p>
                     <p className="text-xs text-gray-400">

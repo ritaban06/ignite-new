@@ -161,8 +161,6 @@ router.post('/:pdfId/view', [
         fileId: pdf.googleDriveFileId,
         userId: req.user._id,
         role: req.user.role,
-        department: req.user.department,
-        year: req.user.year,
         exp: Math.floor(Date.now() / 1000) + (5 * 60) // 5 min
       },
       process.env.JWT_SECRET
@@ -457,6 +455,63 @@ router.get('/gdrive/list', [
 });
 
 // Proxy route to serve PDFs from Google Drive with token validation
+router.get('/proxy/:fileId', [
+  pdfSecurityHeaders,
+  disablePdfCaching,
+  async (req, res, next) => {
+    // Token validation (JWT in query)
+    const token = req.query.token;
+    if (!token) {
+      console.error('[PDF Proxy] No token provided');
+      return res.status(401).json({ error: 'Token required' });
+    }
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('[PDF Proxy] Decoded JWT:', decoded);
+      if (decoded.fileId !== req.params.fileId) {
+        console.error('[PDF Proxy] Token fileId mismatch:', decoded.fileId, req.params.fileId);
+        return res.status(403).json({ error: 'Invalid token for this file' });
+      }
+      req.user = decoded; // Attach user info if needed
+      next();
+    } catch (err) {
+      console.error('[PDF Proxy] Invalid or expired token:', err);
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+  }
+], async (req, res) => {
+  try {
+    // Stream PDF from Google Drive
+    const fileId = req.params.fileId;
+    console.log('[PDF Proxy] Incoming fileId:', fileId);
+    const driveResult = await googleDriveService.downloadPdf(fileId);
+    console.log('[PDF Proxy] googleDriveService.downloadPdf result:', driveResult);
+    if (!driveResult.success) {
+      console.error('[PDF Proxy] Failed to fetch PDF from Google Drive:', driveResult.error);
+      return res.status(500).json({ error: 'Failed to fetch PDF from Google Drive', message: driveResult.error });
+    }
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'inline; filename="secured.pdf"',
+      'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-Download-Options': 'noopen',
+      'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
+    });
+    driveResult.stream.pipe(res);
+    driveResult.stream.on('error', (err) => {
+      console.error('[PDF Proxy] Error streaming PDF:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error streaming PDF' });
+      }
+    });
+  } catch (error) {
+    console.error('[PDF Proxy] Failed to serve PDF:', error);
+    res.status(500).json({ error: 'Failed to serve PDF', message: error.message });
+  }
+});
 
 // Proxy route to serve PDFs with proper CORS headers
 router.get('/proxy/:fileId', [
@@ -488,10 +543,10 @@ router.get('/proxy/:fileId', [
       'Access-Control-Allow-Methods': 'GET',
       'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Cache-Control',
     });
-
-    const fileId = decodeURIComponent(req.params.fileId);
+    const fileKey = decodeURIComponent(req.params.fileKey);
+    const userId = req.query.userId || req.user._id;
     // Find the PDF in database to validate access
-    const pdf = await PDF.findOne({ googleDriveFileId: fileId });
+    const pdf = await PDF.findOne({ cloudflareKey: fileKey });
 
     if (!pdf) {
       return res.status(404).json({ error: 'PDF not found' });
@@ -526,39 +581,114 @@ router.get('/proxy/:fileId', [
 
     console.log('Access granted for PDF:', pdf.title);
 
-    // Use the Google Drive service to get PDF stream
-    const pdfResult = await googleDriveService.downloadPdf(fileId);
+    // Use the R2 service to get PDF stream or signed URL
+    const pdfResult = await googleDriveService.getPdfStream(pdf.cloudflareKey);
 
     if (!pdfResult.success) {
-      console.error('Failed to get PDF from Google Drive:', pdfResult.error);
+      console.error('Failed to get PDF from R2:', pdfResult.error);
       return res.status(500).json({ error: 'Failed to retrieve PDF file' });
     }
 
-    // Set proper headers for PDF streaming (inline display)
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': 'inline; filename="secured.pdf"',
-      'Cache-Control': 'private, no-cache, no-store, must-revalidate',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-Download-Options': 'noopen',
-      'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
-    });
-
-    pdfResult.stream.pipe(res);
-    pdfResult.stream.on('error', (err) => {
-      console.error('Error streaming PDF:', err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Error streaming PDF' });
+    // If R2 service returned a signed URL due to SSL issues, fetch and proxy the content
+    if (pdfResult.useSignedUrl) {
+      console.log('Using signed URL fallback due to SSL issues, fetching content to proxy');
+      
+      try {
+        // Fetch the PDF content from the signed URL and proxy it using https module
+        const https = require('https');
+        const url = require('url');
+        
+        const signedUrlObj = new url.URL(pdfResult.signedUrl);
+        
+        const options = {
+          hostname: signedUrlObj.hostname,
+          port: signedUrlObj.port || 443,
+          path: signedUrlObj.pathname + signedUrlObj.search,
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Ignite-PDF-Proxy/1.0'
+          }
+        };
+        
+        // Set proper headers for PDF viewing (inline display)
+        res.set({
+          'Content-Type': 'application/pdf',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET',
+          'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+          'Cache-Control': 'private, no-cache',
+          'Content-Disposition': 'inline', // This ensures inline viewing, not download
+          'X-Content-Type-Options': 'nosniff'
+        });
+        
+        const req = https.request(options, (response) => {
+          if (response.statusCode !== 200) {
+            console.error('Signed URL fetch failed:', response.statusCode, response.statusMessage);
+            if (!res.headersSent) {
+              return res.status(500).json({ error: 'Failed to fetch PDF from signed URL' });
+            }
+            return;
+          }
+          
+          // Set content length if available
+          if (response.headers['content-length']) {
+            res.set('Content-Length', response.headers['content-length']);
+          }
+          
+          // Pipe the response directly to our response
+          response.pipe(res);
+        });
+        
+        req.on('error', (error) => {
+          console.error('HTTPS request error:', error);
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Error fetching PDF from signed URL' });
+          }
+        });
+        
+        req.end();
+        
+      } catch (fetchError) {
+        console.error('Failed to fetch from signed URL:', fetchError);
+        return res.status(500).json({ error: 'Failed to fetch PDF content' });
       }
-    });
+    } else {
+      // Direct streaming from R2
+      // Set proper headers for PDF streaming (inline display)
+      res.set({
+        'Content-Type': pdfResult.contentType || 'application/pdf',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+        'Content-Disposition': 'inline; filename="secured.pdf"', // Force inline viewing
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-Download-Options': 'noopen',
+        'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
+      });
+      
+      if (pdfResult.contentLength) {
+        res.set('Content-Length', pdfResult.contentLength);
+      }
+      // Stream the PDF to the client
+      pdfResult.stream.pipe(res);
+      
+      // Handle stream errors
+      pdfResult.stream.on('error', (streamError) => {
+        console.error('Direct stream error:', streamError);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error streaming PDF' });
+        }
+      });
+    }
 
     // Log access
     try {
       await AccessLog.logAccess({
         userId: req.user._id,
         pdfId: pdf._id,
-        action: 'view',
+        action: 'view', // Use 'view' instead of 'proxy_view' to match enum
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
         deviceId: req.deviceId
@@ -574,7 +704,15 @@ router.get('/proxy/:fileId', [
 });
 
 // Handle CORS preflight requests for PDF proxy
-// Remove legacy cloudflareKey CORS preflight route
+router.options('/proxy/:fileKey', (req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control',
+    'Access-Control-Max-Age': '86400' // 24 hours
+  });
+  res.status(200).end();
+});
 
 // Test R2 connectivity endpoint (admin only)
 router.get('/test-r2-connection', authenticate, async (req, res) => {

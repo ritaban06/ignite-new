@@ -176,10 +176,10 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
         } catch (fetchError) {
           console.error('[SecurePDFViewer] Failed to fetch PDF content from proxy:', fetchError);
-          // Do NOT fallback to direct URL, always require blob for security
-          setError('Failed to securely load PDF. Please try again or contact support.');
-          setPdfUrl(null);
-          setPdfInfo(null);
+          // Fallback to direct URL
+          console.log('[SecurePDFViewer] Using direct proxy URL as fallback');
+          setPdfUrl(response.data.viewUrl);
+          setPdfInfo(response.data.pdf);
         }
       } else {
         console.error('[SecurePDFViewer] No viewUrl in response:', response.data);

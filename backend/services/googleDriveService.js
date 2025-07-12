@@ -45,16 +45,16 @@ class GoogleDriveService {
   // Download a PDF file from Google Drive
   async downloadPdf(fileId) {
     try {
-      console.log('[GoogleDriveService] downloadPdf called with fileId:', fileId);
+      // console.log('[GoogleDriveService] downloadPdf called with fileId:', fileId);
       const response = await this.drive.files.get({
         fileId,
         alt: 'media',
       }, { responseType: 'stream' });
-      console.log('[GoogleDriveService] downloadPdf success for fileId:', fileId);
+      // console.log('[GoogleDriveService] downloadPdf success for fileId:', fileId);
       return { success: true, stream: response.data };
     } catch (error) {
       // Log full error details for debugging
-      console.error('[GoogleDriveService] downloadPdf ERROR for fileId:', fileId);
+      // console.error('[GoogleDriveService] downloadPdf ERROR for fileId:', fileId);
       console.error('Google Drive download error:', error);
       if (error.response) {
         console.error('Google Drive API response data:', error.response.data);

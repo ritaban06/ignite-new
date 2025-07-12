@@ -390,17 +390,17 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   }, [isOpen, pdfId, fetchPDFUrl]);
 
   // Effect to handle text selection and annotation actions
-  useEffect(() => {
-    if (isOpen && pdfUrl) {
-      const viewer = viewerRef.current;
-      if (viewer) {
-        viewer.addEventListener('mouseup', handleTextSelection);
-      }
-      return () => {
-        if (viewer) viewer.removeEventListener('mouseup', handleTextSelection);
-      };
-    }
-  }, [isOpen, pdfUrl]);
+  // useEffect(() => {
+  //   if (isOpen && pdfUrl) {
+  //     const viewer = viewerRef.current;
+  //     if (viewer) {
+  //       viewer.addEventListener('mouseup', handleTextSelection);
+  //     }
+  //     return () => {
+  //       if (viewer) viewer.removeEventListener('mouseup', handleTextSelection);
+  //     };
+  //   }
+  // }, [isOpen, pdfUrl]);
 
   if (!isOpen) return null;
 

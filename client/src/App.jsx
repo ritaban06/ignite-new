@@ -9,7 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
 import SearchPage from './pages/SearchPage';
-import R2PDFManager from './components/R2PDFManager';
+// import GoogleDrivePDFManager from './components/R2PDFManager';
 import AuthDebug from './components/AuthDebug';
 
 // Get the appropriate Google OAuth Client ID based on platform
@@ -54,7 +54,7 @@ function AppContent() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/search" element={<SearchPage />} />
-          <Route path="/r2-manager" element={<R2PDFManager />} />
+          {/* <Route path="/gdrive-manager" element={<GoogleDrivePDFManager />} /> */}
           {/* Catch all other routes and redirect to dashboard */}
           <Route path="*" element={<DashboardPage />} />
         </Routes>

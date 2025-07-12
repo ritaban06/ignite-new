@@ -3,7 +3,7 @@ import { Viewer, Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { toolbarPlugin, MoreActionsPopover } from '@react-pdf-viewer/toolbar';
 import { X } from 'lucide-react';
-import { pdfAPI, annotationAPI } from '../api';
+import { pdfAPI} from '../api';
 import toast from 'react-hot-toast';
 
 

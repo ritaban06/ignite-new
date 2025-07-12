@@ -359,13 +359,12 @@ const DashboardPage = () => {
   </div>
 
   {/* PDF Viewer Modal */}
-  {isViewerOpen && (
-    <SecurePDFViewer
-      pdfId={selectedPdfId}
-      onClose={handleCloseViewer}
-      user={user}
-    />
-  )}
+  <SecurePDFViewer
+    pdfId={selectedPdfId}
+    isOpen={isViewerOpen}
+    onClose={handleCloseViewer}
+    user={user}
+  />
 </div>
 
   );

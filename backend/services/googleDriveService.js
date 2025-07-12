@@ -51,7 +51,13 @@ class GoogleDriveService {
       }, { responseType: 'stream' });
       return { success: true, stream: response.data };
     } catch (error) {
+      // Log full error details for debugging
       console.error('Google Drive download error:', error);
+      if (error.response) {
+        console.error('Google Drive API response data:', error.response.data);
+        console.error('Google Drive API response status:', error.response.status);
+        console.error('Google Drive API response headers:', error.response.headers);
+      }
       return { success: false, error: error.message };
     }
   }

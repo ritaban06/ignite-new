@@ -1010,4 +1010,6 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
   }
 });
 
+console.log('GDRIVE_CREDENTIALS:', process.env.GDRIVE_CREDENTIALS);
+
 module.exports = router;

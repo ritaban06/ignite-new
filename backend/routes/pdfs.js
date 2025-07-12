@@ -165,9 +165,9 @@ router.post('/:pdfId/view', [
       },
       process.env.JWT_SECRET
     );
-    const proxyUrl = `/api/pdfs/proxy/${pdf.googleDriveFileId}?token=${token}`;
+    const viewUrl = `/api/pdfs/proxy/${pdf.googleDriveFileId}?token=${token}`;
     res.json({
-      proxyUrl,
+      viewUrl,
       pdf: {
         id: pdf._id,
         title: pdf.title,

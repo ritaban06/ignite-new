@@ -76,15 +76,15 @@ const Header = () => {
         </Link>
 
         <Link
-          to="/r2-manager"
+          to="/gdrive-manager"
           className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            isActive('/r2-manager')
+            isActive('/gdrive-manager')
               ? 'bg-purple-500/20 text-white'
               : 'text-white/80 hover:text-white hover:bg-purple-500/20'
           }`}
         >
-          <Cloud className="h-4 w-4" />
-          <span>R2 Manager</span>
+          <FolderOpen className="h-4 w-4" />
+          <span>Google Drive Manager</span>
         </Link>
       </nav>
 

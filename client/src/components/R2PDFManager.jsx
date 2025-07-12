@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Cloud, 
+  FolderOpen, 
   Eye, 
   RefreshCw, 
   Search, 
@@ -15,7 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SecurePDFViewer from './SecurePDFViewer';
 import toast from 'react-hot-toast';
 
-const R2PDFManager = () => {
+const GoogleDrivePDFManager = () => {
   const { user } = useAuth();
   const [pdfs, setPdfs] = useState([]);
   const [filteredPdfs, setFilteredPdfs] = useState([]);
@@ -36,17 +36,17 @@ const R2PDFManager = () => {
   const years = [1, 2, 3, 4];
 
   useEffect(() => {
-    loadR2PDFs();
+    loadGoogleDrivePDFs();
   }, []);
 
   useEffect(() => {
     applyFilters();
   }, [pdfs, searchQuery, selectedDepartment, selectedYear, showOrphaned]);
 
-  const loadR2PDFs = async () => {
+  const loadGoogleDrivePDFs = async () => {
     try {
       setIsLoading(true);
-      const response = await pdfAPI.getAllPDFsFromR2();
+      const response = await pdfAPI.getAllPDFsFromGoogleDrive();
       
       if (response.data.pdfs) {
         setPdfs(response.data.pdfs);
@@ -55,11 +55,11 @@ const R2PDFManager = () => {
           accessibleFiles: response.data.accessibleFiles,
           userAccess: response.data.userAccess
         });
-        toast.success(`Loaded ${response.data.accessibleFiles} accessible files from R2 bucket`);
+        toast.success(`Loaded ${response.data.accessibleFiles} accessible files from Google Drive`);
       }
     } catch (error) {
-      console.error('Error loading R2 PDFs:', error);
-      toast.error('Failed to load PDFs from R2 bucket');
+      console.error('Error loading Google Drive PDFs:', error);
+      toast.error('Failed to load PDFs from Google Drive');
     } finally {
       setIsLoading(false);
     }
@@ -148,9 +148,9 @@ const R2PDFManager = () => {
             <div className="flex items-center space-x-3">
               <Cloud className="h-8 w-8 text-primary-600" />
               <div>
-                <h1 className="text-2xl font-bold text-primary-800">R2 Bucket PDF Manager</h1>
+                <h1 className="text-2xl font-bold text-primary-800">Google Drive PDF Manager</h1>
                 <p className="text-primary-600">
-                  Manage and view PDFs stored in Cloudflare R2
+                  Manage and view PDFs stored in Google Drive
                   {stats.userAccess && (
                     <span className="block text-sm text-primary-700 mt-1">
                       Showing PDFs for {stats.userAccess.department} - Year {stats.userAccess.year}
@@ -161,7 +161,7 @@ const R2PDFManager = () => {
               </div>
             </div>
             
-            <button            onClick={loadR2PDFs}
+            <button            onClick={loadGoogleDrivePDFs}
             disabled={isLoading}
             className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
@@ -282,7 +282,7 @@ const R2PDFManager = () => {
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="h-8 w-8 animate-spin text-primary-500" />
-              <span className="ml-2 text-primary-700">Loading PDFs from R2...</span>
+              <span className="ml-2 text-primary-700">Loading PDFs from Google Drive...</span>
             </div>
           ) : filteredPdfs.length === 0 ? (
             <div className="flex items-center justify-center py-12">

@@ -421,16 +421,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             )}
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            {/* --- Annotation Button --- */}
-            {/* <button
-              onClick={() => setAnnotationMode((m) => !m)}
-              className={`px-2 py-1 text-xs rounded font-semibold border transition-colors duration-150 ${annotationMode ? 'bg-yellow-300 text-yellow-900 border-yellow-500 shadow' : 'bg-white text-gray-700 border-gray-300 hover:bg-yellow-100'}`}
-              style={{ minWidth: 90 }}
-              title="Toggle annotation mode"
-            >
-              {annotationMode ? '🖊️ Annotating' : '🖊️ Annotate'}
-            </button> */}
-            {/* --- End Annotation Button --- */}
+            {/* Annotation button removed (annotationMode not defined) */}
             <div className="text-xs text-red-600 mr-1 sm:mr-4 hidden sm:inline">
               🔒 Viewing Only - Download & Print Disabled
             </div>

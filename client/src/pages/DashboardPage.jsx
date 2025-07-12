@@ -306,7 +306,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Recent PDFs */}
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <h2 className="text-lg font-semibold text-white mb-4">Recently Added PDFs</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {recentPdfs && recentPdfs.length > 0 ? (
@@ -317,7 +317,7 @@ const DashboardPage = () => {
             <div className="text-white/70">No recent PDFs found.</div>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* PDF List */}
       <div>

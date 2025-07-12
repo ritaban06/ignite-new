@@ -8,6 +8,7 @@ import {
   Search,
   Menu,
   X,
+  FolderOpen,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";

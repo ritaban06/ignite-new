@@ -13,10 +13,11 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [pdfInfo, setPdfInfo] = useState(null);
   const [useIframeFallback, setUseIframeFallback] = useState(false);
+  // --- Annotation State ---
   // const [annotations, setAnnotations] = useState([]); // [{page, type, rect, text, note}]
-  const [selectedText, setSelectedText] = useState(null);
-  const [showNoteInput, setShowNoteInput] = useState(false);
-  const [noteInput, setNoteInput] = useState('');
+  // const [selectedText, setSelectedText] = useState(null);
+  // const [showNoteInput, setShowNoteInput] = useState(false);
+  // const [noteInput, setNoteInput] = useState('');
   const viewerRef = useRef();
   
   // Refs to track state and prevent infinite loops
@@ -320,66 +321,66 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   // };
 
   // --- Region-based annotation state ---
-  const [drawing, setDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState(null);
-  const [region, setRegion] = useState(null); // {left, top, width, height}
+  // const [drawing, setDrawing] = useState(false);
+  // const [startPoint, setStartPoint] = useState(null);
+  // const [region, setRegion] = useState(null); // {left, top, width, height}
 
   // --- Annotation mode toggle ---
-  const [annotationMode, setAnnotationMode] = useState(false);
+  // const [annotationMode, setAnnotationMode] = useState(false);
 
   // Mouse events for region drawing
-  const handleMouseDown = (e) => {
-    if (!annotationMode || !isOpen || isLoading || error) return;
-    // Only left click
-    if (e.button !== 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDrawing(true);
-    setStartPoint({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
-    setRegion(null);
-  };
+  // const handleMouseDown = (e) => {
+  //   if (!annotationMode || !isOpen || isLoading || error) return;
+  //   // Only left click
+  //   if (e.button !== 0) return;
+  //   const rect = e.currentTarget.getBoundingClientRect();
+  //   setDrawing(true);
+  //   setStartPoint({
+  //     x: e.clientX - rect.left,
+  //     y: e.clientY - rect.top
+  //   });
+  //   setRegion(null);
+  // };
 
-  const handleMouseMove = (e) => {
-    if (!drawing || !startPoint) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setRegion({
-      left: Math.min(startPoint.x, x),
-      top: Math.min(startPoint.y, y),
-      width: Math.abs(x - startPoint.x),
-      height: Math.abs(y - startPoint.y)
-    });
-  };
+  // const handleMouseMove = (e) => {
+  //   if (!drawing || !startPoint) return;
+  //   const rect = e.currentTarget.getBoundingClientRect();
+  //   const x = e.clientX - rect.left;
+  //   const y = e.clientY - rect.top;
+  //   setRegion({
+  //     left: Math.min(startPoint.x, x),
+  //     top: Math.min(startPoint.y, y),
+  //     width: Math.abs(x - startPoint.x),
+  //     height: Math.abs(y - startPoint.y)
+  //   });
+  // };
 
-  const getPageFromRegion = (region) => {
-    // Try to map region.top to a page by using the rendered PDF pages
-    const pages = document.querySelectorAll('.rpv-core__page-layer');
-    for (let i = 0; i < pages.length; i++) {
-      const pageRect = pages[i].getBoundingClientRect();
-      // region.top is relative to the viewer container
-      if (
-        region.top >= pageRect.top - viewerRef.current.getBoundingClientRect().top &&
-        region.top < pageRect.bottom - viewerRef.current.getBoundingClientRect().top
-      ) {
-        return i + 1; // Pages are 1-indexed
-      }
-    }
-    return 1; // fallback
-  };
+  // const getPageFromRegion = (region) => {
+  //   // Try to map region.top to a page by using the rendered PDF pages
+  //   const pages = document.querySelectorAll('.rpv-core__page-layer');
+  //   for (let i = 0; i < pages.length; i++) {
+  //     const pageRect = pages[i].getBoundingClientRect();
+  //     // region.top is relative to the viewer container
+  //     if (
+  //       region.top >= pageRect.top - viewerRef.current.getBoundingClientRect().top &&
+  //       region.top < pageRect.bottom - viewerRef.current.getBoundingClientRect().top
+  //     ) {
+  //       return i + 1; // Pages are 1-indexed
+  //     }
+  //   }
+  //   return 1; // fallback
+  // };
 
-  const handleMouseUp = (e) => {
-    if (!drawing || !region) return;
-    setDrawing(false);
-    const page = getPageFromRegion(region);
-    setSelectedText({
-      rect: region,
-      page
-    });
-    setRegion(null);
-  };
+  // const handleMouseUp = (e) => {
+  //   if (!drawing || !region) return;
+  //   setDrawing(false);
+  //   const page = getPageFromRegion(region);
+  //   setSelectedText({
+  //     rect: region,
+  //     page
+  //   });
+  //   setRegion(null);
+  // };
 
   // Fetch PDF URL and annotations when component mounts or pdfId changes
   useEffect(() => {
@@ -444,10 +445,10 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-hidden" ref={viewerRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          style={{ position: 'relative', cursor: drawing ? 'crosshair' : 'default' }}
+          // onMouseDown={handleMouseDown}
+          // onMouseMove={handleMouseMove}
+          // onMouseUp={handleMouseUp}
+          style={{ position: 'relative' }}
         >
           {/* Loading State */}
           {isLoading && (
@@ -543,51 +544,8 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                     </div>
                   );
                 })} */}
-                {/* Draw region while dragging */}
-                {drawing && region && (
-                  <div style={{
-                    position: 'absolute',
-                    top: region.top,
-                    left: region.left,
-                    width: region.width,
-                    height: region.height,
-                    border: '2px dashed #1976d2',
-                    background: 'rgba(25, 118, 210, 0.1)',
-                    zIndex: 50,
-                    pointerEvents: 'none'
-                  }} />
-                )}
-                {/* Show highlight/note actions for region */}
-                {selectedText && selectedText.rect && (
-                  <div style={{
-                    position: 'absolute',
-                    top: selectedText.rect.top - 40,
-                    left: selectedText.rect.left,
-                    zIndex: 60,
-                    background: '#fff',
-                    border: '1px solid #ccc',
-                    padding: 4,
-                    borderRadius: 4
-                  }}>
-                    <button onClick={addHighlight} className="mr-2 text-yellow-700">Highlight</button>
-                    <button onClick={() => setShowNoteInput(true)} className="text-blue-700">Add Note</button>
-                  </div>
-                )}
-                {showNoteInput && selectedText && selectedText.rect && (
-                  <div style={{
-                    position: 'absolute',
-                    top: selectedText.rect.top - 80,
-                    left: selectedText.rect.left,
-                    zIndex: 70,
-                    background: '#fff',
-                    border: '1px solid #ccc',
-                    padding: 8,
-                    borderRadius: 4
-                  }}>
-                    <textarea value={noteInput} onChange={e => setNoteInput(e.target.value)} placeholder="Enter note..." />
-                    <button onClick={addNote} className="ml-2 text-green-700">Save Note</button>
-                  </div>
-                )}
+          {/* Draw region while dragging */}
+          {/* Annotation UI commented out */}
               </Worker>
             </div>
           )}

@@ -55,7 +55,7 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
         <div className="flex items-center space-x-2 text-white/70">
           <Tag className="h-4 w-4 flex-shrink-0" />
-          <span>{pdf.department}</span>
+          <span>{Array.isArray(pdf.departments) ? pdf.departments.join(', ') : pdf.department}</span>
         </div>
 
         <div className="flex items-center space-x-2 text-white/70">

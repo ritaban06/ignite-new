@@ -29,10 +29,16 @@ const pdfSchema = new mongoose.Schema({
     required: [true, 'MIME type is required'],
     enum: ['application/pdf']
   },
-  department: {
-    type: String,
-    required: [true, 'Department is required'],
-    enum: ['AIML', 'CSE', 'ECE', 'EEE', 'IT']
+  departments: {
+    type: [String],
+    required: [true, 'At least one department is required'],
+    enum: ['AIML', 'CSE', 'ECE', 'EEE', 'IT'],
+    validate: {
+      validator: function(arr) {
+        return Array.isArray(arr) && arr.length > 0;
+      },
+      message: 'At least one department must be selected.'
+    }
   },
   year: {
     type: Number,
@@ -97,7 +103,7 @@ const pdfSchema = new mongoose.Schema({
 });
 
 // Indexes for efficient querying
-pdfSchema.index({ department: 1, year: 1 });
+pdfSchema.index({ departments: 1, year: 1 });
 pdfSchema.index({ subject: 1 });
 pdfSchema.index({ tags: 1 });
 pdfSchema.index({ uploadedBy: 1 });
@@ -105,7 +111,7 @@ pdfSchema.index({ isActive: 1 });
 pdfSchema.index({ createdAt: -1 });
 
 // Compound index for user access queries
-pdfSchema.index({ department: 1, year: 1, isActive: 1 });
+pdfSchema.index({ departments: 1, year: 1, isActive: 1 });
 
 // Text search index
 pdfSchema.index({ 
@@ -132,7 +138,7 @@ pdfSchema.methods.incrementViewCount = function() {
 pdfSchema.methods.canUserAccess = function(user) {
   if (user.role === 'admin') return true;
   
-  return this.department === user.department && 
+  return Array.isArray(this.departments) && this.departments.includes(user.department) &&
          this.year === user.year && 
          this.isActive;
 };
@@ -145,7 +151,7 @@ pdfSchema.statics.findForUser = function(user, filters = {}) {
   
   // Non-admin users can only see PDFs for their department and year
   if (user.role !== 'admin') {
-    query.department = user.department;
+    query.departments = user.department;
     query.year = user.year;
   }
   

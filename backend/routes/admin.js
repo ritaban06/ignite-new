@@ -225,7 +225,7 @@ router.put('/pdfs/:pdfId', [
   requireAdmin,
   body('title').optional().trim().isLength({ min: 1, max: 200 }),
   body('description').optional().trim().isLength({ max: 1000 }),
-  body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  body('departments').optional().isArray(),
   body('year').optional().isInt({ min: 1, max: 4 }),
   body('subject').optional().trim().isLength({ min: 1, max: 100 }),
   body('tags').optional().isArray(),
@@ -245,7 +245,7 @@ router.put('/pdfs/:pdfId', [
       return res.status(404).json({ error: 'PDF not found' });
     }
 
-    const allowedUpdates = ['title', 'description', 'department', 'year', 'subject', 'tags', 'isActive'];
+    const allowedUpdates = ['title', 'description', 'departments', 'year', 'subject', 'tags', 'isActive'];
     const updates = {};
 
     allowedUpdates.forEach(field => {

@@ -249,7 +249,9 @@ export default function PDFManagementPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white">{pdf.department}</div>
+                      <div className="text-sm text-white">
+                        {Array.isArray(pdf.departments) ? pdf.departments.join(', ') : pdf.department}
+                      </div>
                       <div className="text-sm text-gray-400">Year {pdf.year}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -360,7 +362,7 @@ function EditPDFModal({ pdf, onClose, onUpdate }) {
   const [formData, setFormData] = useState({
     title: pdf.title,
     description: pdf.description || '',
-    department: pdf.department || '',
+    departments: Array.isArray(pdf.departments) ? pdf.departments : (pdf.department ? [pdf.department] : []),
     year: (pdf.year === null || pdf.year === undefined) ? '' : String(pdf.year),
     subject: pdf.subject,
     tags: pdf.tags ? pdf.tags.join(', ') : '',
@@ -370,7 +372,7 @@ function EditPDFModal({ pdf, onClose, onUpdate }) {
     e.preventDefault();
     // Ensure no value is empty before submitting
     const cleanedData = { ...formData };
-    if (!cleanedData.department) cleanedData.department = DEPARTMENTS[1];
+    if (!cleanedData.departments || cleanedData.departments.length === 0) cleanedData.departments = [DEPARTMENTS[1]];
     if (!cleanedData.year) cleanedData.year = YEARS[1];
     if (!cleanedData.title) cleanedData.title = pdf.title;
     if (!cleanedData.subject) cleanedData.subject = pdf.subject;
@@ -380,10 +382,13 @@ function EditPDFModal({ pdf, onClose, onUpdate }) {
   };
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value, options } = e.target;
+    if (name === 'departments') {
+      const selected = Array.from(options).filter(opt => opt.selected).map(opt => opt.value);
+      setFormData(prev => ({ ...prev, departments: selected }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   return (
@@ -424,19 +429,35 @@ function EditPDFModal({ pdf, onClose, onUpdate }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Department
+                  Departments
                 </label>
-                <select
-                  name="department"
-                  required
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  value={formData.department}
-                  onChange={handleChange}
-                >
+                <div className="flex flex-col gap-2">
                   {DEPARTMENTS.slice(1).map(dept => (
-                    <option key={dept} value={dept} className="bg-gray-700 text-white">{dept}</option>
+                    <label key={dept} className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        name="departments"
+                        value={dept}
+                        checked={formData.departments.includes(dept)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setFormData(prev => ({
+                              ...prev,
+                              departments: [...prev.departments, dept]
+                            }));
+                          } else {
+                            setFormData(prev => ({
+                              ...prev,
+                              departments: prev.departments.filter(d => d !== dept)
+                            }));
+                          }
+                        }}
+                        className="form-checkbox h-4 w-4 text-primary-600"
+                      />
+                      <span className="ml-2 text-gray-200">{dept}</span>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
 
               <div>

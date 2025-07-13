@@ -39,7 +39,7 @@ const upload = multer({
 // Get PDFs for authenticated user
 router.get('/', [
   authenticate,
-  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  query('departments').optional().isArray(),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('subject').optional().trim(),
   query('search').optional().trim(),
@@ -57,7 +57,7 @@ router.get('/', [
     }
 
     const { 
-      department, 
+      departments, 
       year, 
       subject, 
       search, 
@@ -69,11 +69,11 @@ router.get('/', [
     // Build filters
     const filters = {};
     if (req.user.role === 'admin') {
-      // Admin: ignore department/year filters unless explicitly set
-      if (department) filters.department = department;
+      // Admin: ignore departments/year filters unless explicitly set
+      if (departments && Array.isArray(departments) && departments.length > 0) filters.departments = { $in: departments };
       if (year) filters.year = parseInt(year);
     } else {
-      if (department) filters.department = department;
+      if (departments && Array.isArray(departments) && departments.length > 0) filters.departments = { $in: departments };
       if (year) filters.year = parseInt(year);
     }
     if (subject) filters.subject = subject;
@@ -82,7 +82,7 @@ router.get('/', [
 
     // For admin, show all PDFs (unless filters are set)
     let pdfsQuery;
-    if (req.user.role === 'admin' && !department && !year) {
+    if (req.user.role === 'admin' && (!departments || departments.length === 0) && !year) {
       // Use the new static method to fetch all PDFs for admin
       pdfsQuery = PDF.findAllForAdmin({ subject, search, tags });
     } else {
@@ -106,7 +106,7 @@ router.get('/', [
         hasPrev: page > 1
       },
       filters: {
-        department: req.user.role === 'admin' ? department : req.user.department,
+        departments: req.user.role === 'admin' ? departments : [req.user.department],
         year: req.user.role === 'admin' ? year : req.user.year,
         subject,
         search,
@@ -172,7 +172,7 @@ router.post('/:pdfId/view', [
         id: pdf._id,
         title: pdf.title,
         subject: pdf.subject,
-        department: pdf.department,
+        departments: pdf.departments,
         year: pdf.year
       }
     });
@@ -185,7 +185,7 @@ router.post('/:pdfId/view', [
 router.get('/search/query', [
   authenticate,
   query('q').trim().isLength({ min: 1 }),
-  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  query('departments').optional().isArray(),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 50 }).toInt()
@@ -199,7 +199,7 @@ router.get('/search/query', [
       });
     }
 
-    const { q, department, year, page = 1, limit = 20 } = req.query;
+    const { q, departments, year, page = 1, limit = 20 } = req.query;
 
     // Build search query
     const searchQuery = {
@@ -209,10 +209,10 @@ router.get('/search/query', [
 
     // Apply user restrictions
     if (req.user.role !== 'admin') {
-      searchQuery.department = req.user.department;
+      searchQuery.departments = req.user.department;
       searchQuery.year = req.user.year;
     } else {
-      if (department) searchQuery.department = department;
+      if (departments && Array.isArray(departments) && departments.length > 0) searchQuery.departments = { $in: departments };
       if (year) searchQuery.year = parseInt(year);
     }
 
@@ -862,13 +862,13 @@ router.post('/:pdfId/view-base64', [
         base64Data: base64Data,
         contentType: 'application/pdf',
         filename: `${pdf.title}.pdf`,
-        pdf: {
-          id: pdf._id,
-          title: pdf.title,
-          subject: pdf.subject,
-          department: pdf.department,
-          year: pdf.year
-        }
+      pdf: {
+        id: pdf._id,
+        title: pdf.title,
+        subject: pdf.subject,
+        departments: pdf.departments,
+        year: pdf.year
+      }
       });
       
     } catch (conversionError) {
@@ -987,7 +987,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
         originalName: file.name,
         fileSize: file.size ? parseInt(file.size) : 0,
         mimeType: 'application/pdf',
-        department: 'IT', // Use a valid department value
+        departments: ['IT'], // Use a valid department array
         year: null, // null to indicate unknown year
         subject: 'Unknown',
         tags: [],

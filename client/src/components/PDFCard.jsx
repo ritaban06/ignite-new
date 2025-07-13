@@ -51,36 +51,30 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
           </p>
         )}
 
-        {/* Metadata Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
-          <div className="flex items-center space-x-2 text-white/70">
-            <Tag className="h-4 w-4 flex-shrink-0" />
-            <span>{pdf.department}</span>
-          </div>
-          
-          <div className="flex items-center space-x-2 text-white/70">
-            <Calendar className="h-4 w-4 flex-shrink-0" />
-            <span>Year {pdf.year}</span>
-          </div>
-
-          {showDetails && (
-            <>
-              <div className="flex items-center space-x-2 text-white/70">
-                <User className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">
-                  {pdf.uploadedBy?.name || (
-                    <span className="italic text-white/60">System Admin</span>
-                  )}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2 text-white/70">
-                <Clock className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{formatDate(pdf.createdAt)}</span>
-              </div>
-            </>
-          )}
+      {/* Metadata Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
+        <div className="flex items-center space-x-2 text-white/70">
+          <Tag className="h-4 w-4 flex-shrink-0" />
+          <span>{pdf.department}</span>
         </div>
+
+        <div className="flex items-center space-x-2 text-white/70">
+          <Calendar className="h-4 w-4 flex-shrink-0" />
+          <span>Year {pdf.year}</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-white/70">
+          <User className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">
+            {pdf.uploadedByName || <span className="italic text-white/60">System Admin</span>}
+          </span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-white/70">
+          <Clock className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate"> {formatDate(pdf.uploadedAt)}</span>
+        </div>
+      </div>
 
         {/* Tags */}
         {pdf.tags && pdf.tags.length > 0 && (

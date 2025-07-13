@@ -119,31 +119,31 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       // Debug authentication state
       const token = localStorage.getItem('authToken');
 
-      console.log('[SecurePDFViewer] === PDF Fetch Debug ===');
-      console.log('[SecurePDFViewer] PDF ID:', pdfId);
-      console.log('[SecurePDFViewer] Auth token exists:', !!token);
-      console.log('[SecurePDFViewer] ======================');
+      // console.log('[SecurePDFViewer] === PDF Fetch Debug ===');
+      // console.log('[SecurePDFViewer] PDF ID:', pdfId);
+      // console.log('[SecurePDFViewer] Auth token exists:', !!token);
+      // console.log('[SecurePDFViewer] ======================');
 
       if (!token) {
         console.error('[SecurePDFViewer] No authentication token found.');
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      console.log('[SecurePDFViewer] Fetching PDF URL for ID:', pdfId);
+      // console.log('[SecurePDFViewer] Fetching PDF URL for ID:', pdfId);
 
       let response;
       try {
         response = await pdfAPI.getViewURL(pdfId);
-        console.log('[SecurePDFViewer] PDF URL response:', response.data);
+        // console.log('[SecurePDFViewer] PDF URL response:', response.data);
       } catch (apiError) {
         console.error('[SecurePDFViewer] Error calling pdfAPI.getViewURL:', apiError);
         throw apiError;
       }
 
       if (response.data.viewUrl) {
-        console.log('[SecurePDFViewer] Proxy URL received:', response.data.viewUrl);
+        // console.log('[SecurePDFViewer] Proxy URL received:', response.data.viewUrl);
         try {
-          console.log('[SecurePDFViewer] Fetching PDF from proxy URL:', response.data.viewUrl);
+          // console.log('[SecurePDFViewer] Fetching PDF from proxy URL:', response.data.viewUrl);
           const pdfResponse = await fetch(response.data.viewUrl, {
             method: 'GET',
             headers: {
@@ -153,14 +153,14 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             mode: 'cors'
           });
 
-          console.log('[SecurePDFViewer] PDF proxy fetch response:', pdfResponse.status, pdfResponse.statusText);
+          // console.log('[SecurePDFViewer] PDF proxy fetch response:', pdfResponse.status, pdfResponse.statusText);
           if (!pdfResponse.ok) {
             console.error('[SecurePDFViewer] PDF proxy fetch failed:', pdfResponse.status, pdfResponse.statusText);
             throw new Error(`HTTP ${pdfResponse.status}: ${pdfResponse.statusText}`);
           }
 
           const pdfBlob = await pdfResponse.blob();
-          console.log('[SecurePDFViewer] PDF blob created, size:', pdfBlob.size, 'type:', pdfBlob.type);
+          // console.log('[SecurePDFViewer] PDF blob created, size:', pdfBlob.size, 'type:', pdfBlob.type);
 
           // Ensure the blob has the correct MIME type
           const correctedBlob = pdfBlob.type === 'application/pdf' ?
@@ -168,21 +168,21 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             new Blob([pdfBlob], { type: 'application/pdf' });
 
           const blobUrl = URL.createObjectURL(correctedBlob);
-          console.log('[SecurePDFViewer] PDF blob URL created:', blobUrl);
+          // console.log('[SecurePDFViewer] PDF blob URL created:', blobUrl);
 
           setPdfUrl(blobUrl);
           setPdfInfo(response.data.pdf);
-          console.log('[SecurePDFViewer] PDF blob URL set successfully');
+          // console.log('[SecurePDFViewer] PDF blob URL set successfully');
 
         } catch (fetchError) {
           console.error('[SecurePDFViewer] Failed to fetch PDF content from proxy:', fetchError);
           // Fallback to direct URL
-          console.log('[SecurePDFViewer] Using direct proxy URL as fallback');
+          // console.log('[SecurePDFViewer] Using direct proxy URL as fallback');
           setPdfUrl(response.data.viewUrl);
           setPdfInfo(response.data.pdf);
         }
       } else {
-        console.error('[SecurePDFViewer] No viewUrl in response:', response.data);
+        // console.error('[SecurePDFViewer] No viewUrl in response:', response.data);
         throw new Error('Failed to get PDF view URL');
       }
     } catch (error) {
@@ -481,15 +481,15 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
                   fileUrl={pdfUrl}
                   plugins={[defaultLayoutPluginInstance]}
                   onDocumentLoad={(e) => {
-                    console.log('✅ PDF Document loaded successfully!');
-                    console.log('Number of pages:', e.doc.numPages);
-                    toast.success(`PDF loaded successfully with ${e.doc.numPages} pages!`);
+                    // console.log('✅ PDF Document loaded successfully!');
+                    // console.log('Number of pages:', e.doc.numPages);
+                    // toast.success(`PDF loaded successfully with ${e.doc.numPages} pages!`);
                   }}
                   onPageChange={(e) => {
-                    console.log('Page changed to:', e.currentPage + 1);
+                    // console.log('Page changed to:', e.currentPage + 1);
                   }}
                   onZoom={(e) => {
-                    console.log('Zoom changed to:', e.scale);
+                    // console.log('Zoom changed to:', e.scale);
                   }}
                 />
                 {/* Render highlights */}

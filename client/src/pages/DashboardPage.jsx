@@ -50,7 +50,7 @@ const DashboardPage = () => {
         params.subject = filters.subject.trim();
       }
 
-      console.log("Loading PDFs with params:", params);
+      // console.log("Loading PDFs with params:", params);
 
       const response = await pdfAPI.getPDFs(params);
 

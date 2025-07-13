@@ -8,13 +8,13 @@ class PlatformAuthService {
     this.isIOS = Capacitor.getPlatform() === 'ios';
     this.isWeb = !this.isNative;
     
-    console.log('🔍 Platform Detection:', {
-      isNative: this.isNative,
-      isAndroid: this.isAndroid,
-      isIOS: this.isIOS,
-      isWeb: this.isWeb,
-      platform: Capacitor.getPlatform()
-    });
+    // console.log('🔍 Platform Detection:', {
+    //   isNative: this.isNative,
+    //   isAndroid: this.isAndroid,
+    //   isIOS: this.isIOS,
+    //   isWeb: this.isWeb,
+    //   platform: Capacitor.getPlatform()
+    // });
 
     // Initialize native Google Auth if we're on a native platform
     if (this.isNative) {

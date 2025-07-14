@@ -44,24 +44,24 @@ const ensureAdminUser = async () => {
     // Check if admin user already exists
     const existingAdmin = await User.findById(ADMIN_OBJECT_ID);
     
-    if (!existingAdmin) {
-      // Create the admin user document with the specific ObjectId
-      const adminUser = new User({
-        _id: ADMIN_OBJECT_ID,
-        name: 'System Administrator',
-        email: process.env.ADMIN_EMAIL || 'admin@ignite.local',
-        role: 'admin',
-        isActive: true,
-        isLocked: false
-        // Note: department and year are not required for admin role
-      });
+  //   if (!existingAdmin) {
+  //     // Create the admin user document with the specific ObjectId
+  //     const adminUser = new User({
+  //       _id: ADMIN_OBJECT_ID,
+  //       name: 'System Administrator',
+  //       email: process.env.ADMIN_EMAIL || 'admin@ignite.local',
+  //       role: 'admin',
+  //       isActive: true,
+  //       isLocked: false
+  //       // Note: department and year are not required for admin role
+  //     });
       
-      await adminUser.save();
-      console.log('✅ Created system admin user in database');
-    } else {
-      console.log('✅ System admin user already exists');
-    }
-  } catch (error) {
+  //     await adminUser.save();
+  //     console.log('✅ Created system admin user in database');
+  //   } else {
+  //     console.log('✅ System admin user already exists');
+  //   }
+   } catch (error) {
     console.error('❌ Failed to ensure admin user exists:', error);
     // Don't exit - this is not critical for app startup
   }

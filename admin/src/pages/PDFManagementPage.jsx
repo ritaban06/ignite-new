@@ -170,13 +170,13 @@ export default function PDFManagementPage() {
               ))}
             </select>
             
-            <button
+            {/* <button
               onClick={handleFixOrphanedUploaders}
               className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md text-sm font-medium transition-colors"
               title="Fix missing uploader information"
             >
               Fix Uploaders
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

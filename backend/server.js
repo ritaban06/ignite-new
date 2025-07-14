@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const connectDB = require('./utils/database');
-const { startScheduledTasks, stopScheduledTasks } = require('./utils/scheduler');
+// const { startScheduledTasks, stopScheduledTasks } = require('./utils/scheduler');
 const authRoutes = require('./routes/auth');
 const pdfRoutes = require('./routes/pdfs');
 const userRoutes = require('./routes/users');
@@ -239,10 +239,6 @@ const server = app.listen(PORT, () => {
     console.log(`👤 Admin login endpoint: http://localhost:${PORT}/api/auth/admin-login`);
   }
   
-  // Start scheduled tasks in production
-  if (process.env.NODE_ENV === 'production') {
-    startScheduledTasks();
-  }
 });
 
 // Graceful shutdown

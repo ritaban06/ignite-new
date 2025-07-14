@@ -4,7 +4,6 @@ const { body, query, validationResult } = require('express-validator');
 const PDF = require('../models/PDF');
 const User = require('../models/User');
 const AccessLog = require('../models/AccessLog');
-const r2Service = require('../services/r2Service');
 const googleSheetsService = require('../services/googleSheetsService');
 const googleDriveService = require('../services/googleDriveService');
 const { 
@@ -293,14 +292,6 @@ router.delete('/pdfs/:pdfId', authenticate, requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'PDF not found' });
     }
 
-    // Delete from R2 storage
-    try {
-      await r2Service.deletePdf(pdf.cloudflareKey);
-    } catch (r2Error) {
-      console.error('Failed to delete from R2:', r2Error);
-      // Continue with database deletion even if R2 fails
-    }
-
     // Delete from database
     await PDF.findByIdAndDelete(req.params.pdfId);
 
@@ -582,19 +573,6 @@ router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-// Test R2 connection
-router.get('/test-r2', authenticate, requireAdmin, async (req, res) => {
-  try {
-    const result = await r2Service.testConnection();
-    res.json(result);
-  } catch (error) {
-    console.error('R2 test error:', error);
-    res.status(500).json({ 
-      error: 'R2 connection test failed', 
-      message: error.message 
-    });
-  }
-});
 
 // Sync from Google Sheets
 router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {

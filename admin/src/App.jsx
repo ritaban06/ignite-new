@@ -13,6 +13,7 @@ import UsersPage from './pages/UsersPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 // import SettingsPage from './pages/SettingsPage';
 import DebugPage from './pages/DebugPage';
+import Docs from './pages/Docs';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -46,6 +47,7 @@ function AppContent() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             {/* <Route path="/settings" element={<SettingsPage />} /> */}
             <Route path="/debug" element={<DebugPage />} />
+            <Route path="/docs" element={<Docs />} />
           </Routes>
         </main>
       </div>

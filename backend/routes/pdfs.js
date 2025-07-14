@@ -714,75 +714,75 @@ router.options('/proxy/:fileKey', (req, res) => {
   res.status(200).end();
 });
 
-// Test R2 connectivity endpoint (admin only)
-router.get('/test-r2-connection', authenticate, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
+// Test R2 connectivity endpoint (admin only) (Now deprecated, using Google Drive service directly)
+// router.get('/test-r2-connection', authenticate, async (req, res) => {
+//   try {
+//     if (req.user.role !== 'admin') {
+//       return res.status(403).json({ error: 'Admin access required' });
+//     }
 
-    console.log('Testing R2 connection...');
+//     console.log('Testing R2 connection...');
     
-    // Test basic R2 configuration
-    const configTest = {
-      hasAccountId: !!process.env.CLOUDFLARE_ACCOUNT_ID,
-      hasAccessKey: !!process.env.R2_ACCESS_KEY_ID,
-      hasSecretKey: !!process.env.R2_SECRET_ACCESS_KEY,
-      hasBucketName: !!process.env.R2_BUCKET_NAME
-    };
+//     // Test basic R2 configuration
+//     const configTest = {
+//       hasAccountId: !!process.env.CLOUDFLARE_ACCOUNT_ID,
+//       hasAccessKey: !!process.env.R2_ACCESS_KEY_ID,
+//       hasSecretKey: !!process.env.R2_SECRET_ACCESS_KEY,
+//       hasBucketName: !!process.env.R2_BUCKET_NAME
+//     };
 
-    console.log('R2 Config:', configTest);
+//     console.log('R2 Config:', configTest);
 
-    // Test listing files
-    const listResult = await googleDriveService.listFiles();
+//     // Test listing files
+//     const listResult = await googleDriveService.listFiles();
     
-    let testResults = {
-      config: configTest,
-      listFiles: {
-        success: listResult.success,
-        fileCount: listResult.files ? listResult.files.length : 0,
-        error: listResult.error
-      }
-    };
+//     let testResults = {
+//       config: configTest,
+//       listFiles: {
+//         success: listResult.success,
+//         fileCount: listResult.files ? listResult.files.length : 0,
+//         error: listResult.error
+//       }
+//     };
 
-    // If list works, test signed URL generation
-    if (listResult.success && listResult.files.length > 0) {
-      const firstFile = listResult.files[0];
-      console.log('Testing signed URL for:', firstFile);
+//     // If list works, test signed URL generation
+//     if (listResult.success && listResult.files.length > 0) {
+//       const firstFile = listResult.files[0];
+//       console.log('Testing signed URL for:', firstFile);
       
-      const signedUrlResult = await googleDriveService.getSignedViewUrl(firstFile, 60);
-      testResults.signedUrl = {
-        success: signedUrlResult.success,
-        hasUrl: !!signedUrlResult.url,
-        error: signedUrlResult.error
-      };
+//       const signedUrlResult = await googleDriveService.getSignedViewUrl(firstFile, 60);
+//       testResults.signedUrl = {
+//         success: signedUrlResult.success,
+//         hasUrl: !!signedUrlResult.url,
+//         error: signedUrlResult.error
+//       };
 
-      // Test PDF stream
-      console.log('Testing PDF stream for:', firstFile);
-      const streamResult = await googleDriveService.getPdfStream(firstFile);
-      testResults.pdfStream = {
-        success: streamResult.success,
-        useSignedUrl: streamResult.useSignedUrl,
-        hasStream: !!streamResult.stream,
-        error: streamResult.error
-      };
-    }
+//       // Test PDF stream
+//       console.log('Testing PDF stream for:', firstFile);
+//       const streamResult = await googleDriveService.getPdfStream(firstFile);
+//       testResults.pdfStream = {
+//         success: streamResult.success,
+//         useSignedUrl: streamResult.useSignedUrl,
+//         hasStream: !!streamResult.stream,
+//         error: streamResult.error
+//       };
+//     }
 
-    res.json({
-      message: 'R2 connection test completed',
-      results: testResults,
-      timestamp: new Date().toISOString()
-    });
+//     res.json({
+//       message: 'R2 connection test completed',
+//       results: testResults,
+//       timestamp: new Date().toISOString()
+//     });
 
-  } catch (error) {
-    console.error('R2 connection test error:', error);
-    res.status(500).json({
-      error: 'R2 connection test failed',
-      message: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
+//   } catch (error) {
+//     console.error('R2 connection test error:', error);
+//     res.status(500).json({
+//       error: 'R2 connection test failed',
+//       message: error.message,
+//       timestamp: new Date().toISOString()
+//     });
+//   }
+// });
 
 // Alternative endpoint to get PDF as base64 data (for cases where direct fetch is blocked)
 router.post('/:pdfId/view-base64', [

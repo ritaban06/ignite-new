@@ -1,0 +1,588 @@
+{
+  "structure": [
+    {
+      "folder": "backend",
+      "items": [
+        {
+          "name": ".env",
+          "type": "file",
+          "desc": "This is the environment configuration file for the backend."
+        },
+        {
+          "name": ".env.example",
+          "type": "file",
+          "desc": "This is the sample environment configuration file for the backend."
+        },
+        {
+          "name": "middleware/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "auth.js",
+              "type": "file",
+              "desc": "Handles authentication , authorization, access logging, PDF access validation and rate limiting. Provides middleware for authentication via JWT tokens, device restrictions, CORS orgins and CORS headers."
+            },
+            {
+              "name": "pdfSecurity.js",
+              "type": "file",
+              "desc": "Enhancing security for PDF access, ensuring only authorized users can view PDFs. Disable caching for PDF files. Prevents unauthorized downloads, framing, and exposure of the PDFs"
+            }
+          ]
+        },
+        {
+          "name": "models/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "AccessLog.js",
+              "type": "file",
+              "desc": "Storing detailed logs of user access to PDFs, including timestamps, user IDs, and PDF IDs. Also captures device information, success status and errors for security and auditing purposes."
+            },
+            {
+              "name": "Annotation.js",
+              "type": "file",
+              "desc": "This feature/file is not yet implemented."
+            },
+            {
+              "name": "PDF.js",
+              "type": "file",
+              "desc": "Storing metadata about each PDF (title, description, file names, size, MIME type, departments, year, subject, tags, uploader info, Google Drive IDs, access counts, and timestamps). Providing methods to check user access permissions, increment view counts, and filter/search PDFs for users and admins. Ensuring sensitive data (like Google Drive file IDs) is not exposed in API responses."
+            },
+            {
+              "name": "User.js",
+              "type": "file",
+              "desc": "Storing user information (email, password, name, role, department, year, account status, device ID, login attempts, Google OAuth fields, etc.). Hashing passwords before saving and providing methods for password comparison. Managing account lockout after multiple failed login attempts and resetting login attempts."
+            }
+          ]
+        },
+        {
+          "name": "package.json",
+          "type": "file",
+          "desc": "Backend package configuration file. Added pnpm support."
+        },
+        {
+          "name": "routes/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "admin.js",
+              "type": "file",
+              "desc": "Handling admin authentication, authorization, and logging for all admin endpoints. Managing PDF documents (viewing, updating, deleting, analytics). Integrating with Google Sheets and Google Drive for user and PDF management. Managing user accounts. Providing analytics and dashboard data for admins."
+            },
+            {
+              "name": "annotations.js",
+              "type": "file",
+              "desc": "This feature/file is not yet implemented."
+            },
+            {
+              "name": "auth.js",
+              "type": "file",
+              "desc": "Handling user registration, login, logout, and token verification for clients. Managing admin login, logout, and admin info retrieval using environment-based credentials. Supporting Google OAuth authentication and user approval via Google Sheets. Enforcing device-based session restrictions and account lockout mechanisms."
+            },
+            {
+              "name": "pdfs.js",
+              "type": "file",
+              "desc": "Serving, searching, and paginating PDF documents for authenticated users and admins. Integrating with Google Drive for storing, retrieving, and caching PDF files. Enforcing access control and logging user actions for PDF views and suspicious activities. Providing secure proxy endpoints for streaming and downloading PDFs with security headers and CORS support."
+            },
+            {
+              "name": "users.js",
+              "type": "file",
+              "desc": "Providing authenticated endpoints for users to view their profile, activity summary, statistics, and device info. Allowing users to view and update their preferences (currently placeholders for future features). Enabling users to log out from their current device and manage device-based sessions."
+            }
+          ]
+        },
+        {
+          "name": "server.js",
+          "type": "file",
+          "desc": "Initializing and configuring the Express app, including security, logging, compression, rate limiting, and CORS. Connecting to the MongoDB database. Registering all API routes (auth, PDFs, users, admin, etc.). Handling health checks, CORS tests, and root endpoint. Managing global error handling and 404 responses."
+        },
+        {
+          "name": "services/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "googleDriveService.js",
+              "type": "file",
+              "desc": "Downloading PDF files from Google Drive as streams. Listing PDF files in a specific folder, including recursive listing in subfolders. Fetching file metadata and owner information. Generating view URLs for Google Drive files."
+            },
+            {
+              "name": "googleSheetsService.js",
+              "type": "file",
+              "desc": "Fetching and caching approved user data from a public (no editor permissions) Google Sheet (CSV export). Parsing CSV data into user objects and normalizing headers. Checking if a user is approved based on their email. Providing cache management and status reporting. Utility methods for fetching from specific sheets and parsing CSV lines."
+            }
+          ]
+        },
+        {
+          "name": "utils/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "database.js",
+              "type": "file",
+              "desc": "An async function to connect to MongoDB using environment variables and log connection status. Event handlers for connection errors, disconnections, and reconnections. Exports the connectDB function for use in server initialization."
+            },
+            {
+              "name": "validation.js",
+              "type": "file",
+              "desc": "Defining common validation rules for user fields (email, password, name, department, year, MongoDB IDs). Defining validation rules for PDF fields (title, description, subject, tags). File validation helpers for size and type checks. Providing query and sorting validation for pagination and sorting endpoints. Exporting grouped validation rule sets for registration, login, PDF upload/update, and user update operations."
+            }
+          ]
+        },
+        {
+          "name": "vercel.json",
+          "type": "file",
+          "desc": "Specifying the build settings for deploying the backend on Vercel, using server.js as the entry point. Setting the maximum serverless function size to 50MB. Defining a rewrite rule so all incoming requests are routed to server.js."
+        }
+      ]
+    },
+    {
+      "folder": "admin",
+      "items": [
+        {
+          "name": ".env",
+          "type": "file",
+          "desc": "This is the environment configuration file for the admin."
+        },
+        {
+          "name": ".env.example",
+          "type": "file",
+          "desc": "This is the sample environment configuration file for the admin."
+        },
+        {
+          "name": ".gitignore",
+          "type": "file",
+          "desc": "This file specifies files and directories that should be ignored by Git."
+        },
+        {
+          "name": "eslint.config.js",
+          "type": "file",
+          "desc": "Template for ESLint configuration, ensuring code quality and consistency. Haven't changed any rules."
+        },
+        {
+          "name": "index.html",
+          "type": "file",
+          "desc": "Main entry point for this directory."
+        },
+        {
+          "name": "package.json",
+          "type": "file",
+          "desc": "Admin package configuration file. Added pnpm support."
+        },
+        {
+          "name": "postcss.config.cjs",
+          "type": "file",
+          "desc": "This file configures PostCSS, a tool for transforming CSS with JavaScript plugins. Haven't changed any plugins."
+        },
+        {
+          "name": "public/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "newlogo.webp",
+              "type": "file",
+              "desc": "The official logo for Samarth logo in webp format."
+            },
+            {
+              "name": "pdfjs/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "pdf.worker.min.js",
+                  "type": "file",
+                  "desc": "This file is a minified JavaScript worker file for PDF.js, a library used to render PDF documents in web applications. Running PDF parsing and rendering tasks in a separate web worker thread to improve performance and responsiveness. It is the backup for the custom PDF viewer"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "src/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "api/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "index.js",
+                  "type": "file",
+                  "desc": "An Axios instance with base URL, credentials, and default headers for API requests. equest and response interceptors for handling authentication tokens and redirecting on auth errors. Helper functions for authentication, PDF management, user management, and Google Sheets integration, mapped to backend endpoints."
+                }
+              ]
+            },
+            {
+              "name": "App.jsx",
+              "type": "file",
+              "desc": "Main application component for admin. Setting up routing for different admin pages (dashboard, PDFs, users, analytics, debug, docs). Managing authentication state and rendering the login page or main app layout accordingly. Providing global context for authentication using AuthProvider. Displaying a loading spinner while authentication state is being determined. Rendering shared UI components like Header, Sidebar, and toast notifications."
+            },
+            {
+              "name": "components/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "Header.jsx",
+                  "type": "file",
+                  "desc": "The dashboard title and branding. The current user's avatar (or a default icon). A logout button that triggers the logout function from the authentication context."
+                },
+                {
+                  "name": "LoginPage.jsx",
+                  "type": "file",
+                  "desc": "A form for logging in with google. Integration with the authentication context to handle login logic, loading state, and error messages. UI feedback using toast notifications for success or failure."
+                },
+                {
+                  "name": "ProtectedRoute.jsx",
+                  "type": "file",
+                  "desc": "Checks authentication and loading state using the authentication context. Displays a loading spinner while authentication is being determined. Prevents access to child components if the user is not authenticated (returns null). Renders its children only when the user is authenticated."
+                },
+                {
+                  "name": "Sidebar.jsx",
+                  "type": "file",
+                  "desc": "Navigation links to main admin pages (dashboard, PDFs, users, analytics). Buttons to sync user data from Google Sheets and cache PDFs from Google Drive, with loading and status feedback. Visual feedback for sync and cache operations, including success and error messages."
+                }
+              ]
+            },
+            {
+              "name": "contexts/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "AuthContext.jsx",
+                  "type": "file",
+                  "desc": "A React context and provider for authentication state (user, loading, error, isAuthenticated). Functions for logging in and out, including token management and API calls. Automatic session initialization and validation on app load. A custom hook (useAuth) for accessing authentication state and actions throughout the app."
+                }
+              ]
+            },
+            {
+              "name": "index.css",
+              "type": "file",
+              "desc": "Imports for the Inter font and Tailwind CSS base, components, and utilities. Defines global styles for the app, including body background, text color, and font family. Ensures consistent styling across the interface."
+            },
+            {
+              "name": "main.jsx",
+              "type": "file",
+              "desc": "The index.html call this file to render the React application. It wraps the App component with AuthProvider for authentication context."
+            },
+            {
+              "name": "pages/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "AnalyticsPage.jsx",
+                  "type": "file",
+                  "desc": "Fetching and displaying analytics data about users, PDFs, views, uploads, and activity from the backend. Visualizing statistics with cards, charts, and lists (overview stats, department/year distribution, recent activity, top PDFs). Loading states and error handling for analytics data."
+                },
+                {
+                  "name": "DashboardPage.jsx",
+                  "type": "file",
+                  "desc": "Fetching and displaying key statistics about users, PDFs, uploads, and activity from the backend. Visualizing data with stat cards, department/year distribution, and recent activity. Quick action links for managing PDFs, users, and viewing analytics. Loading states and error handling for dashboard data."
+                },
+                {
+                  "name": "DebugPage.jsx",
+                  "type": "file",
+                  "desc": "A set of buttons to run various backend and upload-related tests (health checks, CORS, uploads, authentication, environment info). Displays results, including success/failure, response data, and error details for each test. Helps diagnose issues with uploads, API connectivity, and authentication by comparing responses and headers."
+                },
+                {
+                  "name": "PDFManagementPage.jsx",
+                  "type": "file",
+                  "desc": "Fetching, searching, filtering, and paginating PDF documents from the backend. Viewing details, editing, and deleting PDFs. Displaying tags, and Google Drive links for each PDF. Modal form for editing PDF metadata."
+                },
+                {
+                  "name": "SettingsPage.jsx",
+                  "type": "file",
+                  "desc": "This feature/file is not yet implemented."
+                },
+                {
+                  "name": "UploadPage.jsx",
+                  "type": "file",
+                  "desc": "This page allows admins to upload PDF files. It includes a form for uploading PDFs, selecting departments, and adding metadata. Used when used Cloudflare R2 for file storage. Now it is not used as the PDFs are uploaded directly to Google Drive. Still keeping the file for future use/changes."
+                },
+                {
+                  "name": "UsersPage.jsx",
+                  "type": "file",
+                  "desc": "Fetching, searching, filtering, and paginating user accounts from the backend. Displaying user details, avatars, roles, departments, and join dates. Actions for deleting users. Visual feedback for loading, errors, and pagination."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "tailwind.config.js",
+          "type": "file",
+          "desc": "Enabling dark mode support. Extending the default theme with custom colors (including a primary color palette) and font families (using Inter)."
+        },
+        {
+          "name": "vercel.json",
+          "type": "file",
+          "desc": "Defining a rewrite rule so that all non-API requests are routed to index.html, enabling client-side routing for the single-page application."
+        },
+        {
+          "name": "vite.config.js",
+          "type": "file",
+          "desc": "Configuring the development server (port, auto-open). Defining a proxy so that API requests (/api) are forwarded to your backend server at - For Local: http://localhost:5000 & For Prod: https://your-deployed-backend-url.vercel.app."
+        }
+      ]
+    },
+    {
+      "folder": "client",
+      "items": [
+        {
+          "name": ".env",
+          "type": "file",
+          "desc": "This is the environment configuration file for the client."
+        },
+        {
+          "name": ".env.example",
+          "type": "file",
+          "desc": "This is the sample environment configuration file for the client."
+        },
+        {
+          "name": ".gitignore",
+          "type": "file",
+          "desc": "This file specifies files and directories that should be ignored by Git."
+        },
+        {
+          "name": "capacitor.config.json",
+          "type": "file",
+          "desc": "This file configures Capacitor, a native runtime for building cross-platform apps. It includes app ID, name, web directory, and server settings. Haven't implemented any native functionality yet, so this file is just a placeholder. For future use when building mobile apps."
+        },
+        {
+          "name": "eslint.config.js",
+          "type": "file",
+          "desc": "Template for ESLint configuration, ensuring code quality and consistency. Haven't changed any rules."
+        },
+        {
+          "name": "index.html",
+          "type": "file",
+          "desc": "Main entry point for this directory."
+        },
+        {
+          "name": "package.json",
+          "type": "file",
+          "desc": "Client package configuration file. Added pnpm support."
+        },
+        {
+          "name": "postcss.config.cjs",
+          "type": "file",
+          "desc": "This file configures PostCSS, a tool for transforming CSS with JavaScript plugins. Haven't changed any plugins."
+        },
+        {
+          "name": "public/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "manifest.json",
+              "type": "file",
+              "desc": "This file defines the web app's metadata for Progressive Web App (PWA) support. It includes the app's name, description, icons, theme colors, and display settings. Ensures the app can be installed on devices and provides a native-like experience. Couldn't implement the PWA features yet, so this file is just a placeholder for future use."
+            },
+            {
+              "name": "newlogo.webp",
+              "type": "file",
+              "desc": "The official logo for Samarth logo in webp format."
+            },
+            {
+              "name": "pdfjs/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "pdf.worker.min.js",
+                  "type": "file",
+                  "desc": "This file is a minified JavaScript worker file for PDF.js, a library used to render PDF documents in web applications. Running PDF parsing and rendering tasks in a separate web worker thread to improve performance and responsiveness. It is the backup for the custom PDF viewer"
+                }
+              ]
+            },
+            {
+              "name": "pwa-192x192.png",
+              "type": "file",
+              "desc": "Samarth logo in 192x192 resolution for PWA icon."
+            },
+            {
+              "name": "pwa-512x512.png",
+              "type": "file",
+              "desc": "Samarth logo in 512x512 resolution for PWA icon."
+            }
+          ]
+        },
+        {
+          "name": "src/",
+          "type": "folder",
+          "children": [
+            {
+              "name": "api/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "index.js",
+                  "type": "file",
+                  "desc": "An Axios instance with base URL, timeout, credentials, and default headers. Interceptors for adding authentication tokens to requests and handling auth errors (including device switch logic). Helper functions for authentication, PDF management, user profile, and activity endpoints."
+                }
+              ]
+            },
+            {
+              "name": "App.jsx",
+              "type": "file",
+              "desc": "Setting up routing for different client pages (dashboard, search, etc.). Managing authentication state and rendering the login page or main app layout accordingly. Providing global context for authentication and Google OAuth integration. Displaying a loading spinner while authentication state is being determined. Rendering shared UI components like Header, ProtectedRoute, and toast notifications."
+            },
+            {
+              "name": "components/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "AuthDebug.jsx",
+                  "type": "file",
+                  "desc": "A UI panel showing authentication status, user info, and token presence. A button to log detailed authentication state and environment info to the browser console."
+                },
+                {
+                  "name": "GoogleLoginComponent.jsx",
+                  "type": "file",
+                  "desc": "A button for users to sign in with their Google account using the Google OAuth flow. Handles success and error events, sending the credential to the backend for verification and approval. Displays loading and error states, and explains the approval process to users."
+                },
+                {
+                  "name": "Header.jsx",
+                  "type": "file",
+                  "desc": "Branding/logo and navigation links for dashboard and search. Displays user info (avatar, name, department, year) and action button (logout). Responsive design with a mobile menu for navigation and actions.  Handles logout and menu state."
+                },
+                {
+                  "name": "HybridGoogleLogin.jsx",
+                  "type": "file",
+                  "desc": "The file is responsible for providing a unified Google login experience for both web and mobile users in the Ignite platform. It detects the user's platform (web browser or mobile app) and displays the appropriate Google sign-in button. On web, it uses the @react-oauth/google component; on mobile, it calls a native sign-in method via PlatformAuthService. The component manages loading and error states, shows platform indicators, and explains the authentication flow to users. It ensures only approved users can access the platform by verifying their Google account against an approved list after sign-in."
+                },
+                {
+                  "name": "LoginPage.jsx",
+                  "type": "file",
+                  "desc": "The file is responsible for rendering the login page of the Ignite platform. It displays the platform logo, a welcome message, and instructions for accessing the PDF library. The page uses a visually styled layout with a gradient background and a centered card. It embeds the HybridGoogleLogin component, which handles Google authentication for both web and mobile users. This file serves as the entry point for user authentication and access control."
+                },
+                {
+                  "name": "PDFCard.jsx",
+                  "type": "file",
+                  "desc": "The file is responsible for rendering a visually styled card that displays information about a PDF document in the Ignite platform. It shows the PDF's title, subject, description, associated departments, year, uploader, upload date, tags, file size, view count, and last accessed date. The card includes a View button to trigger a view action and adapts its layout responsively. It uses icons for metadata and handles cases where certain fields may be missing. This component is used to present PDF details in a user-friendly, organized format within lists or galleries."
+                },
+                {
+                  "name": "PDFTest.jsx",
+                  "type": "file",
+                  "desc": "The file is responsible for rendering a test component that securely displays a PDF document using the @react-pdf-viewer/core library. It disables download, print, and open actions in the viewer to prevent unauthorized file access. The component shows basic PDF metadata, handles loading and error states, and restricts user interactions like right-click and text selection. It is primarily used for debugging and verifying secure PDF rendering in the Ignite platform. Use only for testing purposes, not in production."
+                },
+                {
+                  "name": "ProtectedRoute.jsx",
+                  "type": "file",
+                  "desc": "The file is responsible for guarding access to protected routes in the Ignite platform. It checks the user's authentication status using the AuthContext. If authentication is loading, it displays a loading indicator. If the user is not authenticated, it returns null (allowing the auth provider to handle redirection). If authenticated, it renders the child components, ensuring only authorized users can access certain pages."
+                },
+                {
+                  "name": "SecurePDFViewer.jsx",
+                  "type": "file",
+                  "desc": "This custom file is responsible for securely displaying PDF documents in a modal within the Ignite platform. It fetches the PDF using an authenticated API, disables download, print, and open actions, and blocks right-click and keyboard shortcuts to prevent unauthorized access or copying. The component handles loading, error, and fallback states, and shows PDF metadata. It is designed to ensure that protected PDFs can only be viewed through the platform, maintaining strict access and security controls."
+                }
+              ]
+            },
+            {
+              "name": "contexts/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "AuthContext.jsx",
+                  "type": "file",
+                  "desc": "The file is responsible for managing authentication state and logic in the Ignite platform's frontend. It provides a React context (AuthContext) and a hook (useAuth) for accessing authentication data and actions throughout the app. The AuthProvider component handles user login, registration, logout, Google sign-in, token validation, and state persistence using localStorage. It exposes authentication status, user info, loading state, and related functions to child components, ensuring secure and consistent user access across the application."
+                }
+              ]
+            },
+            {
+              "name": "index.css",
+              "type": "file",
+              "desc": "Imports for the Inter font and Tailwind CSS base, components, and utilities. Defines global styles for the app, including body background, text color, and font family. Ensures consistent styling across the interface."
+            },
+            {
+              "name": "main.jsx",
+              "type": "file",
+              "desc": "The index.html call this file to render the React application. It wraps the App component with AuthProvider for authentication context."
+            },
+            {
+              "name": "pages/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "DashboardPage.jsx",
+                  "type": "file",
+                  "desc": "The file is responsible for rendering the main dashboard view of the Ignite platform. It displays a personalized welcome header, quick stats, search and filter options, and a paginated list of available PDFs for the authenticated user. The page loads PDF data from the backend, handles searching and filtering, and manages pagination. It also provides a secure modal viewer for PDFs using SecurePDFViewer, ensuring protected access. The dashboard adapts its content based on the user's department and year, and provides feedback for loading, errors, and empty states."
+                },
+                {
+                  "name": "SearchPage.jsx",
+                  "type": "file",
+                  "desc": "The file is responsible for providing a searchable interface for PDFs in the Ignite platform. It allows users to enter keywords, view search results, and open PDFs securely. The page manages search queries, loading states, result pagination, and displays feedback for empty or failed searches. It uses the user's department and year to contextualize results and integrates the SecurePDFViewer for protected PDF access. The component ensures users can efficiently find and view educational resources relevant to their profile."
+                }
+              ]
+            },
+            {
+              "name": "services/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "googleAuthService.js",
+                  "type": "file",
+                  "desc": "The file is responsible for handling Google OAuth token processing and validation in the Ignite platform's frontend. It provides methods to initialize Google OAuth, decode JWT tokens, extract user information from Google credential responses, and validate that the user's email is verified. This service ensures that only users with valid and verified Google accounts can sign in, and it parses the necessary user details for authentication and profile management."
+                },
+                {
+                  "name": "googleSheetsService.js",
+                  "type": "file",
+                  "desc": "The file is responsible for managing the retrieval and parsing of approved user data from a public Google Sheet in the Ignite platform. It fetches the sheet as CSV, parses user records, caches results for performance, and provides methods to check if a user is approved based on their email. The service handles different Google Sheets URL formats, validates required columns, and supports cache clearing and fetching from specific sheets by GID. It ensures only users listed in the approved sheet can access protected resources."
+                },
+                {
+                  "name": "platformAuthService.js",
+                  "type": "file",
+                  "desc": "The file is responsible for managing platform-specific authentication logic in the Ignite platform. It detects whether the app is running on web, Android, or iOS, and initializes native Google authentication for mobile platforms using Capacitor and the Codetrix plugin. The service provides methods for signing in and out with Google, retrieving client IDs, checking sign-in status, and validating environment configuration. It also exposes platform information for debugging and ensures the correct OAuth flow is used based on the user's device."
+                }
+              ]
+            },
+            {
+              "name": "utils/",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "securePdfPlugin.js",
+                  "type": "file",
+                  "desc": "This custom plugin is responsible for providing secure plugins for the PDF viewer in the Ignite platform. It defines a custom toolbar plugin that removes sensitive actions like download, print, open, and more actions from the PDF viewer's toolbar. It also exports a secure default layout plugin that restricts sidebar tabs to thumbnails and uses the secure toolbar, ensuring users cannot access, download, or print protected PDFs. This utility helps enforce document security and access control in the frontend."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "tailwind.config.js",
+          "type": "file",
+          "desc": "The file tailwind.config.js is responsible for configuring Tailwind CSS in the Ignite platform's client app. It defines custom color palettes (primary and secondary), extends the default theme with custom fonts and animations, and specifies which files Tailwind should scan for class usage. This configuration enables consistent styling, branding, and animation effects across the frontend."
+        },
+        {
+          "name": "vercel.json",
+          "type": "file",
+          "desc": "The file vercel.json configures routing and rewrites for the Ignite client app deployed on Vercel. It proxies API requests (/api/*) to the backend server and rewrites all other routes to index.html, enabling client-side routing for the single-page application. This ensures seamless navigation and proper API handling in production."
+        },
+        {
+          "name": "vite.config.js",
+          "type": "file",
+          "desc": "The file vite.config.js configures the Vite build tool for the Ignite client app. It sets up React and PWA plugins, defines the PWA manifest, and configures the development server with SPA routing, API proxying, and custom headers for PDF.js compatibility. It also optimizes dependencies and ensures proper global definitions for browser compatibility. This file enables fast development, secure PDF viewing, and progressive web app features."
+        }
+      ]
+    }
+  ],
+  "flow": [
+    "Admin uploads a PDF manually to Google Drive",
+    "Admin opens admin panel to Manage PDFs",
+    "Admin enters PDF metadata",
+    "Metadata stored in MongoDB",
+    "Client fetches PDF",
+    "Backend proxies PDF",
+    "Access logged to DB"
+  ],
+  "modules": [
+    {
+      "title": "Where to change the domains?",
+      "desc": "backend/server.js - 55 to 61. backend/middleware/auth.js - 12 to 18. backend/routes/auth.js - 531. admin/src/pages/DebugPage.jsx - 196. client/vercel.json - 6"
+    },
+    {
+      "title": "Where to edit/add departments array?",
+      "desc": "admin/src/pages/PDFManagementPage.jsx - 20. admin/src/pages/UploadPage.jsx - 7. backend/models/PDF.js - 35."
+    },
+    {
+      "title": "How to mantain the access logs in MongoDB?",
+      "desc": "Open the DB in MongoDB Compass or any other MongoDB client. Open Indexes tab to create a new Index. Select the name of the index: createdAt and pick 1 as the type/sort order. Also click the checkbox 'Create TTL' under the 'Options' section. Specify the time in seconds. Then click 'Create Index'. This will automatically delete the logs after the specified time. Right now it is set to 172800 seconds (2 days)."
+    }
+  ]
+}

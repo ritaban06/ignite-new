@@ -269,7 +269,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   useEffect(() => {
     if (pdfUrl && !isLoading && !error) {
       const hideToolbarButtons = () => {
-        // Hide download, print, and open buttons by various selectors
+        // Hide download, print, open, and Show Properties buttons by various selectors
         const selectors = [
           'button[title*="Download"]',
           'button[title*="Print"]', 
@@ -281,7 +281,10 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           '[data-testid="more-actions__menu"]',
           '.rpv-download',
           '.rpv-print',
-          '.rpv-open'
+          '.rpv-open',
+          'button[title*="Properties"]',
+          '[data-testid="toolbar__properties-button"]',
+          '.rpv-properties',
         ];
 
         selectors.forEach(selector => {

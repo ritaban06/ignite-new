@@ -18,7 +18,7 @@ const app = express();
 
 // Trust proxy settings for platforms like Vercel, Heroku, etc.
 // This is required for rate limiting and getting real client IPs
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet({
@@ -243,8 +243,8 @@ const server = app.listen(PORT, () => {
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('📴 SIGTERM received, shutting down gracefully');
-  stopScheduledTasks();
+  // console.log('📴 SIGTERM received, shutting down gracefully');
+  // stopScheduledTasks();
   
   try {
     // Close MongoDB connection
@@ -261,8 +261,8 @@ process.on('SIGTERM', async () => {
 });
 
 process.on('SIGINT', async () => {
-  console.log('📴 SIGINT received, shutting down gracefully');
-  stopScheduledTasks();
+  // console.log('📴 SIGINT received, shutting down gracefully');
+  // stopScheduledTasks();
   
   try {
     // Close MongoDB connection

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   LogOut,
   User,
-  Settings,
+  // Settings,
   Cloud,
   Home,
   Search,
@@ -110,12 +110,12 @@ const Header = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <button
+          {/* <button
             className="p-2 text-white/70 hover:text-white hover:bg-purple-500/20 rounded-md transition-colors"
             title="Settings"
           >
             <Settings className="h-4 w-4" />
-          </button>
+          </button> */}
 
           <button
             onClick={handleLogout}
@@ -211,13 +211,13 @@ const Header = () => {
 
           {/* Actions */}
           <div className="border-t border-white/10 pt-2 mt-2">
-            <button
+            {/* <button
               className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-white/80 hover:text-white hover:bg-purple-500/20 transition-colors w-full text-left"
               title="Settings"
             >
               <Settings className="h-5 w-5" />
               <span>Settings</span>
-            </button>
+            </button> */}
 
             <button
               onClick={handleLogout}

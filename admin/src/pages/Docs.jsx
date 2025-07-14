@@ -28,10 +28,10 @@ export default function Docs() {
           {structure.map((section, idx) => (
             <div key={idx}>
               <div className="font-bold text-lg mb-1 text-white">
-                {section.folder.startsWith('backend') && <span className="mr-2 text-red-400">🖥️</span>}
-                {section.folder.startsWith('admin') && <span className="mr-2 text-blue-400">🛠️</span>}
-                {section.folder.startsWith('client') && <span className="mr-2 text-green-400">📱</span>}
-                📂 {section.folder}
+                {section.folder.startsWith('backend') && <span className="mr-2 text-red-400">🛠️</span>}
+                {section.folder.startsWith('admin') && <span className="mr-2 text-blue-400">👨‍💼</span>}
+                {section.folder.startsWith('client') && <span className="mr-2 text-green-400">💻</span>}
+                 {section.folder}
               </div>
               {renderItems(section.items)}
             </div>

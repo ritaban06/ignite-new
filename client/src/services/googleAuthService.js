@@ -1,5 +1,3 @@
-// Google Auth Service - handles Google OAuth token processing and validation
-
 class GoogleAuthService {
   constructor() {
     this.isInitialized = false;

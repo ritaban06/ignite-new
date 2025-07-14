@@ -20,46 +20,53 @@ export default function Docs() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto text-sm text-white space-y-10">
-      <h1 className="text-3xl font-bold">📘 Ignite Internal Docs</h1>
-      <section>
-        <h2 className="text-xl font-semibold mb-2 text-white">📁 Project Folder Working</h2>
-        <div className="space-y-4">
-          {structure.map((section, idx) => (
-            <div key={idx}>
-              <div className="font-bold text-lg mb-1 text-white">
-                {section.folder.startsWith('backend') && <span className="mr-2 text-red-400">🛠️</span>}
-                {section.folder.startsWith('admin') && <span className="mr-2 text-blue-400">👨‍💼</span>}
-                {section.folder.startsWith('client') && <span className="mr-2 text-green-400">💻</span>}
-                 {section.folder}
+    <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 py-10 px-2 sm:px-6 flex items-center justify-center animate-fade-in">
+      <div className="max-w-4xl w-full mx-auto text-sm space-y-10">
+        <h1 className="text-4xl font-bold text-white text-center mb-8 drop-shadow-lg">📘 Ignite Internal Docs</h1>
+        {/* Project Folder Working */}
+        <section className="bg-primary-800/80 rounded-2xl shadow-lg border border-primary-700 p-6 sm:p-8">
+          <h2 className="text-2xl font-semibold mb-4 text-white flex items-center gap-2"><span>📁</span>Project Folder Working</h2>
+          <div className="space-y-6">
+            {structure.map((section, idx) => (
+              <div key={idx} className="bg-primary-900/70 rounded-xl p-4 shadow border border-primary-700">
+                <div className="font-bold text-lg mb-2 flex items-center gap-2">
+                  {section.folder.startsWith('backend') && <span className="text-red-400">🛠️</span>}
+                  {section.folder.startsWith('admin') && <span className="text-blue-400">👨‍💼</span>}
+                  {section.folder.startsWith('client') && <span className="text-green-400">💻</span>}
+                  <span className="text-white">{section.folder}</span>
+                </div>
+                <div>{renderItems(section.items)}</div>
               </div>
-              {renderItems(section.items)}
-            </div>
-          ))}
-        </div>
-      </section>
-      <section>
-        <h2 className="text-xl font-semibold mb-2 text-white">🔁 Backend Flow (PDF Handling)</h2>
-        <div className="rounded-md p-4 border border-gray-300 space-y-1">
-          {flow.map((step, idx) => (
-            <div key={idx} className="flex items-start gap-2">
-              <span className="text-white">{idx + 1}.</span>
-              <span className="text-white">{step}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-      <section>
-        <h2 className="text-xl font-semibold mb-2 text-white">🧩 Key Modules</h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          {modules.map((mod, idx) => (
-            <div key={idx} className="border p-4 rounded-lg shadow-sm">
-              <div className="font-semibold text-base text-white">{mod.title}</div>
-              <div className="text-sm text-white">{mod.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+
+        {/* Backend Flow */}
+        <section className="bg-primary-800/80 rounded-2xl shadow-lg border border-primary-700 p-6 sm:p-8">
+          <h2 className="text-2xl font-semibold mb-4 text-white flex items-center gap-2"><span>🔁</span>Backend Flow (PDF Handling)</h2>
+          <div className="rounded-xl p-4 border border-primary-700 bg-primary-900/60 space-y-2">
+            {flow.map((step, idx) => (
+              <div key={idx} className="flex items-start gap-2 text-white/90">
+                <span className="font-bold text-primary-400">{idx + 1}.</span>
+                <span>{step}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Key Modules */}
+        <section className="bg-primary-800/80 rounded-2xl shadow-lg border border-primary-700 p-6 sm:p-8">
+          <h2 className="text-2xl font-semibold mb-4 text-white flex items-center gap-2"><span>🧩</span>Key Modules</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            {modules.map((mod, idx) => (
+              <div key={idx} className="border border-primary-700 bg-primary-900/70 p-5 rounded-xl shadow flex flex-col gap-2">
+                <div className="font-semibold text-lg text-primary-300 mb-1">{mod.title}</div>
+                <div className="text-sm text-white/90">{mod.desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

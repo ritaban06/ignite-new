@@ -9,7 +9,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
 import SearchPage from './pages/SearchPage';
-// import GoogleDrivePDFManager from './components/R2PDFManager';
 import AuthDebug from './components/AuthDebug';
 
 // Get the appropriate Google OAuth Client ID based on platform

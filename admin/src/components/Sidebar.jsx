@@ -127,7 +127,7 @@ export default function Sidebar() {
                 : 'bg-red-800 text-red-200'
             }`}>
               {cacheResult.success
-                ? `Cache complete: ${cacheResult.cached} of ${cacheResult.total} files.`
+                ? `Sync complete: ${cacheResult.added ?? 0} added, ${cacheResult.updated ?? 0} updated, ${cacheResult.removed ?? 0} removed. Total scanned: ${cacheResult.total ?? 0}.`
                 : `Error: ${cacheResult.error}`}
             </div>
           )}

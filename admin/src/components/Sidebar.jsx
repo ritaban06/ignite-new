@@ -9,18 +9,17 @@ import {
   Settings,
   RefreshCw,
   Bug,
-  Download
+  Download,
+  Folder
 } from 'lucide-react';
 import { userAPI, pdfAPI } from '../api';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  // { name: 'Upload PDF', href: '/upload', icon: Upload },
   { name: 'Manage PDFs', href: '/pdfs', icon: FileText },
+  { name: 'Manage Folders', href: '/folders', icon: Folder },
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  // { name: 'Settings', href: '/settings', icon: Settings },
-  // { name: 'Debug', href: '/debug', icon: Bug },
 ];
 
 export default function Sidebar() {

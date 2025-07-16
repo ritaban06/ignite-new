@@ -15,7 +15,7 @@ export default function LoginPage() {
     e.preventDefault();
     const result = await login(formData);
     if (result.success) {
-      toast.success('Welcome to Admin Dashboard!');
+      // toast.success('Welcome to Admin Dashboard!');
     } else {
       toast.error(result.error);
     }

@@ -12,11 +12,33 @@ const folderSchema = new mongoose.Schema({
     ref: 'Folder',
     default: null // null for root folders
   },
+  gdriveId: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true,
+    required: false
+  },
   description: {
     type: String,
     trim: true,
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
+  year: {
+    type: Number,
+    min: 1,
+    max: 4,
+    required: false
+  },
+  department: {
+    type: String,
+    trim: true,
+    required: false
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -109,6 +109,41 @@ router.get('/:folderId/pdfs', authenticate, async (req, res) => {
   }
 });
 
-// TODO: Add update, delete, access control endpoints as needed
+
+// Update folder metadata in MongoDB
+router.put('/:id', authenticate, async (req, res) => {
+  try {
+    const { name, description, year, department, tags } = req.body;
+    const update = {};
+    if (name !== undefined) update.name = name;
+    if (description !== undefined) update.description = description;
+    if (year !== undefined) update.year = year;
+    if (department !== undefined) update.department = department;
+    if (tags !== undefined) update.tags = tags;
+
+    // Try to update by MongoDB _id first (if valid ObjectId)
+    let folder = null;
+    if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
+      folder = await Folder.findByIdAndUpdate(
+        req.params.id,
+        { $set: update },
+        { new: true }
+      );
+    }
+
+    // If not found, try to find by Google Drive folder id (gdriveId), or create new
+    if (!folder) {
+      folder = await Folder.findOneAndUpdate(
+        { gdriveId: req.params.id },
+        { $set: { ...update, gdriveId: req.params.id, name: name || 'Google Drive Folder', createdBy: req.user._id } },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      );
+    }
+    if (!folder) return res.status(404).json({ error: 'Folder not found or could not be created' });
+    res.json(folder);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update folder', details: err.message });
+  }
+});
 
 module.exports = router;

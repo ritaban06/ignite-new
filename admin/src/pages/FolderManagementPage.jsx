@@ -84,7 +84,6 @@ export default function FolderManagementPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-white mb-6">Manage Folders</h1>
-      <button onClick={() => setShowCreateModal(true)} className="mb-4 px-4 py-2 bg-primary-600 text-white rounded-md flex items-center gap-2"><Plus />Create Folder</button>
       <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6 mb-6">
         {loading ? (
           <div className="p-8 text-center">

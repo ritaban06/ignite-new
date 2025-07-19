@@ -82,9 +82,9 @@ class PlatformAuthService {
         },
       });
       console.log('✅ Native Google sign-in successful:', result);
-      // Convert to format compatible with existing backend
+      // Always send idToken as credential to backend
       const credentials = {
-        credential: result.idToken || result.accessToken,
+        credential: result.idToken,
         clientId: this.getGoogleClientId()
       };
       return credentials;

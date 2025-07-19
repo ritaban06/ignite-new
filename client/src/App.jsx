@@ -17,7 +17,7 @@ const getGoogleClientId = () => {
   
   if (isAndroid) {
     // For Android, use Android-specific client ID if available, fallback to web client ID
-    return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    return import.meta.env.VITE_GOOGLE_CLIENT_ID;
   }
   
   // For web, use web client ID

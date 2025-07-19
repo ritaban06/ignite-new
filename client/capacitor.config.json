@@ -6,11 +6,12 @@
     "androidScheme": "https"
   },
   "plugins": {
-    "GoogleAuth": {
-      "scopes": ["profile", "email"],
-      "serverClientId": "164410585415-lc2ofbhvaqd028453ff66tq2na9n4uov.apps.googleusercontent.com",
-      "androidClientId": "164410585415-sanr91ab4c9b8mt71uao549lunemms5b.apps.googleusercontent.com",
-      "forceCodeForRefreshToken": true
+    "SocialLogin": {
+      "providers": {
+        "google": {
+          "serverClientId": "164410585415-lc2ofbhvaqd028453ff66tq2na9n4uov.apps.googleusercontent.com"
+        }
+      }
     },
     "SplashScreen": {
       "launchShowDuration": 2000,

@@ -25,7 +25,7 @@ class PlatformAuthService {
   // Get the appropriate Google Client ID based on platform
   getGoogleClientId() {
     if (this.isAndroid) {
-      return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      return import.meta.env.VITE_GOOGLE_CLIENT_ID;
     }
     // For web and iOS, use the web client ID
     return import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -36,8 +36,12 @@ class PlatformAuthService {
       console.log('🚀 Initializing native Social Login...');
       console.log('📱 Platform:', Capacitor.getPlatform());
       console.log('🔑 Client ID:', this.getGoogleClientId());
-      // SocialLogin does not require explicit initialization
-      console.log('✅ Native Social Login ready');
+      await SocialLogin.initialize({
+        google: {
+          webClientId: this.getGoogleClientId(), // Required for Android and Web
+        },
+      });
+      console.log('✅ Native Social Login initialized');
     } catch (error) {
       console.error('❌ Failed to initialize native Social Login:', error);
       console.error('❌ Initialization error details:', {
@@ -70,8 +74,13 @@ class PlatformAuthService {
         platform: Capacitor.getPlatform()
       });
       console.log('🔑 Using client ID:', this.getGoogleClientId());
-      // Sign in with Google using SocialLogin
-      const result = await SocialLogin.signIn({ provider: 'google' });
+      // Sign in with Google using SocialLogin.login
+      const result = await SocialLogin.login({
+        provider: 'google',
+        options: {
+          scopes: ['email', 'profile'],
+        },
+      });
       console.log('✅ Native Google sign-in successful:', result);
       // Convert to format compatible with existing backend
       const credentials = {

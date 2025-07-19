@@ -25,7 +25,7 @@ class PlatformAuthService {
   // Get the appropriate Google Client ID based on platform
   getGoogleClientId() {
     if (this.isAndroid) {
-      return import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
     }
     // For web and iOS, use the web client ID
     return import.meta.env.VITE_GOOGLE_CLIENT_ID;

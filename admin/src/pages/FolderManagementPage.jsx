@@ -10,9 +10,10 @@ import { gdriveAPI } from '../api';
 import toast from 'react-hot-toast';
 
 // Use GDRIVE_BASE_FOLDER_ID from admin env
-const GDRIVE_BASE_FOLDER_ID = import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID || import.meta.env.GDRIVE_BASE_FOLDER_ID || '1CiH_j_hiOz2-ybtmvCfTSG-XxrJlh0ic';
+const GDRIVE_BASE_FOLDER_ID = import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID;
 
 export default function FolderManagementPage() {
+  // console.log('GDRIVE_BASE_FOLDER_ID:', GDRIVE_BASE_FOLDER_ID);
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFolder, setSelectedFolder] = useState(null);
@@ -28,6 +29,7 @@ export default function FolderManagementPage() {
     setLoading(true);
     try {
       const response = await gdriveAPI.getFolders();
+      // console.log('GDrive Folders:', response.data); // Debug log
       setFolders(response.data);
     } catch (error) {
       toast.error('Failed to load Google Drive folders');
@@ -45,13 +47,28 @@ export default function FolderManagementPage() {
     }
   };
 
-  // Recursive folder tree renderer
+  // Recursive folder tree renderer (handles parent as string or array)
   const renderFolderTree = (folders, parentId, level = 0) => {
     if (!GDRIVE_BASE_FOLDER_ID && level === 0) return null;
     const rootId = level === 0 ? GDRIVE_BASE_FOLDER_ID : parentId;
+    if (level === 0) {
+      // console.log('Rendering folder tree with rootId:', rootId);
+    }
+    // Find children for this rootId
+    const children = folders.filter(f => {
+      if (Array.isArray(f.parents)) {
+        return f.parents.includes(rootId);
+      }
+      if (typeof f.parent === 'string') {
+        return f.parent === rootId;
+      }
+      return false;
+    });
+    // Fallback: if no children found for root, render all folders as top-level
+    const foldersToRender = (level === 0 && children.length === 0) ? folders : children;
     return (
       <ul className={level === 0 ? 'ml-2' : 'ml-6'}>
-        {folders.filter(f => f.parent === rootId).map((folder, idx) => (
+        {foldersToRender.map((folder, idx) => (
           <li key={folder.id ? folder.id : `folder-${idx}`} className="mb-2">
             <div className="flex items-center gap-2">
               <button

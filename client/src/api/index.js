@@ -86,6 +86,12 @@ export const pdfAPI = {
   getAllPDFsFromGoogleDrive: () => api.get('/pdfs/gdrive/list'),
 };
 
+// Google Drive API for folders and PDFs
+export const gdriveAPI = {
+  getFolders: () => api.get('/folders/gdrive'),
+  getPdfsInFolder: (folderId) => api.get(`/folders/${folderId}/pdfs`),
+};
+
 // User API
 export const userAPI = {
   // Get current user profile

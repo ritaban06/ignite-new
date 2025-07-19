@@ -6,8 +6,9 @@ import {
   Clock,
   TrendingUp,
   Plus,
+  Folder,
 } from "lucide-react";
-import { pdfAPI } from "../api";
+import { pdfAPI, gdriveAPI } from "../api";
 import { useAuth } from "../contexts/AuthContext";
 import PDFCard from "../components/PDFCard";
 import SecurePDFViewer from "../components/SecurePDFViewer";
@@ -30,6 +31,8 @@ const DashboardPage = () => {
     totalPages: 1,
     totalCount: 0,
   });
+  const [folders, setFolders] = useState([]);
+  const [selectedFolder, setSelectedFolder] = useState(null);
 
   // Remove unused filter variables since backend handles user department/year restrictions
 
@@ -177,6 +180,29 @@ const DashboardPage = () => {
     setPagination((prev) => ({ ...prev, currentPage: newPage }));
   };
 
+  useEffect(() => {
+    fetchFolders();
+  }, []);
+
+  const fetchFolders = async () => {
+    try {
+      const response = await gdriveAPI.getFolders();
+      setFolders(response.data);
+    } catch (error) {
+      toast.error("Failed to load subjects");
+    }
+  };
+
+  const fetchPdfsInFolder = async (folderId) => {
+    try {
+      const response = await gdriveAPI.getPdfsInFolder(folderId);
+      setPdfs(response.data);
+      setSelectedFolder(folderId);
+    } catch (error) {
+      toast.error("Failed to load PDFs");
+    }
+  };
+
   if (isLoading && pdfs.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] flex items-center justify-center">
@@ -305,6 +331,39 @@ const DashboardPage = () => {
         </div>
       </div>
 
+      {/* Subject Folders Grid (Google Drive style) */}
+      <div className="mb-8 bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] rounded-xl shadow-lg border border-[rgba(255,255,255,0.12)] p-6">
+        <h2 className="text-lg font-semibold text-white mb-4">Available Subjects</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {folders.map(folder => (
+            <button
+              key={folder.id}
+              className={`bg-[rgba(27,11,66,0.7)] border border-gray-700 rounded-lg p-4 flex flex-col items-center hover:bg-purple-700/80 ${selectedFolder === folder.id ? 'ring-2 ring-primary-600' : ''}`}
+              onClick={() => fetchPdfsInFolder(folder.id)}
+            >
+              <Folder className="h-8 w-8 text-blue-400 mb-2" />
+              <span className="text-white font-semibold">{folder.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* PDF List for selected subject/folder */}
+      {selectedFolder && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4">PDFs in {folders.find(f => f.id === selectedFolder)?.name}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pdfs && pdfs.length > 0 ? (
+              pdfs.map((pdf) => (
+                <PDFCard key={pdf._id || pdf.id} pdf={pdf} onView={() => handleViewPDF(pdf._id || pdf.id)} />
+              ))
+            ) : (
+              <div className="text-white/70">No PDFs found.</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Recent PDFs */}
       {/* <div className="mb-8">
         <h2 className="text-lg font-semibold text-white mb-4">Recently Added PDFs</h2>
@@ -320,7 +379,7 @@ const DashboardPage = () => {
       </div> */}
 
       {/* PDF List */}
-      <div>
+      {/* <div>
         <h2 className="text-lg font-semibold text-white mb-4">All PDFs</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {pdfs && pdfs.length > 0 ? (
@@ -329,9 +388,10 @@ const DashboardPage = () => {
             ))
           ) : (
             <div className="text-white/70">No PDFs found.</div>
-          )}
+          )
+        }
         </div>
-      </div>
+      </div> */}
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (

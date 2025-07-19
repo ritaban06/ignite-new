@@ -12,7 +12,7 @@ const authRoutes = require('./routes/auth');
 const pdfRoutes = require('./routes/pdfs');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
-// const annotationRoutes = require('./routes/annotations');
+const folderRoutes = require('./routes/folders');
 
 const app = express();
 
@@ -115,6 +115,7 @@ connectDB();
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/pdfs', pdfRoutes);
+app.use('/api/folders', folderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 // app.use('/api/annotations', annotationRoutes);

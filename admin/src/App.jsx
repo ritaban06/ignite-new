@@ -14,6 +14,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 // import SettingsPage from './pages/SettingsPage';
 import DebugPage from './pages/DebugPage';
 import Docs from './pages/Docs';
+import FolderManagementPage from './pages/FolderManagementPage';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -41,11 +42,10 @@ function AppContent() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<DashboardPage />} />
-            {/* <Route path="/upload" element={<UploadPage />} /> */}
             <Route path="/pdfs" element={<PDFManagementPage />} />
+            <Route path="/folders" element={<FolderManagementPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
-            {/* <Route path="/settings" element={<SettingsPage />} /> */}
             <Route path="/debug" element={<DebugPage />} />
             <Route path="/docs" element={<Docs />} />
           </Routes>

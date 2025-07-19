@@ -1,3 +1,4 @@
+// ...existing code...
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -9,6 +10,12 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+export const folderAPI = {
+  getAllFolders: () => api.get('/folders'),
+  getPdfsInFolder: (folderId) => api.get(`/folders/${folderId}/pdfs`),
+  updateFolder: (folderId, data) => api.put(`/folders/${folderId}`, data),
+};
 
 // Add token to requests if available
 api.interceptors.request.use((config) => {
@@ -30,6 +37,13 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const gdriveConfigAPI = {
+  getBaseFolderId: () => api.get('/folders/gdrive-base-id'),
+};
+export const gdriveAPI = {
+  getFolders: () => api.get('/folders/gdrive'),
+};
 
 export const authAPI = {
   login: (credentials) => api.post('/auth/admin-login', credentials),

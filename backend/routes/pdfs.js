@@ -960,17 +960,22 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     }
     // Recursively list all PDFs in the base folder and subfolders
     const allFiles = await googleDriveService.listFilesRecursive();
-    let cached = 0;
-    for (const file of allFiles) {
-      // Only create new PDFs if they don't exist
-      const existingPdf = await PDF.findOne({ googleDriveFileId: file.id });
-      if (existingPdf) continue; // Skip existing PDFs
-      // Fetch parent folder ID from Google Drive
-      let googleDriveFolderId = null;
-      if (file.parents && file.parents.length > 0) {
-        googleDriveFolderId = file.parents[0];
+    const allDriveIds = new Set(allFiles.map(f => f.id));
+    let added = 0, updated = 0, removed = 0;
+
+    // Find all PDFs in DB that have a googleDriveFileId
+    const dbPdfs = await PDF.find({ googleDriveFileId: { $exists: true } });
+    // Remove PDFs that no longer exist in Drive
+    for (const pdf of dbPdfs) {
+      if (!allDriveIds.has(pdf.googleDriveFileId)) {
+        await PDF.deleteOne({ _id: pdf._id });
+        removed++;
       }
-      // Fetch full metadata from Google Drive
+    }
+
+    // Add or update PDFs from Drive
+    for (const file of allFiles) {
+      let googleDriveFolderId = file.parents && file.parents.length > 0 ? file.parents[0] : null;
       let uploadedByName = null;
       let uploadedAt = null;
       if (file.id) {
@@ -980,30 +985,52 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           uploadedAt = fullMeta.createdTime ? new Date(fullMeta.createdTime) : null;
         }
       }
-      // Create new PDF record
-      await PDF.create({
-        title: file.name,
-        fileName: file.name,
-        originalName: file.name,
-        fileSize: file.size ? parseInt(file.size) : 0,
-        mimeType: 'application/pdf',
-        departments: ['IT'], // Use a valid department array
-        year: null, // null to indicate unknown year
-        subject: 'Unknown',
-        tags: [],
-        uploadedBy: req.user._id, // Admin user
-        isActive: true,
-        googleDriveFileId: file.id,
-        googleDriveFolderId,
-        uploadedByName,
-        uploadedAt,
-      });
-      cached++;
+      const existingPdf = await PDF.findOne({ googleDriveFileId: file.id });
+      if (!existingPdf) {
+        await PDF.create({
+          title: file.name,
+          fileName: file.name,
+          originalName: file.name,
+          fileSize: file.size ? parseInt(file.size) : 0,
+          mimeType: 'application/pdf',
+          departments: ['IT'], // Use a valid department array
+          year: null, // null to indicate unknown year
+          subject: 'Unknown',
+          tags: [],
+          uploadedBy: req.user._id, // Admin user
+          isActive: true,
+          googleDriveFileId: file.id,
+          googleDriveFolderId,
+          uploadedByName,
+          uploadedAt,
+        });
+        added++;
+      } else {
+        // Update metadata if changed
+        let needsUpdate = false;
+        if (existingPdf.title !== file.name) { existingPdf.title = file.name; needsUpdate = true; }
+        if (existingPdf.fileName !== file.name) { existingPdf.fileName = file.name; needsUpdate = true; }
+        if (existingPdf.originalName !== file.name) { existingPdf.originalName = file.name; needsUpdate = true; }
+        if (existingPdf.fileSize !== (file.size ? parseInt(file.size) : 0)) { existingPdf.fileSize = file.size ? parseInt(file.size) : 0; needsUpdate = true; }
+        if (existingPdf.googleDriveFolderId !== googleDriveFolderId) { existingPdf.googleDriveFolderId = googleDriveFolderId; needsUpdate = true; }
+        if (existingPdf.uploadedByName !== uploadedByName) { existingPdf.uploadedByName = uploadedByName; needsUpdate = true; }
+        if (existingPdf.uploadedAt?.toISOString() !== uploadedAt?.toISOString()) { existingPdf.uploadedAt = uploadedAt; needsUpdate = true; }
+        if (needsUpdate) {
+          await existingPdf.save();
+          updated++;
+        }
+      }
     }
-    res.json({ message: 'Cache complete', total: allFiles.length, cached });
+    res.json({ 
+      message: `Sync complete: ${added} added, ${updated} updated, ${removed} removed. Total scanned: ${allFiles.length}.`,
+      total: allFiles.length, 
+      added, 
+      updated, 
+      removed 
+    });
   } catch (error) {
-    console.error('Cache PDFs from Google Drive error:', error);
-    res.status(500).json({ error: 'Failed to cache PDFs', message: error.message });
+    console.error('Sync PDFs from Google Drive error:', error);
+    res.status(500).json({ error: 'Failed to sync PDFs', message: error.message });
   }
 });
 

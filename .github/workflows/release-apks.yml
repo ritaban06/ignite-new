@@ -95,9 +95,9 @@ jobs:
         echo "🧱 Building Vite web assets for DEBUG..."
         RELEASE=false pnpm build
         echo "📂 Copying web assets to Android for DEBUG..."
-        rm -rf android/app/src/main/assets/public || true
-        mkdir -p android/app/src/main/assets
-        cp -r dist android/app/src/main/assets/public
+        rm -rf app/src/main/assets/public || true
+        mkdir -p app/src/main/assets
+        cp -r ../dist app/src/main/assets/public
 
         echo "📦 Building Debug APK..."
         ./gradlew assembleDebug
@@ -106,9 +106,9 @@ jobs:
           echo "🧱 Building Vite web assets for RELEASE..."
           RELEASE=true pnpm build
           echo "📂 Copying web assets to Android for RELEASE..."
-          rm -rf android/app/src/main/assets/public || true
-          mkdir -p android/app/src/main/assets
-          cp -r dist android/app/src/main/assets/public
+          rm -rf app/src/main/assets/public || true
+          mkdir -p app/src/main/assets
+          cp -r ../dist app/src/main/assets/public
 
           echo "🔐 Building signed Release APK..."
           ./gradlew assembleRelease

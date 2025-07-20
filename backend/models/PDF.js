@@ -88,6 +88,10 @@ const pdfSchema = new mongoose.Schema({
     type: Date,
     required: false,
     default: null,
+  },
+  viewCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
@@ -125,10 +129,14 @@ pdfSchema.methods.incrementViewCount = function() {
 // Method to check if user can access this PDF
 pdfSchema.methods.canUserAccess = function(user) {
   if (user.role === 'admin') return true;
-  // Folder-based access: check if user has access to the folder
-  if (!this.folder || !this.isActive) return false;
-  // Folder access logic should be implemented in Folder model (e.g., access array)
-  return true; // Placeholder: implement folder access check in Folder model
+  
+  // Check if PDF is active
+  if (!this.isActive) return false;
+  
+  // For now, allow access to all active PDFs for authenticated users
+  // This can be enhanced later with folder-based access control
+  // when folder metadata is properly configured
+  return true;
 };
 
 // Static method to find PDFs for a specific user

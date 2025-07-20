@@ -86,10 +86,31 @@ export const pdfAPI = {
   getAllPDFsFromGoogleDrive: () => api.get('/pdfs/gdrive/list'),
 };
 
-// Google Drive API for folders and PDFs
-export const gdriveAPI = {
+// Folder API for folder-based management
+export const folderAPI = {
+  // Get all folders from Google Drive with hierarchy
   getFolders: () => api.get('/folders/gdrive'),
+  
+  // Get folders from MongoDB with metadata
+  getFoldersWithMetadata: () => api.get('/folders'),
+  
+  // Get PDFs in a specific folder
   getPdfsInFolder: (folderId) => api.get(`/folders/${folderId}/pdfs`),
+  
+  // Update folder metadata (access control, etc.)
+  updateFolder: (folderId, folderData) => api.put(`/folders/${folderId}`, folderData),
+  
+  // Cache/sync folders from Google Drive
+  cacheFolders: () => api.post('/folders/gdrive/cache'),
+  
+  // Get Google Drive base folder ID
+  getBaseFolderId: () => api.get('/folders/gdrive-base-id'),
+};
+
+// Legacy Google Drive API (kept for backward compatibility)
+export const gdriveAPI = {
+  getFolders: () => folderAPI.getFolders(),
+  getPdfsInFolder: (folderId) => folderAPI.getPdfsInFolder(folderId),
 };
 
 // User API

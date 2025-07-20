@@ -204,10 +204,31 @@ router.get('/:folderId/pdfs', authenticate, async (req, res) => {
     );
     const driveResult = await googleDriveService.listFiles();
     if (driveResult.success && Array.isArray(driveResult.files)) {
-      // Optionally, enrich with MongoDB cache if needed
-      // For each file, try to find matching MongoDB PDF by fileName or Google Drive fileId
-      // This is optional and can be extended as needed
-      return res.json(driveResult.files);
+      // Transform Google Drive files to match PDF schema expected by client
+      const transformedPdfs = driveResult.files.map(file => ({
+        _id: file.id, // Use Google Drive file ID as _id
+        googleDriveFileId: file.id,
+        title: file.name || 'Untitled PDF',
+        fileName: file.name,
+        subject: 'N/A', // Default values for missing metadata
+        description: '',
+        department: 'N/A',
+        year: 'N/A',
+        semester: 'N/A',
+        tags: [],
+        fileSize: file.size ? parseInt(file.size) : 0,
+        uploadedBy: null,
+        uploadedByName: 'Unknown',
+        uploadedAt: file.createdTime || new Date(),
+        createdAt: file.createdTime || new Date(),
+        updatedAt: file.createdTime || new Date(),
+        viewCount: 0,
+        lastAccessedAt: null,
+        isActive: true,
+        webViewLink: file.webViewLink,
+        webContentLink: file.webContentLink
+      }));
+      return res.json(transformedPdfs);
     } else {
       // Fallback to MongoDB if Google Drive fails
       const pdfs = await PDF.find({ folder: folderId });

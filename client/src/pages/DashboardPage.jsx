@@ -8,7 +8,7 @@ import {
   Plus,
   Folder,
 } from "lucide-react";
-import { pdfAPI, gdriveAPI } from "../api";
+import { pdfAPI, folderAPI } from "../api";
 import { useAuth } from "../contexts/AuthContext";
 import PDFCard from "../components/PDFCard";
 import SecurePDFViewer from "../components/SecurePDFViewer";
@@ -33,6 +33,9 @@ const DashboardPage = () => {
   });
   const [folders, setFolders] = useState([]);
   const [selectedFolder, setSelectedFolder] = useState(null);
+  const [folderHierarchy, setFolderHierarchy] = useState([]);
+  const [currentPath, setCurrentPath] = useState([]);
+  const [accessibleFolders, setAccessibleFolders] = useState([]);
 
   // Remove unused filter variables since backend handles user department/year restrictions
 
@@ -186,21 +189,175 @@ const DashboardPage = () => {
 
   const fetchFolders = async () => {
     try {
-      const response = await gdriveAPI.getFolders();
-      setFolders(response.data);
+      // Get folders from Google Drive with hierarchy
+      const gdriveResponse = await folderAPI.getFolders();
+      const allFolders = gdriveResponse.data;
+      
+      // Get folder metadata from MongoDB for access control
+      const metadataResponse = await folderAPI.getFoldersWithMetadata();
+      const folderMetadata = metadataResponse.data;
+      
+      // Create a map of folder metadata by gdriveId
+      const metadataMap = new Map();
+      folderMetadata.forEach(folder => {
+        if (folder.gdriveId) {
+          metadataMap.set(folder.gdriveId, folder);
+        }
+      });
+      
+      // Filter folders based on user access control
+      const userAccessibleFolders = allFolders.filter(folder => {
+        const metadata = metadataMap.get(folder.id);
+        if (!metadata) return true; // If no metadata, allow access (default behavior)
+        
+        // Check if user has access based on departments, years, semesters, and access control tags
+        const hasAccess = checkFolderAccess(metadata, user);
+        return hasAccess;
+      });
+      
+      // Enrich folders with metadata
+      const enrichedFolders = userAccessibleFolders.map(folder => ({
+        ...folder,
+        metadata: metadataMap.get(folder.id) || null
+      }));
+      
+      // Build folder hierarchy
+      const hierarchy = buildFolderHierarchy(enrichedFolders);
+      
+      setFolders(enrichedFolders);
+      setFolderHierarchy(hierarchy);
+      setAccessibleFolders(userAccessibleFolders);
     } catch (error) {
+      console.error('Failed to load folders:', error);
       toast.error("Failed to load subjects");
     }
   };
+  
+  // Check if user has access to a folder based on access control
+  const checkFolderAccess = (folderMetadata, user) => {
+    // If no metadata exists, allow access (default behavior for unconfigured folders)
+    if (!folderMetadata) return true;
+    
+    // If metadata exists but all access control arrays are empty, allow access
+    const hasDepartmentRestrictions = folderMetadata.departments && folderMetadata.departments.length > 0;
+    const hasYearRestrictions = folderMetadata.years && folderMetadata.years.length > 0;
+    const hasSemesterRestrictions = folderMetadata.semesters && folderMetadata.semesters.length > 0;
+    const hasAccessTagRestrictions = folderMetadata.accessControlTags && folderMetadata.accessControlTags.length > 0;
+    
+    // If no restrictions are set, allow access
+    if (!hasDepartmentRestrictions && !hasYearRestrictions && !hasSemesterRestrictions && !hasAccessTagRestrictions) {
+      return true;
+    }
+    
+    // Check departments (only if restrictions are set)
+    if (hasDepartmentRestrictions) {
+      if (!user.department || !folderMetadata.departments.includes(user.department)) {
+        return false;
+      }
+    }
+    
+    // Check years (only if restrictions are set)
+    if (hasYearRestrictions) {
+      if (!user.year || !folderMetadata.years.includes(user.year)) {
+        return false;
+      }
+    }
+    
+    // Check semesters (only if restrictions are set and user has semester info)
+    if (hasSemesterRestrictions && user.semester) {
+      if (!folderMetadata.semesters.includes(user.semester)) {
+        return false;
+      }
+    }
+    
+    // Check access control tags (only if restrictions are set and user has tags)
+    if (hasAccessTagRestrictions && user.accessTags && user.accessTags.length > 0) {
+      const hasRequiredTag = folderMetadata.accessControlTags.some(tag => 
+        user.accessTags.includes(tag)
+      );
+      if (!hasRequiredTag) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+  
+  // Build folder hierarchy for nested display
+  const buildFolderHierarchy = (folders) => {
+    const folderMap = new Map();
+    const rootFolders = [];
+    
+    // Create a map of all folders
+    folders.forEach(folder => {
+      folderMap.set(folder.id, { ...folder, children: [] });
+    });
+    
+    // Build the hierarchy
+    folders.forEach(folder => {
+      const folderNode = folderMap.get(folder.id);
+      if (folder.parent && folderMap.has(folder.parent)) {
+        folderMap.get(folder.parent).children.push(folderNode);
+      } else {
+        rootFolders.push(folderNode);
+      }
+    });
+    
+    return rootFolders;
+  };
 
-  const fetchPdfsInFolder = async (folderId) => {
+  const fetchPdfsInFolder = async (folderId, folderName = null) => {
     try {
-      const response = await gdriveAPI.getPdfsInFolder(folderId);
+      const response = await folderAPI.getPdfsInFolder(folderId);
       setPdfs(response.data);
       setSelectedFolder(folderId);
+      
+      // Update current path for breadcrumb navigation
+      if (folderName) {
+        const newPath = [...currentPath, { id: folderId, name: folderName }];
+        setCurrentPath(newPath);
+      }
     } catch (error) {
+      console.error('Failed to load PDFs:', error);
       toast.error("Failed to load PDFs");
     }
+  };
+  
+  // Navigate to a folder (handles both root and nested folders)
+  const navigateToFolder = (folderId, folderName) => {
+    fetchPdfsInFolder(folderId, folderName);
+  };
+  
+  // Navigate back in folder hierarchy
+  const navigateBack = () => {
+    if (currentPath.length > 1) {
+      const newPath = currentPath.slice(0, -1);
+      const parentFolder = newPath[newPath.length - 1];
+      setCurrentPath(newPath);
+      fetchPdfsInFolder(parentFolder.id, parentFolder.name);
+    } else {
+      // Go back to root (show all folders)
+      setSelectedFolder(null);
+      setPdfs([]);
+      setCurrentPath([]);
+    }
+  };
+  
+  // Get current folder's subfolders
+  const getCurrentSubfolders = () => {
+    if (!selectedFolder) return folderHierarchy;
+    
+    const findFolder = (folders, targetId) => {
+      for (const folder of folders) {
+        if (folder.id === targetId) return folder;
+        const found = findFolder(folder.children, targetId);
+        if (found) return found;
+      }
+      return null;
+    };
+    
+    const currentFolder = findFolder(folderHierarchy, selectedFolder);
+    return currentFolder ? currentFolder.children : [];
   };
 
   if (isLoading && pdfs.length === 0) {
@@ -331,34 +488,129 @@ const DashboardPage = () => {
         </div>
       </div>
 
+      {/* Breadcrumb Navigation */}
+      {currentPath.length > 0 && (
+        <div className="mb-4 bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 border border-[rgba(255,255,255,0.15)]">
+          <div className="flex items-center space-x-2 text-white/80">
+            <button
+              onClick={() => {
+                setSelectedFolder(null);
+                setPdfs([]);
+                setCurrentPath([]);
+              }}
+              className="hover:text-white transition-colors"
+            >
+              Home
+            </button>
+            {currentPath.map((pathItem, index) => (
+              <React.Fragment key={pathItem.id}>
+                <span className="text-white/60">/</span>
+                <button
+                  onClick={() => {
+                    if (index === currentPath.length - 1) return; // Current folder, no action
+                    const newPath = currentPath.slice(0, index + 1);
+                    setCurrentPath(newPath);
+                    fetchPdfsInFolder(pathItem.id, pathItem.name);
+                  }}
+                  className={`hover:text-white transition-colors ${
+                    index === currentPath.length - 1 ? 'text-white font-semibold' : ''
+                  }`}
+                >
+                  {pathItem.name}
+                </button>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Subject Folders Grid (Google Drive style) */}
       <div className="mb-8 bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] rounded-xl shadow-lg border border-[rgba(255,255,255,0.12)] p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Available Subjects</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">
+            {selectedFolder ? 'Subfolders' : 'Available Subjects'}
+          </h2>
+          {selectedFolder && (
+            <button
+              onClick={navigateBack}
+              className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
+            >
+              ← Back
+            </button>
+          )}
+        </div>
+        
+        {/* Display current level folders */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {folders.map(folder => (
+          {getCurrentSubfolders().map(folder => (
             <button
               key={folder.id}
-              className={`bg-[rgba(27,11,66,0.7)] border border-gray-700 rounded-lg p-4 flex flex-col items-center hover:bg-purple-700/80 ${selectedFolder === folder.id ? 'ring-2 ring-primary-600' : ''}`}
-              onClick={() => fetchPdfsInFolder(folder.id)}
+              className="bg-[rgba(27,11,66,0.7)] border border-gray-700 rounded-lg p-4 flex flex-col items-center hover:bg-purple-700/80 transition-all duration-200 transform hover:scale-105"
+              onClick={() => navigateToFolder(folder.id, folder.name)}
             >
               <Folder className="h-8 w-8 text-blue-400 mb-2" />
-              <span className="text-white font-semibold">{folder.name}</span>
+              <span className="text-white font-semibold text-center">{folder.name}</span>
+              {folder.metadata && (
+                <div className="mt-2 text-xs text-white/60 text-center">
+                  {folder.metadata.departments && folder.metadata.departments.length > 0 && (
+                    <div>Dept: {folder.metadata.departments.join(', ')}</div>
+                  )}
+                  {folder.metadata.years && folder.metadata.years.length > 0 && (
+                    <div>Year: {folder.metadata.years.join(', ')}</div>
+                  )}
+                </div>
+              )}
+              {folder.children && folder.children.length > 0 && (
+                <div className="mt-1 text-xs text-blue-300">
+                  {folder.children.length} subfolder{folder.children.length !== 1 ? 's' : ''}
+                </div>
+              )}
             </button>
           ))}
         </div>
+        
+        {getCurrentSubfolders().length === 0 && !selectedFolder && (
+          <div className="text-center text-white/70 py-8">
+            No accessible subjects found. Please contact your administrator if you believe this is an error.
+          </div>
+        )}
+        
+        {getCurrentSubfolders().length === 0 && selectedFolder && (
+          <div className="text-center text-white/70 py-4">
+            No subfolders in this directory.
+          </div>
+        )}
       </div>
 
       {/* PDF List for selected subject/folder */}
       {selectedFolder && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-white mb-4">PDFs in {folders.find(f => f.id === selectedFolder)?.name}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-6 border border-[rgba(255,255,255,0.15)]">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">
+                PDFs in {currentPath.length > 0 ? currentPath[currentPath.length - 1].name : 'Selected Folder'}
+              </h2>
+              <div className="text-sm text-white/60">
+                {pdfs.length} PDF{pdfs.length !== 1 ? 's' : ''} found
+              </div>
+            </div>
+            
             {pdfs && pdfs.length > 0 ? (
-              pdfs.map((pdf) => (
-                <PDFCard key={pdf._id || pdf.id} pdf={pdf} onView={() => handleViewPDF(pdf._id || pdf.id)} />
-              ))
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pdfs.map((pdf) => (
+                  <PDFCard 
+                    key={pdf._id || pdf.id || pdf.name} 
+                    pdf={pdf} 
+                    onView={() => handleViewPDF(pdf._id || pdf.id)} 
+                  />
+                ))}
+              </div>
             ) : (
-              <div className="text-white/70">No PDFs found.</div>
+              <div className="text-center text-white/70 py-8">
+                <BookOpen className="h-12 w-12 text-white/40 mx-auto mb-4" />
+                <p>No PDFs found in this folder.</p>
+                <p className="text-sm mt-2">PDFs may be located in subfolders or this folder may be empty.</p>
+              </div>
             )}
           </div>
         </div>

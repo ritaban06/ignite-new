@@ -40,7 +40,8 @@ const upload = multer({
 router.get('/', [
   authenticate,
   query('departments').optional().isArray(),
-  query('year').optional().isInt({ min: 1, max: 4 }),
+  query('years').optional().isArray(),
+  query('semesters').optional().isArray(),
   query('subject').optional().trim(),
   query('search').optional().trim(),
   query('tags').optional().isArray(),
@@ -58,7 +59,8 @@ router.get('/', [
 
     const { 
       departments, 
-      year, 
+      years, 
+      semesters, 
       subject, 
       search, 
       tags, 
@@ -69,12 +71,14 @@ router.get('/', [
     // Build filters
     const filters = {};
     if (req.user.role === 'admin') {
-      // Admin: ignore departments/year filters unless explicitly set
+      // Admin: ignore departments/years/semesters filters unless explicitly set
       if (departments && Array.isArray(departments) && departments.length > 0) filters.departments = { $in: departments };
-      if (year) filters.year = parseInt(year);
+      if (years && Array.isArray(years) && years.length > 0) filters.years = { $in: years.map(y => parseInt(y)) };
+      if (semesters && Array.isArray(semesters) && semesters.length > 0) filters.semesters = { $in: semesters.map(s => parseInt(s)) };
     } else {
       if (departments && Array.isArray(departments) && departments.length > 0) filters.departments = { $in: departments };
-      if (year) filters.year = parseInt(year);
+      if (years && Array.isArray(years) && years.length > 0) filters.years = { $in: years.map(y => parseInt(y)) };
+      if (semesters && Array.isArray(semesters) && semesters.length > 0) filters.semesters = { $in: semesters.map(s => parseInt(s)) };
     }
     if (subject) filters.subject = subject;
     if (search) filters.search = search;

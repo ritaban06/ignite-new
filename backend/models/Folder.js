@@ -24,25 +24,34 @@ const folderSchema = new mongoose.Schema({
     trim: true,
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
-  year: {
+  years: [{
     type: Number,
     min: 1,
-    max: 4,
-    required: false
-  },
-  department: {
+    max: 4
+  }],
+  departments: [{
     type: String,
     trim: true,
-    required: false
-  },
+    enum: ['AIML', 'CSE', 'ECE', 'EEE', 'IT']
+  }],
+  semesters: [{
+    type: Number,
+    min: 1,
+    max: 8
+  }],
   tags: [{
     type: String,
     trim: true
   }],
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+  accessControlTags: [{
+    type: String,
+    trim: true,
+    maxlength: [50, 'Access control tag cannot exceed 50 characters']
+  }],
+  createdByName: {
+    type: String,
+    trim: true,
+    required: false
   },
   access: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

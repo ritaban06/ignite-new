@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-// Department and Year options (same as PDFManagementPage)
-const DEPARTMENTS = [
-  'All', 'AIML', 'CSE', 'ECE', 'EEE', 'IT'
-];
-const YEARS = ['All', '1', '2', '3', '4'];
+// Department, Year, and Semester options
+const DEPARTMENTS = ['AIML', 'CSE', 'ECE', 'EEE', 'IT'];
+const YEARS = ['1', '2', '3', '4'];
+const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8'];
 import { Folder, FileText, Edit, Trash2, Plus, User } from 'lucide-react';
 import { folderAPI, pdfAPI } from '../api';
 import { gdriveAPI } from '../api';
@@ -113,31 +112,50 @@ export default function FolderManagementPage() {
 
 
   // Edit Folder Modal logic
-  const [editForm, setEditForm] = useState({ name: '', description: '', year: '', department: '', tags: '' });
+  const [editForm, setEditForm] = useState({ 
+    name: '', 
+    description: '', 
+    years: [], 
+    departments: [], 
+    semesters: [], 
+    tags: '', 
+    accessControlTags: '' 
+  });
   useEffect(() => {
     if (showEditModal && selectedFolder) {
       setEditForm({
         name: selectedFolder.name || '',
         description: selectedFolder.description || '',
-        year: selectedFolder.year ? String(selectedFolder.year) : '',
-        department: selectedFolder.department || '',
+        years: Array.isArray(selectedFolder.years) ? selectedFolder.years.map(String) : (selectedFolder.year ? [String(selectedFolder.year)] : []),
+        departments: Array.isArray(selectedFolder.departments) ? selectedFolder.departments : (selectedFolder.department ? [selectedFolder.department] : []),
+        semesters: Array.isArray(selectedFolder.semesters) ? selectedFolder.semesters.map(String) : [],
         tags: Array.isArray(selectedFolder.tags) ? selectedFolder.tags.join(', ') : (selectedFolder.tags || ''),
+        accessControlTags: Array.isArray(selectedFolder.accessControlTags) ? selectedFolder.accessControlTags.join(', ') : '',
       });
     }
   }, [showEditModal, selectedFolder]);
 
   const handleEditFolderChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === 'select-multiple') {
+      const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
+      setEditForm(prev => ({ ...prev, [name]: selectedValues }));
+    } else {
+      setEditForm(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleUpdateFolder = async (e) => {
     e.preventDefault();
-    // Clean up tags (convert to array)
+    // Clean up tags and convert arrays
     const updateData = {
-      ...editForm,
+      name: editForm.name,
+      description: editForm.description,
+      departments: editForm.departments,
+      years: editForm.years.map(year => Number(year)),
+      semesters: editForm.semesters.map(semester => Number(semester)),
       tags: editForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      year: editForm.year ? Number(editForm.year) : undefined,
+      accessControlTags: editForm.accessControlTags.split(',').map(tag => tag.trim()).filter(tag => tag),
     };
     try {
       await folderAPI.updateFolder(selectedFolder.id, updateData);
@@ -216,32 +234,47 @@ export default function FolderManagementPage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-1">Department</label>
+                <label className="block text-gray-300 mb-1">Departments (Hold Ctrl/Cmd to select multiple)</label>
                 <select
-                  name="department"
-                  value={editForm.department}
+                  name="departments"
+                  value={editForm.departments}
                   onChange={handleEditFolderChange}
                   className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none"
-                  required
+                  multiple
+                  size="3"
                 >
-                  <option value="">Select Department</option>
-                  {DEPARTMENTS.slice(1).map(dept => (
+                  {DEPARTMENTS.map(dept => (
                     <option key={dept} value={dept}>{dept}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-gray-300 mb-1">Year</label>
+                <label className="block text-gray-300 mb-1">Years (Hold Ctrl/Cmd to select multiple)</label>
                 <select
-                  name="year"
-                  value={editForm.year}
+                  name="years"
+                  value={editForm.years}
                   onChange={handleEditFolderChange}
                   className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none"
-                  required
+                  multiple
+                  size="3"
                 >
-                  <option value="">Select Year</option>
-                  {YEARS.slice(1).map(year => (
-                    <option key={year} value={year}>{year}</option>
+                  {YEARS.map(year => (
+                    <option key={year} value={year}>Year {year}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-300 mb-1">Semesters (Hold Ctrl/Cmd to select multiple)</label>
+                <select
+                  name="semesters"
+                  value={editForm.semesters}
+                  onChange={handleEditFolderChange}
+                  className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none"
+                  multiple
+                  size="3"
+                >
+                  {SEMESTERS.map(semester => (
+                    <option key={semester} value={semester}>Semester {semester}</option>
                   ))}
                 </select>
               </div>
@@ -255,6 +288,18 @@ export default function FolderManagementPage() {
                   className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none"
                   placeholder="Separate tags with commas"
                 />
+              </div>
+              <div>
+                <label className="block text-gray-300 mb-1">Access Control Tags</label>
+                <input
+                  type="text"
+                  name="accessControlTags"
+                  value={editForm.accessControlTags}
+                  onChange={handleEditFolderChange}
+                  className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none"
+                  placeholder="Separate access control tags with commas"
+                />
+                <p className="text-xs text-gray-400 mt-1">These tags control who can access this folder</p>
               </div>
               <div className="flex justify-end gap-2 mt-4">
                 <button

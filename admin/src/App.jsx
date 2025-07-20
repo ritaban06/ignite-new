@@ -8,7 +8,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
 // import UploadPage from './pages/UploadPage';
-import PDFManagementPage from './pages/PDFManagementPage';
+// import PDFManagementPage from './pages/PDFManagementPage'; // Removed for folder-based management
 import UsersPage from './pages/UsersPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 // import SettingsPage from './pages/SettingsPage';
@@ -42,7 +42,7 @@ function AppContent() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<DashboardPage />} />
-            <Route path="/pdfs" element={<PDFManagementPage />} />
+            {/* <Route path="/pdfs" element={<PDFManagementPage />} /> */} {/* Removed for folder-based management */}
             <Route path="/folders" element={<FolderManagementPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />

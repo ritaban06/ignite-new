@@ -7,48 +7,38 @@ class PlatformAuthService {
     this.isAndroid = Capacitor.getPlatform() === 'android';
     this.isIOS = Capacitor.getPlatform() === 'ios';
     this.isWeb = !this.isNative;
-    
-    // console.log('🔍 Platform Detection:', {
-    //   isNative: this.isNative,
-    //   isAndroid: this.isAndroid,
-    //   isIOS: this.isIOS,
-    //   isWeb: this.isWeb,
-    //   platform: Capacitor.getPlatform()
-    // });
 
-    // Initialize native Social Login if we're on a native platform
     if (this.isNative) {
       this.initializeNativeSocialLogin();
     }
   }
 
-  // Get the appropriate Google Client ID based on platform
+  // Detect whether this is a debug or release build
+  isDebugBuild() {
+    return import.meta.env.RELEASE !== 'true';
+  }
+
   getGoogleClientId() {
     if (this.isAndroid) {
-      return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      const debug = this.isDebugBuild();
+      return debug
+        ? import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG
+        : import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE;
     }
-    // For web and iOS, use the web client ID
     return import.meta.env.VITE_GOOGLE_CLIENT_ID;
   }
 
   async initializeNativeSocialLogin() {
     try {
       console.log('🚀 Initializing native Social Login...');
-      console.log('📱 Platform:', Capacitor.getPlatform());
-      console.log('🔑 Client ID:', this.getGoogleClientId());
       await SocialLogin.initialize({
         google: {
-          webClientId: this.getGoogleClientId(), // Required for Android and Web
+          webClientId: this.getGoogleClientId(),
         },
       });
       console.log('✅ Native Social Login initialized');
     } catch (error) {
       console.error('❌ Failed to initialize native Social Login:', error);
-      console.error('❌ Initialization error details:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
     }
   }
 
@@ -68,13 +58,6 @@ class PlatformAuthService {
   async nativeGoogleSignIn() {
     try {
       console.log('🔐 Starting native Google sign-in...');
-      console.log('📱 Platform info:', {
-        isNative: this.isNative,
-        isAndroid: this.isAndroid,
-        platform: Capacitor.getPlatform()
-      });
-      console.log('🔑 Using client ID:', this.getGoogleClientId());
-      // Sign in with Google using SocialLogin.login
       const result = await SocialLogin.login({
         provider: 'google',
         options: {
@@ -82,15 +65,12 @@ class PlatformAuthService {
         },
       });
       console.log('✅ Native Google sign-in successful:', result);
-      // Always send idToken as credential to backend
-      const credentials = {
+      return {
         credential: result.idToken,
         clientId: this.getGoogleClientId()
       };
-      return credentials;
     } catch (error) {
       console.error('❌ Native Google sign-in failed:', error);
-      // Error handling similar to previous implementation
       const msg = error.message || '';
       if (/cancel|CANCELED|12501/.test(msg)) {
         throw new Error('OAUTH_ERROR: Sign-in was cancelled or interrupted.');
@@ -99,7 +79,7 @@ class PlatformAuthService {
       } else if (/client|certificate|package|SHA|fingerprint|console|DEVELOPER_ERROR|INVALID_CLIENT|INVALID_PACKAGE_NAME|INVALID_CERTIFICATE|INVALID_AUDIENCE/.test(msg)) {
         throw new Error(`OAUTH_ERROR: ${msg} (Likely Google Console misconfiguration)`);
       } else {
-        throw new Error(`OAUTH_ERROR: ${msg || 'Something went wrong with Google authentication. Please check your configuration.'}`);
+        throw new Error(`OAUTH_ERROR: ${msg || 'Something went wrong with Google authentication.'}`);
       }
     }
   }
@@ -116,7 +96,6 @@ class PlatformAuthService {
     }
   }
 
-  // Check if user is currently signed in (native platforms only)
   async isSignedIn() {
     try {
       if (this.isNative) {
@@ -124,60 +103,22 @@ class PlatformAuthService {
         return !!result?.idToken || !!result?.accessToken;
       }
       return false;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  // Get platform info for debugging
   getPlatformInfo() {
-    const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const androidClientId = import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
-    const currentClientId = this.getGoogleClientId();
-    const validation = this.validateEnvironment();
-    
     return {
       isNative: this.isNative,
       isAndroid: this.isAndroid,
       isIOS: this.isIOS,
       isWeb: this.isWeb,
       platform: Capacitor.getPlatform(),
-      hasGoogleClientId: !!webClientId,
-      hasAndroidClientId: !!androidClientId,
-      currentClientId: currentClientId ? currentClientId.substring(0, 12) + '...' : 'Not Set',
-      clientIdSource: this.isAndroid && androidClientId ? 'Android' : 'Web',
-      isValid: validation.isValid,
-      issues: validation.issues,
-      warnings: validation.warnings
-    };
-  }
-
-  // Validate environment configuration
-  validateEnvironment() {
-    const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const androidClientId = import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
-    
-    const issues = [];
-    
-    if (!webClientId) {
-      issues.push('VITE_GOOGLE_CLIENT_ID is not set');
-    }
-    
-    if (this.isAndroid && !androidClientId) {
-      console.warn('⚠️ VITE_GOOGLE_ANDROID_CLIENT_ID not set, falling back to web client ID');
-    }
-    
-    if (this.isAndroid && !androidClientId && !webClientId) {
-      issues.push('No Google Client ID configured for Android platform');
-    }
-    
-    return {
-      isValid: issues.length === 0,
-      issues,
-      warnings: this.isAndroid && !androidClientId ? ['Android client ID not set, using web fallback'] : []
+      currentClientId: this.getGoogleClientId()?.slice(0, 12) + '...',
+      buildType: this.isDebugBuild() ? 'debug' : 'release'
     };
   }
 }
 
-// Export singleton instance
 export default new PlatformAuthService();

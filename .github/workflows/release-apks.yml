@@ -90,25 +90,44 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Build Debug and Release APKs
+    - name: 🔨 Build APKs...
       run: |
-        echo "🔨 Building APKs..."
+        echo "🧱 Building Vite web assets for DEBUG..."
+        RELEASE=false pnpm build
+        echo "📂 Copying web assets to Android for DEBUG..."
+        rm -rf android/app/src/main/assets/public || true
+        mkdir -p android/app/src/main/assets
+        cp -r dist android/app/src/main/assets/public
+
+        echo "📦 Building Debug APK..."
         ./gradlew assembleDebug
+
         if [ -f "app/release.keystore" ]; then
-           echo "🔐 Building signed release APK..."
-           ./gradlew assembleRelease
+          echo "🧱 Building Vite web assets for RELEASE..."
+          RELEASE=true pnpm build
+          echo "📂 Copying web assets to Android for RELEASE..."
+          rm -rf android/app/src/main/assets/public || true
+          mkdir -p android/app/src/main/assets
+          cp -r dist android/app/src/main/assets/public
+
+          echo "🔐 Building signed Release APK..."
+          ./gradlew assembleRelease
         else
-           echo "⚠️ No keystore found, skipping release APK"
+          echo "⚠️ No keystore found, skipping release APK"
         fi
       working-directory: client/android
       env:
-        ANDROID_HOME: ${{ env.ANDROID_HOME }}
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        VITE_API_URL: ${{ secrets.VITE_API_URL }}
-        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-        VITE_SOCIAL_LOGIN_PROVIDER: google
+      ANDROID_HOME: ${{ env.ANDROID_HOME }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      VITE_API_URL: ${{ secrets.VITE_API_URL }}
+      VITE_SOCIAL_LOGIN_PROVIDER: google
+
+      # ✅ Add both client IDs for platformAuthService.js
+      VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
+      VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE }}
+
 
     - name: Rename APKs to include run number
       run: |

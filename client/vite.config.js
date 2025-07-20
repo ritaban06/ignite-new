@@ -60,5 +60,6 @@ export default defineConfig({
   // Ensure proper MIME types for PDF worker files
   define: {
     global: 'globalThis',
+    'import.meta.env.RELEASE': JSON.stringify(process.env.RELEASE),
   }
 })

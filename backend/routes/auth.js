@@ -24,12 +24,14 @@ router.options('*', (req, res) => {
 // Initialize Google OAuth2 client with multiple client IDs
 const GOOGLE_WEB_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_WEB_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_ANDROID_CLIENT_ID = process.env.GOOGLE_ANDROID_CLIENT_ID;
+const GOOGLE_ANDROID_CLIENT_ID_DEBUG = process.env.GOOGLE_ANDROID_CLIENT_ID_DEBUG;
+const GOOGLE_ANDROID_CLIENT_ID_RELEASE = process.env.GOOGLE_ANDROID_CLIENT_ID_RELEASE;
 // Note: Android OAuth clients don't have client secrets
 
 // Create OAuth2 clients for each platform
 const googleWebClient = new OAuth2Client(GOOGLE_WEB_CLIENT_ID, GOOGLE_WEB_CLIENT_SECRET);
-const googleAndroidClient = new OAuth2Client(GOOGLE_ANDROID_CLIENT_ID); // No secret for Android
+const googleAndroidClientDebug = GOOGLE_ANDROID_CLIENT_ID_DEBUG ? new OAuth2Client(GOOGLE_ANDROID_CLIENT_ID_DEBUG) : null;
+const googleAndroidClientRelease = GOOGLE_ANDROID_CLIENT_ID_RELEASE ? new OAuth2Client(GOOGLE_ANDROID_CLIENT_ID_RELEASE) : null;
 
 // Generate device ID from user agent and other factors
 const generateDeviceId = (req) => {
@@ -542,38 +544,54 @@ router.post('/google-verify', [
 
     const { credential } = req.body;
 
-    // Verify the Google token - try both web and Android client IDs
+    // Verify the Google token - try web, debug, and release Android client IDs
     let ticket;
     let verifiedClientId = null;
-    
+    let verificationError = null;
+    // Try web client ID first
     try {
-      // First try web client ID
-      try {
-        ticket = await googleWebClient.verifyIdToken({
-          idToken: credential,
-          audience: GOOGLE_WEB_CLIENT_ID
-        });
-        verifiedClientId = GOOGLE_WEB_CLIENT_ID;
-        console.log('Token verified with web client ID');
-      } catch (webError) {
-        // If web client fails, try Android client ID
-        if (GOOGLE_ANDROID_CLIENT_ID !== GOOGLE_WEB_CLIENT_ID) {
-          ticket = await googleAndroidClient.verifyIdToken({
+      ticket = await googleWebClient.verifyIdToken({
+        idToken: credential,
+        audience: GOOGLE_WEB_CLIENT_ID
+      });
+      verifiedClientId = GOOGLE_WEB_CLIENT_ID;
+      console.log('Token verified with web client ID');
+    } catch (webError) {
+      verificationError = webError;
+      // Try Android debug client ID
+      if (googleAndroidClientDebug) {
+        try {
+          ticket = await googleAndroidClientDebug.verifyIdToken({
             idToken: credential,
-            audience: GOOGLE_ANDROID_CLIENT_ID
+            audience: GOOGLE_ANDROID_CLIENT_ID_DEBUG
           });
-          verifiedClientId = GOOGLE_ANDROID_CLIENT_ID;
-          console.log('Token verified with Android client ID');
-        } else {
-          throw webError;
+          verifiedClientId = GOOGLE_ANDROID_CLIENT_ID_DEBUG;
+          console.log('Token verified with Android debug client ID');
+        } catch (debugError) {
+          verificationError = debugError;
         }
       }
-    } catch (error) {
-      console.error('Google token verification failed for both client IDs:', error);
-      return res.status(401).json({
-        error: 'Invalid Google token',
-        message: 'Failed to verify Google authentication token'
-      });
+      // If not verified, try Android release client ID
+      if (!ticket && googleAndroidClientRelease) {
+        try {
+          ticket = await googleAndroidClientRelease.verifyIdToken({
+            idToken: credential,
+            audience: GOOGLE_ANDROID_CLIENT_ID_RELEASE
+          });
+          verifiedClientId = GOOGLE_ANDROID_CLIENT_ID_RELEASE;
+          console.log('Token verified with Android release client ID');
+        } catch (releaseError) {
+          verificationError = releaseError;
+        }
+      }
+      // If still not verified, throw last error
+      if (!ticket) {
+        console.error('Google token verification failed for all client IDs:', verificationError);
+        return res.status(401).json({
+          error: 'Invalid Google token',
+          message: 'Failed to verify Google authentication token'
+        });
+      }
     }
 
     const payload = ticket.getPayload();

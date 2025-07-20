@@ -14,6 +14,7 @@ const GDRIVE_BASE_FOLDER_ID = import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID;
 export default function FolderManagementPage() {
   // console.log('GDRIVE_BASE_FOLDER_ID:', GDRIVE_BASE_FOLDER_ID);
   const [folders, setFolders] = useState([]);
+  const [folderMetadata, setFolderMetadata] = useState(new Map());
   const [loading, setLoading] = useState(true);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -27,11 +28,36 @@ export default function FolderManagementPage() {
   const fetchGDriveFolders = async () => {
     setLoading(true);
     try {
-      const response = await gdriveAPI.getFolders();
-      // console.log('GDrive Folders:', response.data); // Debug log
-      setFolders(response.data);
+      // Fetch Google Drive folders
+      const gdriveResponse = await gdriveAPI.getFolders();
+      const gdriveFolders = gdriveResponse.data;
+      
+      // Fetch MongoDB folder metadata
+      const metadataResponse = await folderAPI.getAllFolders();
+      const mongoFolders = metadataResponse.data;
+      
+      // Create metadata map by gdriveId
+      const metadataMap = new Map();
+      mongoFolders.forEach(folder => {
+        if (folder.gdriveId) {
+          metadataMap.set(folder.gdriveId, folder);
+        }
+      });
+      
+      // Merge Google Drive folders with MongoDB metadata
+      const enrichedFolders = gdriveFolders.map(gdriveFolder => {
+        const metadata = metadataMap.get(gdriveFolder.id);
+        return {
+          ...gdriveFolder,
+          ...metadata, // Merge MongoDB metadata
+          gdriveId: gdriveFolder.id // Ensure gdriveId is set
+        };
+      });
+      
+      setFolders(enrichedFolders);
+      setFolderMetadata(metadataMap);
     } catch (error) {
-      toast.error('Failed to load Google Drive folders');
+      toast.error('Failed to load folders');
     } finally {
       setLoading(false);
     }
@@ -69,7 +95,7 @@ export default function FolderManagementPage() {
       <ul className={level === 0 ? 'ml-2' : 'ml-6'}>
         {foldersToRender.map((folder, idx) => (
           <li key={folder.id ? folder.id : `folder-${idx}`} className="mb-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-1">
               <button
                 className="text-blue-400 hover:text-blue-600 font-bold"
                 onClick={() => {
@@ -90,6 +116,29 @@ export default function FolderManagementPage() {
                 <Edit className="inline-block h-4 w-4" />
               </button>
             </div>
+            {/* Display MongoDB metadata if available */}
+            {folderMetadata.get(folder.id) && (
+              <div className="ml-6 text-xs text-gray-400 space-y-1">
+                {folderMetadata.get(folder.id).departments?.length > 0 && (
+                  <div>Departments: {folderMetadata.get(folder.id).departments.join(', ')}</div>
+                )}
+                {folderMetadata.get(folder.id).years?.length > 0 && (
+                  <div>Years: {folderMetadata.get(folder.id).years.join(', ')}</div>
+                )}
+                {folderMetadata.get(folder.id).semesters?.length > 0 && (
+                  <div>Semesters: {folderMetadata.get(folder.id).semesters.join(', ')}</div>
+                )}
+                {folderMetadata.get(folder.id).description && (
+                  <div>Description: {folderMetadata.get(folder.id).description}</div>
+                )}
+                {folderMetadata.get(folder.id).tags?.length > 0 && (
+                  <div>Tags: {folderMetadata.get(folder.id).tags.join(', ')}</div>
+                )}
+                {folderMetadata.get(folder.id).accessControlTags?.length > 0 && (
+                  <div>Access Tags: {folderMetadata.get(folder.id).accessControlTags.join(', ')}</div>
+                )}
+              </div>
+            )}
             {renderFolderTree(folders, folder.id, level + 1)}
           </li>
         ))}
@@ -208,8 +257,8 @@ export default function FolderManagementPage() {
       )}
       {/* Edit Folder Modal */}
       {showEditModal && selectedFolder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg max-w-md w-full p-6 border border-gray-700">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-gray-700">
             <h2 className="text-xl font-bold text-white mb-4">Edit Folder</h2>
             <form onSubmit={handleUpdateFolder} className="space-y-4">
               <div>

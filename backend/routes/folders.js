@@ -52,17 +52,29 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       }
     }
 
+    // Helper function to find parent metadata for inheritance
+    const findParentMetadata = async (parentGdriveId) => {
+      if (!parentGdriveId) return null;
+      const parentFolder = await Folder.findOne({ gdriveId: parentGdriveId });
+      return parentFolder;
+    };
+
     // Add or update folders from Drive
     for (const f of folders) {
       const existingFolder = await Folder.findOne({ gdriveId: f.id });
-      // Default values for schema fields
-      const defaultDepartments = ['IT'];
-      const defaultYears = [1];
-      const defaultSemesters = [1];
-      const defaultDescription = f.name.toLowerCase();
-      const defaultTags = [f.name.toLowerCase()];
-      const defaultAccessControlTags = [];
+      
+      // Find parent metadata for inheritance
+      const parentMetadata = await findParentMetadata(f.parent);
+      
+      // Default values for schema fields with inheritance from parent
+      const defaultDepartments = parentMetadata?.departments?.length > 0 ? parentMetadata.departments : ['IT'];
+      const defaultYears = parentMetadata?.years?.length > 0 ? parentMetadata.years : [1];
+      const defaultSemesters = parentMetadata?.semesters?.length > 0 ? parentMetadata.semesters : [1];
+      const defaultDescription = parentMetadata?.description || f.name.toLowerCase();
+      const defaultTags = parentMetadata?.tags?.length > 0 ? [...parentMetadata.tags, f.name.toLowerCase()] : [f.name.toLowerCase()];
+      const defaultAccessControlTags = parentMetadata?.accessControlTags || [];
       const defaultCreatedByName = f.ownerName || 'Ignite Admin';
+      
       if (!existingFolder) {
         await Folder.create({
           name: f.name,
@@ -189,6 +201,16 @@ router.get('/', authenticate, async (req, res) => {
     res.json(folders);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch folders', details: err.message });
+  }
+});
+
+// Get folders with metadata (for client access control)
+router.get('/with-metadata', authenticate, async (req, res) => {
+  try {
+    const folders = await Folder.find().populate('parent').lean();
+    res.json(folders);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch folders with metadata', details: err.message });
   }
 });
 

@@ -263,9 +263,9 @@ const DashboardPage = () => {
       }
     }
     
-    // Check semesters (only if restrictions are set and user has semester info)
-    if (hasSemesterRestrictions && user.semester) {
-      if (!folderMetadata.semesters.includes(user.semester)) {
+    // Check semesters (only if restrictions are set)
+    if (hasSemesterRestrictions) {
+      if (!user.semester || !folderMetadata.semesters.includes(user.semester)) {
         return false;
       }
     }
@@ -382,7 +382,7 @@ const DashboardPage = () => {
       Welcome back, {user?.name}
     </h1>
     <p className="mt-2 text-xs sm:text-base text-white/80">
-      {user?.department} Department • Year {user?.year}
+      {user?.department} Department • Year {user?.year} • Semester {user?.semester}
     </p>
   </div>
 </div>
@@ -390,7 +390,7 @@ const DashboardPage = () => {
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="py-8">
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* PDF Stat */}
         <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 border border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,255,255,0.25)] transition-all text-white">
           <div className="flex items-center">
@@ -421,17 +421,32 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Department Stat */}
-        <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-6 border border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,255,255,0.25)] transition-all text-white">
+        {/* Semester Stat */}
+        <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 border border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,255,255,0.25)] transition-all text-white">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-600 to-teal-500 rounded-lg flex items-center justify-center">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-white/80">Your Department</p>
-              <p className="text-2xl font-bold text-white">{user?.department}</p>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm font-medium text-white/80">Semester</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{user?.semester}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Department Stat */}
+        <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 border border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,255,255,0.25)] transition-all text-white">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+            </div>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm font-medium text-white/80">Your Department</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{user?.department}</p>
             </div>
           </div>
         </div>

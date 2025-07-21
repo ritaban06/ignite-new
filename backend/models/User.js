@@ -41,8 +41,18 @@ const userSchema = new mongoose.Schema({
     required: function() { 
       return this.role === 'client'; 
     },
-    min: [1, 'Year must be between 1 and 4'],
-    max: [4, 'Year must be between 1 and 4']
+    min: [0, 'Year must be between 0 and 4'],
+    max: [4, 'Year must be between 0 and 4'],
+    default: 0
+  },
+  semester: {
+    type: Number,
+    required: function() { 
+      return this.role === 'client'; 
+    },
+    min: [0, 'Semester must be between 0 and 8'],
+    max: [8, 'Semester must be between 0 and 8'],
+    default: 0
   },
   isActive: {
     type: Boolean,
@@ -83,7 +93,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes
-userSchema.index({ department: 1, year: 1 });
+userSchema.index({ department: 1, year: 1, semester: 1 });
 userSchema.index({ role: 1 });
 
 // Virtual for account lock status

@@ -28,36 +28,22 @@ export default function FolderManagementPage() {
   const fetchGDriveFolders = async () => {
     setLoading(true);
     try {
-      // Fetch Google Drive folders
-      const gdriveResponse = await gdriveAPI.getFolders();
-      const gdriveFolders = gdriveResponse.data;
-      
-      // Fetch MongoDB folder metadata
-      const metadataResponse = await folderAPI.getAllFolders();
-      const mongoFolders = metadataResponse.data;
+      // Fetch subject folders only (excludes subfolders)
+      const subjectFoldersResponse = await folderAPI.getSubjectFolders();
+      const subjectFolders = subjectFoldersResponse.data;
       
       // Create metadata map by gdriveId
       const metadataMap = new Map();
-      mongoFolders.forEach(folder => {
-        if (folder.gdriveId) {
-          metadataMap.set(folder.gdriveId, folder);
+      subjectFolders.forEach(folder => {
+        if (folder.metadata) {
+          metadataMap.set(folder.id, folder.metadata);
         }
       });
       
-      // Merge Google Drive folders with MongoDB metadata
-      const enrichedFolders = gdriveFolders.map(gdriveFolder => {
-        const metadata = metadataMap.get(gdriveFolder.id);
-        return {
-          ...gdriveFolder,
-          ...metadata, // Merge MongoDB metadata
-          gdriveId: gdriveFolder.id // Ensure gdriveId is set
-        };
-      });
-      
-      setFolders(enrichedFolders);
+      setFolders(subjectFolders);
       setFolderMetadata(metadataMap);
     } catch (error) {
-      toast.error('Failed to load folders');
+      toast.error('Failed to load subject folders');
     } finally {
       setLoading(false);
     }
@@ -72,42 +58,25 @@ export default function FolderManagementPage() {
     }
   };
 
-  // Recursive folder tree renderer (handles parent as string or array)
-  const renderFolderTree = (folders, parentId, level = 0) => {
-    if (!GDRIVE_BASE_FOLDER_ID && level === 0) return null;
-    const rootId = level === 0 ? GDRIVE_BASE_FOLDER_ID : parentId;
-    if (level === 0) {
-      // console.log('Rendering folder tree with rootId:', rootId);
-    }
-    // Find children for this rootId
-    const children = folders.filter(f => {
-      if (Array.isArray(f.parents)) {
-        return f.parents.includes(rootId);
-      }
-      if (typeof f.parent === 'string') {
-        return f.parent === rootId;
-      }
-      return false;
-    });
-    // Fallback: if no children found for root, render all folders as top-level
-    const foldersToRender = (level === 0 && children.length === 0) ? folders : children;
+  // Simple folder list renderer (no hierarchy since we only show subject folders)
+  const renderFolderList = (folders) => {
     return (
-      <ul className={level === 0 ? 'ml-2' : 'ml-6'}>
-        {foldersToRender.map((folder, idx) => (
-          <li key={folder.id ? folder.id : `folder-${idx}`} className="mb-2">
-            <div className="flex items-center gap-2 mb-1">
+      <ul className="ml-2">
+        {folders.map((folder, idx) => (
+          <li key={folder.id ? folder.id : `folder-${idx}`} className="mb-4 p-4 bg-gray-700 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
               <button
-                className="text-blue-400 hover:text-blue-600 font-bold"
+                className="text-blue-400 hover:text-blue-600 font-bold text-lg"
                 onClick={() => {
                   setSelectedFolder(folder);
                   fetchPdfsInFolder(folder.id);
                 }}
               >
-                <Folder className="inline-block mr-1" />{folder.name}
+                <Folder className="inline-block mr-2" />{folder.name}
               </button>
               <button
                 className="ml-2 text-yellow-400 hover:text-yellow-600"
-                title="Edit Folder"
+                title="Edit Subject Folder Metadata"
                 onClick={() => {
                   setSelectedFolder(folder);
                   setShowEditModal(true);
@@ -116,30 +85,30 @@ export default function FolderManagementPage() {
                 <Edit className="inline-block h-4 w-4" />
               </button>
             </div>
-            {/* Display MongoDB metadata if available */}
-            {folderMetadata.get(folder.id) && (
-              <div className="ml-6 text-xs text-gray-400 space-y-1">
-                {folderMetadata.get(folder.id).departments?.length > 0 && (
-                  <div>Departments: {folderMetadata.get(folder.id).departments.join(', ')}</div>
-                )}
-                {folderMetadata.get(folder.id).years?.length > 0 && (
-                  <div>Years: {folderMetadata.get(folder.id).years.join(', ')}</div>
-                )}
-                {folderMetadata.get(folder.id).semesters?.length > 0 && (
-                  <div>Semesters: {folderMetadata.get(folder.id).semesters.join(', ')}</div>
-                )}
-                {folderMetadata.get(folder.id).description && (
-                  <div>Description: {folderMetadata.get(folder.id).description}</div>
-                )}
-                {folderMetadata.get(folder.id).tags?.length > 0 && (
-                  <div>Tags: {folderMetadata.get(folder.id).tags.join(', ')}</div>
-                )}
-                {folderMetadata.get(folder.id).accessControlTags?.length > 0 && (
-                  <div>Access Tags: {folderMetadata.get(folder.id).accessControlTags.join(', ')}</div>
-                )}
+            {/* Display metadata */}
+            <div className="ml-8 text-sm text-gray-300 space-y-1">
+              {folder.departments?.length > 0 && (
+                <div><span className="font-semibold">Departments:</span> {folder.departments.join(', ')}</div>
+              )}
+              {folder.years?.length > 0 && (
+                <div><span className="font-semibold">Years:</span> {folder.years.join(', ')}</div>
+              )}
+              {folder.semesters?.length > 0 && (
+                <div><span className="font-semibold">Semesters:</span> {folder.semesters.join(', ')}</div>
+              )}
+              {folder.description && (
+                <div><span className="font-semibold">Description:</span> {folder.description}</div>
+              )}
+              {folder.tags?.length > 0 && (
+                <div><span className="font-semibold">Tags:</span> {folder.tags.join(', ')}</div>
+              )}
+              {folder.accessControlTags?.length > 0 && (
+                <div><span className="font-semibold">Access Tags:</span> {folder.accessControlTags.join(', ')}</div>
+              )}
+              <div className="text-xs text-gray-400 mt-2">
+                <em>Note: This metadata will be inherited by all subfolders unless explicitly changed.</em>
               </div>
-            )}
-            {renderFolderTree(folders, folder.id, level + 1)}
+            </div>
           </li>
         ))}
       </ul>
@@ -221,13 +190,17 @@ export default function FolderManagementPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-white mb-6">Manage Folders</h1>
       <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6 mb-6">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-white mb-2">Subject Folders</h2>
+          <p className="text-gray-400 text-sm">These are the main subject folders. Subfolders inherit metadata from their parent unless explicitly changed.</p>
+        </div>
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-2 text-gray-300">Loading folders...</p>
+            <p className="mt-2 text-gray-300">Loading subject folders...</p>
           </div>
         ) : (
-          renderFolderTree(folders, GDRIVE_BASE_FOLDER_ID)
+          renderFolderList(folders)
         )}
       </div>
       {selectedFolder && (
@@ -259,7 +232,8 @@ export default function FolderManagementPage() {
       {showEditModal && selectedFolder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-gray-700">
-            <h2 className="text-xl font-bold text-white mb-4">Edit Folder</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Edit Subject Folder Metadata</h2>
+            <p className="text-gray-400 text-sm mb-4">Changes to this metadata will be inherited by all subfolders unless they have explicit metadata set.</p>
             <form onSubmit={handleUpdateFolder} className="space-y-4">
               <div>
                 <label className="block text-gray-300 mb-1">Name</label>

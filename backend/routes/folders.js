@@ -204,6 +204,71 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+// Get subject folders only (for admin panel) - excludes subfolders
+router.get('/subject-folders', authenticate, async (req, res) => {
+  try {
+    // Only allow admin to access this endpoint
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    // Get all Google Drive folders
+    const googleDriveService = new GoogleDriveService(
+      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      process.env.GDRIVE_BASE_FOLDER_ID
+    );
+    
+    const listFoldersRecursive = async (folderId) => {
+      const subfoldersRes = await googleDriveService.drive.files.list({
+        q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: 'files(id, name, parents)',
+      });
+      const subfolders = subfoldersRes.data.files || [];
+      let allFolders = subfolders.map(f => ({ id: f.id, name: f.name, parent: f.parents?.[0] || null }));
+      for (const subfolder of subfolders) {
+        const childFolders = await listFoldersRecursive(subfolder.id);
+        allFolders = allFolders.concat(childFolders);
+      }
+      return allFolders;
+    };
+    
+    const rootId = process.env.GDRIVE_BASE_FOLDER_ID;
+    const allFolders = await listFoldersRecursive(rootId);
+    
+    // Filter to get only direct children of root (subject folders)
+    const subjectFolders = allFolders.filter(folder => folder.parent === rootId);
+    
+    // Get MongoDB metadata for all folders
+    const mongoFolders = await Folder.find().lean();
+    const metadataMap = new Map();
+    mongoFolders.forEach(folder => {
+      if (folder.gdriveId) {
+        metadataMap.set(folder.gdriveId, folder);
+      }
+    });
+    
+    // Enrich subject folders with metadata
+    const enrichedSubjectFolders = subjectFolders.map(folder => {
+      const metadata = metadataMap.get(folder.id);
+      return {
+        ...folder,
+        metadata: metadata || null,
+        // Include computed properties for easier frontend handling
+        departments: metadata?.departments || [],
+        years: metadata?.years || [],
+        semesters: metadata?.semesters || [],
+        description: metadata?.description || '',
+        tags: metadata?.tags || [],
+        accessControlTags: metadata?.accessControlTags || []
+      };
+    });
+    
+    res.json(enrichedSubjectFolders);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch subject folders', details: err.message });
+  }
+});
+
 // Get folders with metadata (for client access control)
 router.get('/with-metadata', authenticate, async (req, res) => {
   try {
@@ -268,7 +333,7 @@ router.get('/:folderId/pdfs', authenticate, async (req, res) => {
 });
 
 
-// Update folder metadata in MongoDB
+// Update folder metadata in MongoDB with inheritance for subfolders
 router.put('/:id', authenticate, async (req, res) => {
   try {
     const { name, description, years, departments, semesters, tags, accessControlTags } = req.body;
@@ -300,6 +365,68 @@ router.put('/:id', authenticate, async (req, res) => {
       );
     }
     if (!folder) return res.status(404).json({ error: 'Folder not found or could not be created' });
+
+    // If this is a subject folder (direct child of root), apply inheritance to subfolders
+    if (folder.gdriveId && req.user.role === 'admin') {
+      try {
+        // Get all Google Drive folders to find subfolders
+        const googleDriveService = new GoogleDriveService(
+          JSON.parse(process.env.GDRIVE_CREDENTIALS),
+          process.env.GDRIVE_BASE_FOLDER_ID
+        );
+        
+        const listSubfoldersRecursive = async (parentId) => {
+          const subfoldersRes = await googleDriveService.drive.files.list({
+            q: `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+            fields: 'files(id, name, parents)',
+          });
+          const subfolders = subfoldersRes.data.files || [];
+          let allSubfolders = subfolders.map(f => ({ id: f.id, name: f.name, parent: f.parents?.[0] || null }));
+          for (const subfolder of subfolders) {
+            const childFolders = await listSubfoldersRecursive(subfolder.id);
+            allSubfolders = allSubfolders.concat(childFolders);
+          }
+          return allSubfolders;
+        };
+        
+        // Get all subfolders of this folder
+        const subfolders = await listSubfoldersRecursive(folder.gdriveId);
+        
+        // Apply inheritance to subfolders that don't have explicit metadata
+        for (const subfolder of subfolders) {
+          const existingSubfolderMetadata = await Folder.findOne({ gdriveId: subfolder.id });
+          
+          // Only inherit if subfolder doesn't have explicit metadata or has default values
+          if (!existingSubfolderMetadata || 
+              (existingSubfolderMetadata.departments?.length === 0 && 
+               existingSubfolderMetadata.years?.length === 0 && 
+               existingSubfolderMetadata.semesters?.length === 0)) {
+            
+            const inheritedMetadata = {
+              gdriveId: subfolder.id,
+              name: subfolder.name,
+              description: folder.description || subfolder.name.toLowerCase(),
+              departments: folder.departments || [],
+              years: folder.years || [],
+              semesters: folder.semesters || [],
+              tags: folder.tags ? [...folder.tags, subfolder.name.toLowerCase()] : [subfolder.name.toLowerCase()],
+              accessControlTags: folder.accessControlTags || [],
+              createdBy: req.user._id
+            };
+            
+            await Folder.findOneAndUpdate(
+              { gdriveId: subfolder.id },
+              { $set: inheritedMetadata },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+          }
+        }
+      } catch (inheritanceError) {
+        console.error('Error applying metadata inheritance:', inheritanceError);
+        // Don't fail the main update if inheritance fails
+      }
+    }
+
     res.json(folder);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update folder', details: err.message });

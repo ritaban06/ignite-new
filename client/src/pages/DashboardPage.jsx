@@ -184,18 +184,42 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
+    // Fetch folders when component mounts
     fetchFolders();
+    
+    // Set up a timer to log folder hierarchy for debugging
+    const debugTimer = setTimeout(() => {
+      // console.log('Current folder hierarchy state:', folderHierarchy);
+      // console.log('Current selected folder:', selectedFolder);
+      // console.log('Current path:', currentPath);
+      
+      if (folderHierarchy.length === 0) {
+        // console.log('No folders in hierarchy, retrying fetch...');
+        fetchFolders();
+      }
+    }, 2000);
+    
+    return () => clearTimeout(debugTimer);
   }, []);
 
   const fetchFolders = async () => {
     try {
+      setIsLoading(true);
+      // console.log('Fetching folders...');
+      
       // Get folders from Google Drive with hierarchy
       const gdriveResponse = await folderAPI.getFolders();
       const allFolders = gdriveResponse.data;
       
+      // console.log('All folders from Google Drive:', allFolders);
+      // console.log('Number of folders from Google Drive:', allFolders.length);
+      
       // Get folder metadata from MongoDB for access control
       const metadataResponse = await folderAPI.getFoldersWithMetadata();
       const folderMetadata = metadataResponse.data;
+      
+      // console.log('Folder metadata from MongoDB:', folderMetadata);
+      // console.log('Number of folder metadata records:', folderMetadata.length);
       
       // Create a map of folder metadata by gdriveId
       const metadataMap = new Map();
@@ -205,33 +229,54 @@ const DashboardPage = () => {
         }
       });
       
+      // console.log('Metadata map size:', metadataMap.size);
+      
       // Filter folders based on user access control
       const userAccessibleFolders = allFolders.filter(folder => {
         const metadata = metadataMap.get(folder.id);
-        if (!metadata) return true; // If no metadata, allow access (default behavior)
+        if (!metadata) {
+          // console.log(`No metadata found for folder: ${folder.name} (${folder.id}), allowing access by default`);
+          return true; // If no metadata, allow access (default behavior)
+        }
         
         // Check if user has access based on departments, years, semesters, and access control tags
         const hasAccess = checkFolderAccess(metadata, user);
+        // console.log(`Access check for folder ${folder.name}: ${hasAccess ? 'Allowed' : 'Denied'}`);
         return hasAccess;
       });
       
+      // console.log('User accessible folders after filtering:', userAccessibleFolders);
+      // console.log('Number of accessible folders:', userAccessibleFolders.length);
+      
       // Enrich folders with metadata
-      const enrichedFolders = userAccessibleFolders.map(folder => ({
-        ...folder,
-        metadata: metadataMap.get(folder.id) || null
-      }));
+      const enrichedFolders = userAccessibleFolders.map(folder => {
+        const metadata = metadataMap.get(folder.id);
+        return {
+          ...folder,
+          metadata: metadata || null
+        };
+      });
+      
+      // console.log('Enriched folders with metadata:', enrichedFolders.length);
       
       // Build folder hierarchy
       const hierarchy = buildFolderHierarchy(enrichedFolders);
       
       // Log the hierarchy for debugging
-      console.log('Folder hierarchy:', JSON.stringify(hierarchy, null, 2));
+      // console.log('Folder hierarchy built with root folders:', hierarchy.length);
+      // console.log('Root folder names:', hierarchy.map(f => f.name));
       
       setFolderHierarchy(hierarchy);
       setAccessibleFolders(enrichedFolders);
+      
+      if (hierarchy.length === 0) {
+        // console.warn('No folders in hierarchy after building. This might indicate a problem.');
+      }
     } catch (error) {
       console.error('Failed to load folders:', error);
       toast.error("Failed to load subjects");
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -287,28 +332,69 @@ const DashboardPage = () => {
   
   // Build folder hierarchy for nested display
   const buildFolderHierarchy = (folders) => {
+    // console.log('Building folder hierarchy from folders:', folders.length, 'folders');
+    // console.log('Sample folder structure:', folders.length > 0 ? JSON.stringify(folders[0], null, 2) : 'No folders');
+    
     const folderMap = new Map();
     const rootFolders = [];
     
-    // Create a map of all folders
+    // Create a map of all folders with empty children arrays
     folders.forEach(folder => {
-      folderMap.set(folder.id, { ...folder, children: [] });
+      // Check if folder has an id
+      if (!folder.id) {
+        console.warn('Found folder without ID:', folder);
+        return;
+      }
+      
+      // Initialize with empty children array if not present
+      const folderWithChildren = { 
+        ...folder, 
+        children: Array.isArray(folder.children) ? [...folder.children] : [] 
+      };
+      
+      folderMap.set(folder.id, folderWithChildren);
+      // console.log(`Added folder to map: ${folder.name} (${folder.id}), children: ${folderWithChildren.children.length}`);
     });
     
-    // Build the hierarchy
+    // console.log('Folder map created with', folderMap.size, 'entries');
+    
+    // Build the hierarchy by adding children to their parents
     folders.forEach(folder => {
+      if (!folder.id) return; // Skip folders without ID
+      
       const folderNode = folderMap.get(folder.id);
+      if (!folderNode) {
+        console.warn(`Folder node not found in map for ID: ${folder.id}`);
+        return;
+      }
+      
+      // Check if this folder has a parent and if that parent exists in our map
       if (folder.parent && folderMap.has(folder.parent)) {
-        folderMap.get(folder.parent).children.push(folderNode);
+        const parentFolder = folderMap.get(folder.parent);
+        // console.log(`Adding folder '${folder.name}' as child to parent '${parentFolder.name}'`);
+        
+        // Ensure parent has a children array
+        if (!Array.isArray(parentFolder.children)) {
+          // console.warn(`Parent folder '${parentFolder.name}' has no children array, creating one`);
+          parentFolder.children = [];
+        }
+        
+        parentFolder.children.push(folderNode);
+        // console.log(`Parent '${parentFolder.name}' now has ${parentFolder.children.length} children`);
       } else {
+        // console.log(`Adding folder '${folder.name}' as a root folder (no parent or parent not in map)`);
         rootFolders.push(folderNode);
       }
     });
+    
+    // console.log('Root folders before sorting:', rootFolders.map(f => f.name));
+    // console.log('Root folders count:', rootFolders.length);
     
     // Sort children alphabetically by name for better organization
     const sortFolderChildren = (folders) => {
       folders.forEach(folder => {
         if (folder.children && folder.children.length > 0) {
+          // console.log(`Sorting ${folder.children.length} children of '${folder.name}'`);
           folder.children.sort((a, b) => a.name.localeCompare(b.name));
           sortFolderChildren(folder.children);
         }
@@ -318,6 +404,21 @@ const DashboardPage = () => {
     // Sort root folders and their children
     rootFolders.sort((a, b) => a.name.localeCompare(b.name));
     sortFolderChildren(rootFolders);
+    
+    // Log detailed information about the hierarchy
+    // console.log('Final root folders:', rootFolders.map(f => ({ 
+    //   name: f.name, 
+    //   id: f.id, 
+    //   childCount: f.children ? f.children.length : 0 
+    // })));
+    
+    // Log the first level of children for each root folder
+    rootFolders.forEach(folder => {
+      if (folder.children && folder.children.length > 0) {
+        // console.log(`Children of root folder '${folder.name}':`, 
+        //   folder.children.map(child => ({ name: child.name, id: child.id })));
+      }
+    });
     
     return rootFolders;
   };
@@ -334,6 +435,9 @@ const DashboardPage = () => {
   
   // Navigate to a folder (handles both root and nested folders)
   const navigateToFolder = (folderId, folderName) => {
+    // console.log(`Navigating to folder: ${folderName} (ID: ${folderId})`);
+    setIsLoading(true);
+    
     // Find the complete path to this folder
     const findFolderPath = (folders, targetId, currentPath = []) => {
       for (const folder of folders) {
@@ -352,29 +456,38 @@ const DashboardPage = () => {
     // of the current folder to maintain proper path
     if (selectedFolder) {
       const currentSubfolders = getCurrentSubfolders();
-      const isDirectChild = currentSubfolders.some(f => f.id === folderId);
+      // console.log('Current subfolders:', currentSubfolders.map(f => ({ id: f.id, name: f.name })));
+      
+      const isDirectChild = currentSubfolders && currentSubfolders.some(f => f.id === folderId);
+      // console.log(`Is ${folderName} a direct child of current folder? ${isDirectChild}`);
       
       if (isDirectChild) {
         // It's a direct child, just add to the current path
         const newPath = [...currentPath, { id: folderId, name: folderName }];
+        // console.log('Setting new path (direct child):', newPath);
         setCurrentPath(newPath);
       } else {
         // It's not a direct child, we need to find the complete path
         const newPath = findFolderPath(folderHierarchy, folderId);
         if (newPath) {
+          console.log('Setting new path (found in hierarchy):', newPath);
           setCurrentPath(newPath);
         } else {
           // Fallback if path not found
+          console.log('Path not found in hierarchy, using fallback path');
           setCurrentPath([{ id: folderId, name: folderName }]);
         }
       }
     } else {
       // We're at the root level
+      // console.log('Setting path from root level');
       setCurrentPath([{ id: folderId, name: folderName }]);
     }
     
+    // console.log(`Fetching PDFs for folder: ${folderName}`);
     fetchPdfsInFolder(folderId);
     setSelectedFolder(folderId);
+    setIsLoading(false);
   };
   
   // Navigate back in folder hierarchy
@@ -409,7 +522,18 @@ const DashboardPage = () => {
     };
     
     const currentFolder = findFolder(folderHierarchy, selectedFolder);
-    return currentFolder && currentFolder.children ? currentFolder.children : [];
+    
+    // Debug information
+    // console.log('Current folder:', currentFolder);
+    if (currentFolder && currentFolder.children) {
+      // console.log('Subfolders found:', currentFolder.children.length);
+      // console.log('Subfolder details:', JSON.stringify(currentFolder.children, null, 2));
+    } else {
+      console.log('No subfolders found for folder ID:', selectedFolder);
+    }
+    
+    // Make sure we return an array even if children is undefined
+    return (currentFolder && Array.isArray(currentFolder.children)) ? currentFolder.children : [];
   };
 
   if (isLoading && pdfs.length === 0) {
@@ -615,51 +739,61 @@ const DashboardPage = () => {
           )}
         </div>
         
+        {/* Debug info */}
+        {/* <div className="mb-4 p-2 bg-black/30 rounded text-xs text-white/70 overflow-auto">
+          <div>Current folder: {selectedFolder || 'None (root level)'}</div>
+          <div>Path: {currentPath.map(p => p.name).join(' > ') || 'Root'}</div>
+          <div>Subfolders count: {getCurrentSubfolders().length}</div>
+        </div> */}
+        
         {/* Display current level folders */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {getCurrentSubfolders().map(folder => (
-            <button
-              key={folder.id}
-              className="bg-[rgba(27,11,66,0.7)] border border-gray-700 rounded-lg p-4 flex flex-col items-center hover:bg-purple-700/80 transition-all duration-200 transform hover:scale-105"
-              onClick={() => navigateToFolder(folder.id, folder.name)}
-            >
-              <div className="relative">
-                <Folder className="h-8 w-8 text-blue-400 mb-2" />
-                {folder.children && folder.children.length > 0 && (
-                  <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] text-white font-bold">
-                    {folder.children.length}
+          {getCurrentSubfolders() && getCurrentSubfolders().length > 0 ? (
+            getCurrentSubfolders().map(folder => (
+              <button
+                key={folder.id}
+                className="bg-[rgba(27,11,66,0.7)] border border-gray-700 rounded-lg p-4 flex flex-col items-center hover:bg-purple-700/80 transition-all duration-200 transform hover:scale-105"
+                onClick={() => navigateToFolder(folder.id, folder.name)}
+              >
+                <div className="relative">
+                  <Folder className="h-8 w-8 text-blue-400 mb-2" />
+                  {folder.children && folder.children.length > 0 && (
+                    <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] text-white font-bold">
+                      {folder.children.length}
+                    </div>
+                  )}
+                </div>
+                <span className="text-white font-semibold text-center">{folder.name}</span>
+                {folder.metadata && (
+                  <div className="mt-2 text-xs text-white/60 text-center">
+                    {folder.metadata.departments && folder.metadata.departments.length > 0 && (
+                      <div>Dept: {folder.metadata.departments.join(', ')}</div>
+                    )}
+                    {folder.metadata.years && folder.metadata.years.length > 0 && (
+                      <div>Year: {folder.metadata.years.join(', ')}</div>
+                    )}
+                    {folder.metadata.semesters && folder.metadata.semesters.length > 0 && (
+                      <div>Sem: {folder.metadata.semesters.join(', ')}</div>
+                    )}
                   </div>
                 )}
-              </div>
-              <span className="text-white font-semibold text-center">{folder.name}</span>
-              {folder.metadata && (
-                <div className="mt-2 text-xs text-white/60 text-center">
-                  {folder.metadata.departments && folder.metadata.departments.length > 0 && (
-                    <div>Dept: {folder.metadata.departments.join(', ')}</div>
-                  )}
-                  {folder.metadata.years && folder.metadata.years.length > 0 && (
-                    <div>Year: {folder.metadata.years.join(', ')}</div>
-                  )}
-                </div>
-              )}
-              {folder.children && folder.children.length > 0 && (
-                <div className="mt-1 text-xs text-blue-300">
-                  {folder.children.length} subfolder{folder.children.length !== 1 ? 's' : ''}
-                </div>
-              )}
-            </button>
-          ))}
+                {folder.children && folder.children.length > 0 && (
+                  <div className="mt-1 text-xs text-blue-300">
+                    {folder.children.length} subfolder{folder.children.length !== 1 ? 's' : ''}
+                  </div>
+                )}
+              </button>
+            ))
+          ) : (
+            <div className="col-span-full text-center text-white/70 py-4">
+              {isLoading ? 'Loading folders...' : 'No subfolders in this directory.'}
+            </div>
+          )}
         </div>
         
-        {getCurrentSubfolders().length === 0 && !selectedFolder && (
+        {!isLoading && getCurrentSubfolders().length === 0 && !selectedFolder && (
           <div className="text-center text-white/70 py-8">
             No accessible subjects found. Please contact your administrator if you believe this is an error.
-          </div>
-        )}
-        
-        {getCurrentSubfolders().length === 0 && selectedFolder && (
-          <div className="text-center text-white/70 py-4">
-            No subfolders in this directory.
           </div>
         )}
       </div>

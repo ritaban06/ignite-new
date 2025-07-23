@@ -27,7 +27,8 @@ const folderSchema = new mongoose.Schema({
   years: [{
     type: Number,
     min: 1,
-    max: 4
+    max: 4,
+    default: 0
   }],
   departments: [{
     type: String,
@@ -37,7 +38,8 @@ const folderSchema = new mongoose.Schema({
   semesters: [{
     type: Number,
     min: 1,
-    max: 8
+    max: 8,
+    default: 0
   }],
   tags: [{
     type: String,

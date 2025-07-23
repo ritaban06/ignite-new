@@ -224,9 +224,11 @@ const DashboardPage = () => {
       // Build folder hierarchy
       const hierarchy = buildFolderHierarchy(enrichedFolders);
       
-      setFolders(enrichedFolders);
+      // Log the hierarchy for debugging
+      console.log('Folder hierarchy:', JSON.stringify(hierarchy, null, 2));
+      
       setFolderHierarchy(hierarchy);
-      setAccessibleFolders(userAccessibleFolders);
+      setAccessibleFolders(enrichedFolders);
     } catch (error) {
       console.error('Failed to load folders:', error);
       toast.error("Failed to load subjects");
@@ -303,20 +305,27 @@ const DashboardPage = () => {
       }
     });
     
+    // Sort children alphabetically by name for better organization
+    const sortFolderChildren = (folders) => {
+      folders.forEach(folder => {
+        if (folder.children && folder.children.length > 0) {
+          folder.children.sort((a, b) => a.name.localeCompare(b.name));
+          sortFolderChildren(folder.children);
+        }
+      });
+    };
+    
+    // Sort root folders and their children
+    rootFolders.sort((a, b) => a.name.localeCompare(b.name));
+    sortFolderChildren(rootFolders);
+    
     return rootFolders;
   };
 
-  const fetchPdfsInFolder = async (folderId, folderName = null) => {
+  const fetchPdfsInFolder = async (folderId) => {
     try {
       const response = await folderAPI.getPdfsInFolder(folderId);
       setPdfs(response.data);
-      setSelectedFolder(folderId);
-      
-      // Update current path for breadcrumb navigation
-      if (folderName) {
-        const newPath = [...currentPath, { id: folderId, name: folderName }];
-        setCurrentPath(newPath);
-      }
     } catch (error) {
       console.error('Failed to load PDFs:', error);
       toast.error("Failed to load PDFs");
@@ -325,7 +334,47 @@ const DashboardPage = () => {
   
   // Navigate to a folder (handles both root and nested folders)
   const navigateToFolder = (folderId, folderName) => {
-    fetchPdfsInFolder(folderId, folderName);
+    // Find the complete path to this folder
+    const findFolderPath = (folders, targetId, currentPath = []) => {
+      for (const folder of folders) {
+        if (folder.id === targetId) {
+          return [...currentPath, { id: folder.id, name: folder.name }];
+        }
+        if (folder.children && folder.children.length > 0) {
+          const path = findFolderPath(folder.children, targetId, [...currentPath, { id: folder.id, name: folder.name }]);
+          if (path) return path;
+        }
+      }
+      return null;
+    };
+    
+    // If we're already in a folder, we need to check if the target folder is a child
+    // of the current folder to maintain proper path
+    if (selectedFolder) {
+      const currentSubfolders = getCurrentSubfolders();
+      const isDirectChild = currentSubfolders.some(f => f.id === folderId);
+      
+      if (isDirectChild) {
+        // It's a direct child, just add to the current path
+        const newPath = [...currentPath, { id: folderId, name: folderName }];
+        setCurrentPath(newPath);
+      } else {
+        // It's not a direct child, we need to find the complete path
+        const newPath = findFolderPath(folderHierarchy, folderId);
+        if (newPath) {
+          setCurrentPath(newPath);
+        } else {
+          // Fallback if path not found
+          setCurrentPath([{ id: folderId, name: folderName }]);
+        }
+      }
+    } else {
+      // We're at the root level
+      setCurrentPath([{ id: folderId, name: folderName }]);
+    }
+    
+    fetchPdfsInFolder(folderId);
+    setSelectedFolder(folderId);
   };
   
   // Navigate back in folder hierarchy
@@ -334,7 +383,8 @@ const DashboardPage = () => {
       const newPath = currentPath.slice(0, -1);
       const parentFolder = newPath[newPath.length - 1];
       setCurrentPath(newPath);
-      fetchPdfsInFolder(parentFolder.id, parentFolder.name);
+      setSelectedFolder(parentFolder.id);
+      fetchPdfsInFolder(parentFolder.id);
     } else {
       // Go back to root (show all folders)
       setSelectedFolder(null);
@@ -350,14 +400,16 @@ const DashboardPage = () => {
     const findFolder = (folders, targetId) => {
       for (const folder of folders) {
         if (folder.id === targetId) return folder;
-        const found = findFolder(folder.children, targetId);
-        if (found) return found;
+        if (folder.children && folder.children.length > 0) {
+          const found = findFolder(folder.children, targetId);
+          if (found) return found;
+        }
       }
       return null;
     };
     
     const currentFolder = findFolder(folderHierarchy, selectedFolder);
-    return currentFolder ? currentFolder.children : [];
+    return currentFolder && currentFolder.children ? currentFolder.children : [];
   };
 
   if (isLoading && pdfs.length === 0) {
@@ -506,28 +558,36 @@ const DashboardPage = () => {
       {/* Breadcrumb Navigation */}
       {currentPath.length > 0 && (
         <div className="mb-4 bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 border border-[rgba(255,255,255,0.15)]">
-          <div className="flex items-center space-x-2 text-white/80">
+          <div className="flex items-center space-x-2 text-white/80 overflow-x-auto pb-2">
+            <button
+              onClick={() => navigateBack()}
+              className="flex items-center hover:text-white transition-colors flex-shrink-0"
+            >
+              ← Back
+            </button>
+            <span className="text-white/60 flex-shrink-0">/</span>
             <button
               onClick={() => {
                 setSelectedFolder(null);
                 setPdfs([]);
                 setCurrentPath([]);
               }}
-              className="hover:text-white transition-colors"
+              className="hover:text-white transition-colors flex-shrink-0"
             >
               Home
             </button>
             {currentPath.map((pathItem, index) => (
               <React.Fragment key={pathItem.id}>
-                <span className="text-white/60">/</span>
+                <span className="text-white/60 flex-shrink-0">/</span>
                 <button
                   onClick={() => {
                     if (index === currentPath.length - 1) return; // Current folder, no action
                     const newPath = currentPath.slice(0, index + 1);
                     setCurrentPath(newPath);
-                    fetchPdfsInFolder(pathItem.id, pathItem.name);
+                    setSelectedFolder(pathItem.id);
+                    fetchPdfsInFolder(pathItem.id);
                   }}
-                  className={`hover:text-white transition-colors ${
+                  className={`hover:text-white transition-colors flex-shrink-0 ${
                     index === currentPath.length - 1 ? 'text-white font-semibold' : ''
                   }`}
                 >
@@ -563,7 +623,14 @@ const DashboardPage = () => {
               className="bg-[rgba(27,11,66,0.7)] border border-gray-700 rounded-lg p-4 flex flex-col items-center hover:bg-purple-700/80 transition-all duration-200 transform hover:scale-105"
               onClick={() => navigateToFolder(folder.id, folder.name)}
             >
-              <Folder className="h-8 w-8 text-blue-400 mb-2" />
+              <div className="relative">
+                <Folder className="h-8 w-8 text-blue-400 mb-2" />
+                {folder.children && folder.children.length > 0 && (
+                  <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] text-white font-bold">
+                    {folder.children.length}
+                  </div>
+                )}
+              </div>
               <span className="text-white font-semibold text-center">{folder.name}</span>
               {folder.metadata && (
                 <div className="mt-2 text-xs text-white/60 text-center">

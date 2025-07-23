@@ -18,32 +18,64 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       JSON.parse(process.env.GDRIVE_CREDENTIALS),
       process.env.GDRIVE_BASE_FOLDER_ID
     );
-    // Recursively list all folders from Google Drive, including owner info
-    const listFoldersRecursive = async (folderId) => {
+    
+    // Build a folder hierarchy from Google Drive
+    const buildFolderHierarchy = async (folderId, parentGdriveId = null) => {
       const subfoldersRes = await googleDriveService.drive.files.list({
         q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
         fields: 'files(id, name, parents, owners)',
       });
+      
       const subfolders = subfoldersRes.data.files || [];
-      let allFolders = subfolders.map(f => ({
-        id: f.id,
-        name: f.name,
-        parent: f.parents?.[0] || null,
-        ownerName: (f.owners && f.owners.length > 0) ? f.owners[0].displayName : 'Unknown'
-      }));
-      for (const subfolder of subfolders) {
-        const childFolders = await listFoldersRecursive(subfolder.id);
-        allFolders = allFolders.concat(childFolders);
+      const result = [];
+      
+      for (const folder of subfolders) {
+        const ownerName = (folder.owners && folder.owners.length > 0) ? folder.owners[0].displayName : 'Unknown';
+        
+        // Create folder object with nested structure
+        const folderObj = {
+          name: folder.name,
+          gdriveId: folder.id,
+          parent: parentGdriveId,
+          ownerName: ownerName,
+          children: []
+        };
+        
+        // Recursively get children
+        folderObj.children = await buildFolderHierarchy(folder.id, folder.id);
+        
+        result.push(folderObj);
       }
-      return allFolders;
+      
+      return result;
     };
+    
     const rootId = process.env.GDRIVE_BASE_FOLDER_ID;
-    const folders = await listFoldersRecursive(rootId);
-    const allDriveIds = new Set(folders.map(f => f.id));
+    const folderHierarchy = await buildFolderHierarchy(rootId, null);
+    
+    // Collect all Google Drive IDs for cleanup
+    const collectAllGdriveIds = (folders) => {
+      let ids = new Set();
+      
+      const collectIds = (folderArray) => {
+        for (const folder of folderArray) {
+          ids.add(folder.gdriveId);
+          if (folder.children && folder.children.length > 0) {
+            collectIds(folder.children);
+          }
+        }
+      };
+      
+      collectIds(folders);
+      return ids;
+    };
+    
+    const allDriveIds = collectAllGdriveIds(folderHierarchy);
     let added = 0, updated = 0, removed = 0;
 
     // Find all folders in DB that have a gdriveId
     const dbFolders = await Folder.find({ gdriveId: { $exists: true } });
+    
     // Remove folders that no longer exist in Drive
     for (const folder of dbFolders) {
       if (!allDriveIds.has(folder.gdriveId)) {
@@ -52,77 +84,100 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       }
     }
 
-    // Helper function to find parent metadata for inheritance
-    const findParentMetadata = async (parentGdriveId) => {
-      if (!parentGdriveId) return null;
-      const parentFolder = await Folder.findOne({ gdriveId: parentGdriveId });
-      return parentFolder;
-    };
-
-    // Add or update folders from Drive
-    for (const f of folders) {
-      const existingFolder = await Folder.findOne({ gdriveId: f.id });
-      
-      // Find parent metadata for inheritance
-      const parentMetadata = await findParentMetadata(f.parent);
-      
-      // Default values for schema fields with inheritance from parent
-      const defaultDepartments = parentMetadata?.departments?.length > 0 ? parentMetadata.departments : ['IT'];
-      const defaultYears = parentMetadata?.years?.length > 0 ? parentMetadata.years : [1];
-      const defaultSemesters = parentMetadata?.semesters?.length > 0 ? parentMetadata.semesters : [1];
-      const defaultDescription = parentMetadata?.description || f.name.toLowerCase();
-      const defaultTags = parentMetadata?.tags?.length > 0 ? [...parentMetadata.tags, f.name.toLowerCase()] : [f.name.toLowerCase()];
-      const defaultAccessControlTags = parentMetadata?.accessControlTags || [];
-      const defaultCreatedByName = f.ownerName || 'Ignite Admin';
-      
-      if (!existingFolder) {
-        await Folder.create({
-          name: f.name,
-          gdriveId: f.id,
-          parent: null, // Optionally resolve parent by gdriveId
-          description: defaultDescription,
-          departments: defaultDepartments,
-          years: defaultYears,
-          semesters: defaultSemesters,
-          tags: defaultTags,
-          accessControlTags: defaultAccessControlTags,
-          createdByName: defaultCreatedByName
-        });
-        added++;
-      } else {
-        let needsUpdate = false;
-        if (existingFolder.name !== f.name) { existingFolder.name = f.name; needsUpdate = true; }
-        if (existingFolder.description !== defaultDescription) { existingFolder.description = defaultDescription; needsUpdate = true; }
-        // Migrate old single fields to arrays if needed
-        if (existingFolder.department && !existingFolder.departments) {
-          existingFolder.departments = [existingFolder.department];
-          existingFolder.department = undefined;
-          needsUpdate = true;
+    // Process the folder hierarchy and save to MongoDB
+    const processFolderHierarchy = async (folders, parentMetadata = null) => {
+      for (const folder of folders) {
+        // Check if this is a subject folder (top-level)
+        const isSubjectFolder = folder.parent === null;
+        
+        // Find existing folder in DB
+        const existingFolder = await Folder.findOne({ gdriveId: folder.gdriveId });
+        
+        // Prepare metadata with inheritance from parent if needed
+        const folderMetadata = {
+          name: folder.name,
+          gdriveId: folder.gdriveId,
+          description: folder.description || parentMetadata?.description || folder.name.toLowerCase(),
+          departments: folder.departments || parentMetadata?.departments || ['IT'],
+          years: folder.years || parentMetadata?.years || [0],
+          semesters: folder.semesters || parentMetadata?.semesters || [0],
+          tags: folder.tags || (parentMetadata?.tags ? [...parentMetadata.tags, folder.name.toLowerCase()] : [folder.name.toLowerCase()]),
+          accessControlTags: folder.accessControlTags || parentMetadata?.accessControlTags || [],
+          createdByName: folder.ownerName || 'Ignite Admin'
+        };
+        
+        // Process children with inherited metadata
+        const processedChildren = [];
+        if (folder.children && folder.children.length > 0) {
+          for (const child of folder.children) {
+            // Apply parent metadata inheritance to child
+            const childWithMetadata = {
+              ...child,
+              // Only set these fields if not explicitly defined on the child
+              description: child.description || folderMetadata.description,
+              departments: child.departments || folderMetadata.departments,
+              years: child.years || folderMetadata.years,
+              semesters: child.semesters || folderMetadata.semesters,
+              tags: child.tags || (folderMetadata.tags ? [...folderMetadata.tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
+              accessControlTags: child.accessControlTags || folderMetadata.accessControlTags
+            };
+            
+            // Process nested children recursively
+            if (child.children && child.children.length > 0) {
+              childWithMetadata.children = await processFolderHierarchy(child.children, folderMetadata);
+            }
+            
+            processedChildren.push(childWithMetadata);
+          }
         }
-        if (existingFolder.year && !existingFolder.years) {
-          existingFolder.years = [existingFolder.year];
-          existingFolder.year = undefined;
-          needsUpdate = true;
-        }
-        if (!existingFolder.semesters) {
-          existingFolder.semesters = defaultSemesters;
-          needsUpdate = true;
-        }
-        if (!existingFolder.accessControlTags) {
-          existingFolder.accessControlTags = defaultAccessControlTags;
-          needsUpdate = true;
-        }
-        if (JSON.stringify(existingFolder.tags) !== JSON.stringify(defaultTags)) { existingFolder.tags = defaultTags; needsUpdate = true; }
-        if (existingFolder.createdByName !== defaultCreatedByName) { existingFolder.createdByName = defaultCreatedByName; needsUpdate = true; }
-        if (needsUpdate) {
+        
+        // Update or create the folder in MongoDB
+        if (!existingFolder) {
+          // Create new folder with children
+          await Folder.create({
+            ...folderMetadata,
+            parent: null, // Top-level folders have null parent
+            children: processedChildren
+          });
+          added++;
+        } else {
+          // Update existing folder
+          existingFolder.name = folderMetadata.name;
+          existingFolder.description = folderMetadata.description;
+          existingFolder.departments = folderMetadata.departments;
+          existingFolder.years = folderMetadata.years;
+          existingFolder.semesters = folderMetadata.semesters;
+          existingFolder.tags = folderMetadata.tags;
+          existingFolder.accessControlTags = folderMetadata.accessControlTags;
+          existingFolder.createdByName = folderMetadata.createdByName;
+          existingFolder.children = processedChildren;
+          
           await existingFolder.save();
           updated++;
         }
       }
-    }
+      
+      return folders;
+    };
+    
+    // Process the entire hierarchy
+    await processFolderHierarchy(folderHierarchy);
+    
+    // Count total folders processed
+    const countFolders = (folders) => {
+      let count = folders.length;
+      for (const folder of folders) {
+        if (folder.children && folder.children.length > 0) {
+          count += countFolders(folder.children);
+        }
+      }
+      return count;
+    };
+    
+    const totalFolders = countFolders(folderHierarchy);
     res.json({
-      message: `Sync complete: ${added} added, ${updated} updated, ${removed} removed. Total scanned: ${folders.length}.`,
-      total: folders.length,
+      message: `Sync complete: ${added} added, ${updated} updated, ${removed} removed. Total scanned: ${totalFolders}.`,
+      total: totalFolders,
       added,
       updated,
       removed
@@ -139,32 +194,52 @@ router.get('/gdrive-base-id', (req, res) => {
   res.json({ baseFolderId: process.env.GDRIVE_BASE_FOLDER_ID });
 });
 
-// List Google Drive folders and subfolders
+// List Google Drive folders and subfolders with hierarchy
 router.get('/gdrive', async (req, res) => {
   try {
-    const googleDriveService = new GoogleDriveService(
-      JSON.parse(process.env.GDRIVE_CREDENTIALS),
-      process.env.GDRIVE_BASE_FOLDER_ID
-    );
-    // List subfolders recursively
-    const listFoldersRecursive = async (folderId) => {
-      const subfoldersRes = await googleDriveService.drive.files.list({
-        q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-        fields: 'files(id, name, parents)',
+    // Instead of fetching from Google Drive directly, get from MongoDB with children
+    const folders = await Folder.find({ parent: null }).lean();
+    
+    // Transform the data to match the expected format for the client
+    const transformedFolders = folders.map(folder => {
+      return {
+        id: folder.gdriveId,
+        gdriveId: folder.gdriveId, // Ensure gdriveId is included
+        _id: folder._id,
+        name: folder.name,
+        parent: null,
+        description: folder.description,
+        departments: folder.departments || [],
+        years: folder.years || [],
+        semesters: folder.semesters || [],
+        tags: folder.tags || [],
+        accessControlTags: folder.accessControlTags || [],
+        children: transformChildren(folder.children || [])
+      };
+    });
+    
+    // Helper function to transform nested children
+    function transformChildren(children) {
+      return children.map(child => {
+        return {
+          id: child.gdriveId,
+          gdriveId: child.gdriveId, // Ensure gdriveId is included
+          name: child.name,
+          parent: child.parent,
+          description: child.description || '',
+          departments: child.departments || [],
+          years: child.years || [],
+          semesters: child.semesters || [],
+          tags: child.tags || [],
+          accessControlTags: child.accessControlTags || [],
+          children: child.children && child.children.length > 0 ? transformChildren(child.children) : []
+        };
       });
-      const subfolders = subfoldersRes.data.files || [];
-      let allFolders = subfolders.map(f => ({ id: f.id, name: f.name, parent: f.parents?.[0] || null }));
-      for (const subfolder of subfolders) {
-        const childFolders = await listFoldersRecursive(subfolder.id);
-        allFolders = allFolders.concat(childFolders);
-      }
-      return allFolders;
-    };
-    const rootId = process.env.GDRIVE_BASE_FOLDER_ID;
-    const folders = await listFoldersRecursive(rootId);
-    res.json(folders);
+    }
+    
+    res.json(transformedFolders);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch Google Drive folders', details: err.message });
+    res.status(500).json({ error: 'Failed to fetch folders', details: err.message });
   }
 });
 
@@ -212,58 +287,61 @@ router.get('/subject-folders', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    // Get all Google Drive folders
-    const googleDriveService = new GoogleDriveService(
-      JSON.parse(process.env.GDRIVE_CREDENTIALS),
-      process.env.GDRIVE_BASE_FOLDER_ID
-    );
-    
-    const listFoldersRecursive = async (folderId) => {
-      const subfoldersRes = await googleDriveService.drive.files.list({
-        q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-        fields: 'files(id, name, parents)',
-      });
-      const subfolders = subfoldersRes.data.files || [];
-      let allFolders = subfolders.map(f => ({ id: f.id, name: f.name, parent: f.parents?.[0] || null }));
-      for (const subfolder of subfolders) {
-        const childFolders = await listFoldersRecursive(subfolder.id);
-        allFolders = allFolders.concat(childFolders);
+    // Get all top-level folders from MongoDB
+    const subjectFolders = await Folder.find({ parent: null }).lean();
+    // Helper function to transform folder and its children recursively
+    const transformFolderWithChildren = (folder) => {
+      // Transform the current folder
+      const transformed = {
+        gdriveId: folder.gdriveId,
+        id: folder.gdriveId, // For backward compatibility
+        _id: folder._id,
+        name: folder.name,
+        parent: null,
+        // Include metadata directly
+        departments: folder.departments || [],
+        years: folder.years || [],
+        semesters: folder.semesters || [],
+        description: folder.description || '',
+        tags: folder.tags || [],
+        accessControlTags: folder.accessControlTags || [],
+        // Include children count
+        childrenCount: folder.children ? folder.children.length : 0,
+        // Include metadata as a separate property for backward compatibility
+        metadata: {
+          _id: folder._id,
+          departments: folder.departments || [],
+          years: folder.years || [],
+          semesters: folder.semesters || [],
+          description: folder.description || '',
+          tags: folder.tags || [],
+          accessControlTags: folder.accessControlTags || []
+        }
+      };
+      
+      // Transform children recursively if they exist
+      if (folder.children && folder.children.length > 0) {
+        // console.log(`Folder ${folder.name} has ${folder.children.length} children`);
+        transformed.children = folder.children.map(child => {
+          return transformFolderWithChildren({
+            ...child,
+            _id: child._id || folder._id, // Use parent _id if child doesn't have one
+            gdriveId: child.gdriveId,
+            parent: folder.gdriveId
+          });
+        });
+      } else {
+        transformed.children = [];
       }
-      return allFolders;
+      
+      // console.log(`Transformed folder ${transformed.name} has ${transformed.children ? transformed.children.length : 0} children`);
+      return transformed;
     };
     
-    const rootId = process.env.GDRIVE_BASE_FOLDER_ID;
-    const allFolders = await listFoldersRecursive(rootId);
+    // Transform the data to match the expected format for the admin panel
+    const transformedFolders = subjectFolders.map(folder => transformFolderWithChildren(folder));
     
-    // Filter to get only direct children of root (subject folders)
-    const subjectFolders = allFolders.filter(folder => folder.parent === rootId);
-    
-    // Get MongoDB metadata for all folders
-    const mongoFolders = await Folder.find().lean();
-    const metadataMap = new Map();
-    mongoFolders.forEach(folder => {
-      if (folder.gdriveId) {
-        metadataMap.set(folder.gdriveId, folder);
-      }
-    });
-    
-    // Enrich subject folders with metadata
-    const enrichedSubjectFolders = subjectFolders.map(folder => {
-      const metadata = metadataMap.get(folder.id);
-      return {
-        ...folder,
-        metadata: metadata || null,
-        // Include computed properties for easier frontend handling
-        departments: metadata?.departments || [],
-        years: metadata?.years || [],
-        semesters: metadata?.semesters || [],
-        description: metadata?.description || '',
-        tags: metadata?.tags || [],
-        accessControlTags: metadata?.accessControlTags || []
-      };
-    });
-    
-    res.json(enrichedSubjectFolders);
+    res.json(transformedFolders);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch subject folders', details: err.message });
   }
@@ -349,84 +427,60 @@ router.put('/:id', authenticate, async (req, res) => {
     // Try to update by MongoDB _id first (if valid ObjectId)
     let folder = null;
     if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
-      folder = await Folder.findByIdAndUpdate(
-        req.params.id,
-        { $set: update },
-        { new: true }
-      );
+      folder = await Folder.findById(req.params.id);
+    } else {
+      // If not found by _id, try to find by Google Drive folder id (gdriveId)
+      folder = await Folder.findOne({ gdriveId: req.params.id });
     }
 
-    // If not found, try to find by Google Drive folder id (gdriveId), or create new
     if (!folder) {
-      folder = await Folder.findOneAndUpdate(
-        { gdriveId: req.params.id },
-        { $set: { ...update, gdriveId: req.params.id, name: name || 'Google Drive Folder', createdBy: req.user._id } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-    }
-    if (!folder) return res.status(404).json({ error: 'Folder not found or could not be created' });
-
-    // If this is a subject folder (direct child of root), apply inheritance to subfolders
-    if (folder.gdriveId && req.user.role === 'admin') {
-      try {
-        // Get all Google Drive folders to find subfolders
-        const googleDriveService = new GoogleDriveService(
-          JSON.parse(process.env.GDRIVE_CREDENTIALS),
-          process.env.GDRIVE_BASE_FOLDER_ID
-        );
-        
-        const listSubfoldersRecursive = async (parentId) => {
-          const subfoldersRes = await googleDriveService.drive.files.list({
-            q: `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-            fields: 'files(id, name, parents)',
-          });
-          const subfolders = subfoldersRes.data.files || [];
-          let allSubfolders = subfolders.map(f => ({ id: f.id, name: f.name, parent: f.parents?.[0] || null }));
-          for (const subfolder of subfolders) {
-            const childFolders = await listSubfoldersRecursive(subfolder.id);
-            allSubfolders = allSubfolders.concat(childFolders);
-          }
-          return allSubfolders;
-        };
-        
-        // Get all subfolders of this folder
-        const subfolders = await listSubfoldersRecursive(folder.gdriveId);
-        
-        // Apply inheritance to subfolders that don't have explicit metadata
-        for (const subfolder of subfolders) {
-          const existingSubfolderMetadata = await Folder.findOne({ gdriveId: subfolder.id });
-          
-          // Only inherit if subfolder doesn't have explicit metadata or has default values
-          if (!existingSubfolderMetadata || 
-              (existingSubfolderMetadata.departments?.length === 0 && 
-               existingSubfolderMetadata.years?.length === 0 && 
-               existingSubfolderMetadata.semesters?.length === 0)) {
-            
-            const inheritedMetadata = {
-              gdriveId: subfolder.id,
-              name: subfolder.name,
-              description: folder.description || subfolder.name.toLowerCase(),
-              departments: folder.departments || [],
-              years: folder.years || [],
-              semesters: folder.semesters || [],
-              tags: folder.tags ? [...folder.tags, subfolder.name.toLowerCase()] : [subfolder.name.toLowerCase()],
-              accessControlTags: folder.accessControlTags || [],
-              createdBy: req.user._id
+      // Create new folder if not found
+      folder = new Folder({
+        gdriveId: req.params.id,
+        name: name || 'Google Drive Folder',
+        createdBy: req.user._id,
+        ...update
+      });
+      await folder.save();
+    } else {
+      // Update existing folder
+      Object.assign(folder, update);
+      
+      // If this is a subject folder (direct child of root), apply inheritance to children
+      if (folder.children && folder.children.length > 0 && req.user.role === 'admin') {
+        // Apply inheritance to all children recursively
+        const applyInheritanceToChildren = (children) => {
+          return children.map(child => {
+            // Only inherit fields if they're not explicitly set on the child
+            const updatedChild = {
+              ...child,
+              // Only update these fields if they're not already set on the child
+              description: child.description || description,
+              departments: child.departments?.length > 0 ? child.departments : departments,
+              years: child.years?.length > 0 ? child.years : years,
+              semesters: child.semesters?.length > 0 ? child.semesters : semesters,
+              tags: child.tags?.length > 0 ? child.tags : (tags ? [...tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
+              accessControlTags: child.accessControlTags?.length > 0 ? child.accessControlTags : accessControlTags
             };
             
-            await Folder.findOneAndUpdate(
-              { gdriveId: subfolder.id },
-              { $set: inheritedMetadata },
-              { new: true, upsert: true, setDefaultsOnInsert: true }
-            );
-          }
-        }
-      } catch (inheritanceError) {
-        console.error('Error applying metadata inheritance:', inheritanceError);
-        // Don't fail the main update if inheritance fails
+            // Recursively apply to nested children
+            if (child.children && child.children.length > 0) {
+              updatedChild.children = applyInheritanceToChildren(child.children);
+            }
+            
+            return updatedChild;
+          });
+        };
+        
+        // Apply inheritance to all children
+        folder.children = applyInheritanceToChildren(folder.children);
       }
+      
+      await folder.save();
     }
-
+    
+    if (!folder) return res.status(404).json({ error: 'Folder not found or could not be created' });
+    
     res.json(folder);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update folder', details: err.message });

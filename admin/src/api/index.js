@@ -14,6 +14,7 @@ const api = axios.create({
 export const folderAPI = {
   getAllFolders: () => api.get('/folders'),
   getSubjectFolders: () => api.get('/folders/subject-folders'),
+  getGDriveFolders: () => api.get('/folders/gdrive'),
   getPdfsInFolder: (folderId) => api.get(`/folders/${folderId}/pdfs`),
   updateFolder: (folderId, data) => api.put(`/folders/${folderId}`, data),
 };

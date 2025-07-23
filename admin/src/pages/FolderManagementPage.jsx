@@ -249,7 +249,7 @@ export default function FolderManagementPage() {
             {folder.accessControlTags?.length > 0 && (
               <div><span className="font-semibold">Access Tags:</span> {folder.accessControlTags.join(', ')}</div>
             )}
-            <div className="text-xs text-gray-400 mt-2">
+            <div className="text-xs text-yellow-400 mt-2">
               <em>Note: This metadata will be inherited by all subfolders unless explicitly changed.</em>
             </div>
           </div>

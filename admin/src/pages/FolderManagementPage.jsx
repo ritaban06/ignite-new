@@ -192,7 +192,7 @@ export default function FolderManagementPage() {
       <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6 mb-6">
         <div className="mb-4">
           <h2 className="text-xl font-bold text-white mb-2">Subject Folders</h2>
-          <p className="text-gray-400 text-sm">These are the main subject folders. Subfolders inherit metadata from their parent unless explicitly changed.</p>
+          <p className="text-yellow-400 text-sm">These are the main subject folders. Subfolders inherit metadata from their parent unless explicitly changed.</p>
         </div>
         {loading ? (
           <div className="p-8 text-center">

@@ -1,7 +1,7 @@
 {
   "name": "ignite-workspace",
   "private": true,
-  "description": "Secure PDF study material platform with MERN stack",
+  "description": "Secure PDF study material platform for Samarth TMSL",
   "license": "MIT",
   "workspaces": [
     "admin",

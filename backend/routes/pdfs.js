@@ -40,7 +40,8 @@ const upload = multer({
 router.get('/', [
   authenticate,
   query('departments').optional().isArray(),
-  query('year').optional().isInt({ min: 1, max: 4 }),
+  query('years').optional().isArray(),
+  query('semesters').optional().isArray(),
   query('subject').optional().trim(),
   query('search').optional().trim(),
   query('tags').optional().isArray(),
@@ -58,7 +59,8 @@ router.get('/', [
 
     const { 
       departments, 
-      year, 
+      years, 
+      semesters, 
       subject, 
       search, 
       tags, 
@@ -69,12 +71,14 @@ router.get('/', [
     // Build filters
     const filters = {};
     if (req.user.role === 'admin') {
-      // Admin: ignore departments/year filters unless explicitly set
+      // Admin: ignore departments/years/semesters filters unless explicitly set
       if (departments && Array.isArray(departments) && departments.length > 0) filters.departments = { $in: departments };
-      if (year) filters.year = parseInt(year);
+      if (years && Array.isArray(years) && years.length > 0) filters.years = { $in: years.map(y => parseInt(y)) };
+      if (semesters && Array.isArray(semesters) && semesters.length > 0) filters.semesters = { $in: semesters.map(s => parseInt(s)) };
     } else {
       if (departments && Array.isArray(departments) && departments.length > 0) filters.departments = { $in: departments };
-      if (year) filters.year = parseInt(year);
+      if (years && Array.isArray(years) && years.length > 0) filters.years = { $in: years.map(y => parseInt(y)) };
+      if (semesters && Array.isArray(semesters) && semesters.length > 0) filters.semesters = { $in: semesters.map(s => parseInt(s)) };
     }
     if (subject) filters.subject = subject;
     if (search) filters.search = search;
@@ -513,198 +517,8 @@ router.get('/proxy/:fileId', [
   }
 });
 
-// Proxy route to serve PDFs with proper CORS headers
-router.get('/proxy/:fileId', [
-  pdfSecurityHeaders,
-  disablePdfCaching,
-  async (req, res, next) => {
-    // Token validation (JWT in query)
-    const token = req.query.token;
-    if (!token) {
-      return res.status(401).json({ error: 'Token required' });
-    }
-    try {
-      const jwt = require('jsonwebtoken');
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.fileId !== req.params.fileId) {
-        return res.status(403).json({ error: 'Invalid token for this file' });
-      }
-      req.user = decoded; // Attach user info if needed
-      next();
-    } catch (err) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
-    }
-  }
-], async (req, res) => {
-  try {
-    // Set CORS headers early
-    res.set({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Cache-Control',
-    });
-    const fileKey = decodeURIComponent(req.params.fileKey);
-    const userId = req.query.userId || req.user._id;
-    // Find the PDF in database to validate access
-    const pdf = await PDF.findOne({ cloudflareKey: fileKey });
-
-    if (!pdf) {
-      return res.status(404).json({ error: 'PDF not found' });
-    }
-
-    // Check if user can access this PDF
-    console.log('PDF Access Check:', {
-      pdfId: pdf._id,
-      pdfDepartment: pdf.department,
-      pdfYear: pdf.year,
-      pdfActive: pdf.isActive,
-      userId: req.user._id,
-      userRole: req.user.role,
-      userDepartment: req.user.department,
-      userYear: req.user.year
-    });
-
-    if (!pdf.canUserAccess(req.user)) {
-      console.log('Access denied for user:', {
-        reason: 'canUserAccess returned false',
-        userRole: req.user.role,
-        userDept: req.user.department,
-        userYear: req.user.year,
-        pdfDept: pdf.department,
-        pdfYear: pdf.year,
-        pdfActive: pdf.isActive
-      });
-      return res.status(403).json({ 
-        error: 'You do not have access to this PDF' 
-      });
-    }
-
-    console.log('Access granted for PDF:', pdf.title);
-
-    // Use the R2 service to get PDF stream or signed URL
-    const pdfResult = await googleDriveService.getPdfStream(pdf.cloudflareKey);
-
-    if (!pdfResult.success) {
-      console.error('Failed to get PDF from R2:', pdfResult.error);
-      return res.status(500).json({ error: 'Failed to retrieve PDF file' });
-    }
-
-    // If R2 service returned a signed URL due to SSL issues, fetch and proxy the content
-    if (pdfResult.useSignedUrl) {
-      console.log('Using signed URL fallback due to SSL issues, fetching content to proxy');
-      
-      try {
-        // Fetch the PDF content from the signed URL and proxy it using https module
-        const https = require('https');
-        const url = require('url');
-        
-        const signedUrlObj = new url.URL(pdfResult.signedUrl);
-        
-        const options = {
-          hostname: signedUrlObj.hostname,
-          port: signedUrlObj.port || 443,
-          path: signedUrlObj.pathname + signedUrlObj.search,
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Ignite-PDF-Proxy/1.0'
-          }
-        };
-        
-        // Set proper headers for PDF viewing (inline display)
-        res.set({
-          'Content-Type': 'application/pdf',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET',
-          'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-          'Cache-Control': 'private, no-cache',
-          'Content-Disposition': 'inline', // This ensures inline viewing, not download
-          'X-Content-Type-Options': 'nosniff'
-        });
-        
-        const req = https.request(options, (response) => {
-          if (response.statusCode !== 200) {
-            console.error('Signed URL fetch failed:', response.statusCode, response.statusMessage);
-            if (!res.headersSent) {
-              return res.status(500).json({ error: 'Failed to fetch PDF from signed URL' });
-            }
-            return;
-          }
-          
-          // Set content length if available
-          if (response.headers['content-length']) {
-            res.set('Content-Length', response.headers['content-length']);
-          }
-          
-          // Pipe the response directly to our response
-          response.pipe(res);
-        });
-        
-        req.on('error', (error) => {
-          console.error('HTTPS request error:', error);
-          if (!res.headersSent) {
-            res.status(500).json({ error: 'Error fetching PDF from signed URL' });
-          }
-        });
-        
-        req.end();
-        
-      } catch (fetchError) {
-        console.error('Failed to fetch from signed URL:', fetchError);
-        return res.status(500).json({ error: 'Failed to fetch PDF content' });
-      }
-    } else {
-      // Direct streaming from R2
-      // Set proper headers for PDF streaming (inline display)
-      res.set({
-        'Content-Type': pdfResult.contentType || 'application/pdf',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET',
-        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
-        'Content-Disposition': 'inline; filename="secured.pdf"', // Force inline viewing
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-Download-Options': 'noopen',
-        'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
-      });
-      
-      if (pdfResult.contentLength) {
-        res.set('Content-Length', pdfResult.contentLength);
-      }
-      // Stream the PDF to the client
-      pdfResult.stream.pipe(res);
-      
-      // Handle stream errors
-      pdfResult.stream.on('error', (streamError) => {
-        console.error('Direct stream error:', streamError);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Error streaming PDF' });
-        }
-      });
-    }
-
-    // Log access
-    try {
-      await AccessLog.logAccess({
-        userId: req.user._id,
-        pdfId: pdf._id,
-        action: 'view', // Use 'view' instead of 'proxy_view' to match enum
-        ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
-        deviceId: req.deviceId
-      });
-    } catch (logError) {
-      console.error('Failed to log access:', logError);
-      // Don't fail the response for logging errors
-    }
-
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to serve PDF', message: error.message });
-  }
-});
-
 // Handle CORS preflight requests for PDF proxy
-router.options('/proxy/:fileKey', (req, res) => {
+router.options('/proxy/:fileId', (req, res) => {
   res.set({
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -960,17 +774,22 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     }
     // Recursively list all PDFs in the base folder and subfolders
     const allFiles = await googleDriveService.listFilesRecursive();
-    let cached = 0;
-    for (const file of allFiles) {
-      // Only create new PDFs if they don't exist
-      const existingPdf = await PDF.findOne({ googleDriveFileId: file.id });
-      if (existingPdf) continue; // Skip existing PDFs
-      // Fetch parent folder ID from Google Drive
-      let googleDriveFolderId = null;
-      if (file.parents && file.parents.length > 0) {
-        googleDriveFolderId = file.parents[0];
+    const allDriveIds = new Set(allFiles.map(f => f.id));
+    let added = 0, updated = 0, removed = 0;
+
+    // Find all PDFs in DB that have a googleDriveFileId
+    const dbPdfs = await PDF.find({ googleDriveFileId: { $exists: true } });
+    // Remove PDFs that no longer exist in Drive
+    for (const pdf of dbPdfs) {
+      if (!allDriveIds.has(pdf.googleDriveFileId)) {
+        await PDF.deleteOne({ _id: pdf._id });
+        removed++;
       }
-      // Fetch full metadata from Google Drive
+    }
+
+    // Add or update PDFs from Drive
+    for (const file of allFiles) {
+      let googleDriveFolderId = file.parents && file.parents.length > 0 ? file.parents[0] : null;
       let uploadedByName = null;
       let uploadedAt = null;
       if (file.id) {
@@ -980,30 +799,52 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           uploadedAt = fullMeta.createdTime ? new Date(fullMeta.createdTime) : null;
         }
       }
-      // Create new PDF record
-      await PDF.create({
-        title: file.name,
-        fileName: file.name,
-        originalName: file.name,
-        fileSize: file.size ? parseInt(file.size) : 0,
-        mimeType: 'application/pdf',
-        departments: ['IT'], // Use a valid department array
-        year: null, // null to indicate unknown year
-        subject: 'Unknown',
-        tags: [],
-        uploadedBy: req.user._id, // Admin user
-        isActive: true,
-        googleDriveFileId: file.id,
-        googleDriveFolderId,
-        uploadedByName,
-        uploadedAt,
-      });
-      cached++;
+      const existingPdf = await PDF.findOne({ googleDriveFileId: file.id });
+      if (!existingPdf) {
+        await PDF.create({
+          title: file.name,
+          fileName: file.name,
+          originalName: file.name,
+          fileSize: file.size ? parseInt(file.size) : 0,
+          mimeType: 'application/pdf',
+          departments: ['IT'], // Use a valid department array
+          year: null, // null to indicate unknown year
+          subject: 'Unknown',
+          tags: [],
+          uploadedBy: req.user._id, // Admin user
+          isActive: true,
+          googleDriveFileId: file.id,
+          googleDriveFolderId,
+          uploadedByName,
+          uploadedAt,
+        });
+        added++;
+      } else {
+        // Update metadata if changed
+        let needsUpdate = false;
+        if (existingPdf.title !== file.name) { existingPdf.title = file.name; needsUpdate = true; }
+        if (existingPdf.fileName !== file.name) { existingPdf.fileName = file.name; needsUpdate = true; }
+        if (existingPdf.originalName !== file.name) { existingPdf.originalName = file.name; needsUpdate = true; }
+        if (existingPdf.fileSize !== (file.size ? parseInt(file.size) : 0)) { existingPdf.fileSize = file.size ? parseInt(file.size) : 0; needsUpdate = true; }
+        if (existingPdf.googleDriveFolderId !== googleDriveFolderId) { existingPdf.googleDriveFolderId = googleDriveFolderId; needsUpdate = true; }
+        if (existingPdf.uploadedByName !== uploadedByName) { existingPdf.uploadedByName = uploadedByName; needsUpdate = true; }
+        if (existingPdf.uploadedAt?.toISOString() !== uploadedAt?.toISOString()) { existingPdf.uploadedAt = uploadedAt; needsUpdate = true; }
+        if (needsUpdate) {
+          await existingPdf.save();
+          updated++;
+        }
+      }
     }
-    res.json({ message: 'Cache complete', total: allFiles.length, cached });
+    res.json({ 
+      message: `Sync complete: ${added} added, ${updated} updated, ${removed} removed. Total scanned: ${allFiles.length}.`,
+      total: allFiles.length, 
+      added, 
+      updated, 
+      removed 
+    });
   } catch (error) {
-    console.error('Cache PDFs from Google Drive error:', error);
-    res.status(500).json({ error: 'Failed to cache PDFs', message: error.message });
+    console.error('Sync PDFs from Google Drive error:', error);
+    res.status(500).json({ error: 'Failed to sync PDFs', message: error.message });
   }
 });
 

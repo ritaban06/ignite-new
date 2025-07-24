@@ -63,7 +63,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       
       // Clean up blob URL
       if (pdfUrl && pdfUrl.startsWith('blob:')) {
-        console.log('Cleaning up blob URL on modal close:', pdfUrl);
+        // console.log('Cleaning up blob URL on modal close:', pdfUrl);
         URL.revokeObjectURL(pdfUrl);
         setPdfUrl(null);
       }
@@ -82,7 +82,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     return () => {
       // Cleanup: revoke object URL if it exists
       if (currentUrl && currentUrl.startsWith('blob:')) {
-        console.log('Cleaning up blob URL:', currentUrl);
+        // console.log('Cleaning up blob URL:', currentUrl);
         URL.revokeObjectURL(currentUrl);
       }
     };
@@ -100,7 +100,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   useEffect(() => {
     return () => {
       if (pdfUrl && pdfUrl.startsWith('blob:')) {
-        console.log('Cleaning up blob URL on unmount:', pdfUrl);
+        // console.log('Cleaning up blob URL on unmount:', pdfUrl);
         URL.revokeObjectURL(pdfUrl);
       }
     };

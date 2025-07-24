@@ -53,27 +53,33 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
 
       {/* Metadata Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
-        <div className="flex items-center space-x-2 text-white/70">
-          <Tag className="h-4 w-4 flex-shrink-0" />
-          <span>{Array.isArray(pdf.departments) ? pdf.departments.join(', ') : pdf.department}</span>
-        </div>
+        {(pdf.departments || pdf.department) && (
+          <div className="flex items-center space-x-2 text-white/70">
+            <Tag className="h-4 w-4 flex-shrink-0" />
+            <span>{Array.isArray(pdf.departments) ? pdf.departments.join(', ') : (pdf.department || 'N/A')}</span>
+          </div>
+        )}
 
-        <div className="flex items-center space-x-2 text-white/70">
-          <Calendar className="h-4 w-4 flex-shrink-0" />
-          <span>Year {pdf.year}</span>
-        </div>
+        {pdf.year && (
+          <div className="flex items-center space-x-2 text-white/70">
+            <Calendar className="h-4 w-4 flex-shrink-0" />
+            <span>Year {pdf.year}</span>
+          </div>
+        )}
 
         <div className="flex items-center space-x-2 text-white/70">
           <User className="h-4 w-4 flex-shrink-0" />
           <span className="truncate">
-            {pdf.uploadedByName || <span className="italic text-white/60">System Admin</span>}
+            {pdf.uploadedByName || pdf.uploadedBy?.name || <span className="italic text-white/60">Unknown</span>}
           </span>
         </div>
 
-        <div className="flex items-center space-x-2 text-white/70">
-          <Clock className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate"> {formatDate(pdf.uploadedAt)}</span>
-        </div>
+        {(pdf.uploadedAt || pdf.createdAt) && (
+          <div className="flex items-center space-x-2 text-white/70">
+            <Clock className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{formatDate(pdf.uploadedAt || pdf.createdAt)}</span>
+          </div>
+        )}
       </div>
 
         {/* Tags */}

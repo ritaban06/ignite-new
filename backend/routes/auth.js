@@ -251,6 +251,7 @@ router.post('/login', [
         name: user.name,
         department: user.department,
         year: user.year,
+        semester: user.semester,
         role: user.role,
         picture: user.picture,
         lastLogin: user.lastLogin
@@ -329,6 +330,7 @@ router.get('/me', async (req, res) => {
         name: user.name,
         department: user.department,
         year: user.year,
+        semester: user.semester,
         role: user.role,
         picture: user.picture,
         lastLogin: user.lastLogin
@@ -623,7 +625,8 @@ router.post('/google-verify', [
       email,
       name: approvalResult.userData.name || name, // Prefer name from approved list
       department: approvalResult.userData.department,
-      year: parseInt(approvalResult.userData.year),
+      year: parseInt(approvalResult.userData.year) || 0, // Default to 0 if invalid
+      semester: parseInt(approvalResult.userData.semester) || 0, // Default to 0 if invalid
       googleId,
       picture,
       loginMethod: 'google',
@@ -702,6 +705,7 @@ router.post('/google-verify', [
         name: user.name,
         department: user.department,
         year: user.year,
+        semester: user.semester,
         picture: user.picture,
         role: user.role,
         loginMethod: user.loginMethod

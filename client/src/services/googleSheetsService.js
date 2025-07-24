@@ -97,14 +97,15 @@ class GoogleSheetsService {
       'Team UID': 'teamUid',
       'Team Role': 'teamRole',
       'Year': 'year',
-      'Department': 'department'
+      'Department': 'department',
+      'Semester': 'semester'
     };
     
     // Map headers to normalized field names
     const headers = rawHeaders.map(header => headerMapping[header] || header.toLowerCase());
     
     // Validate required headers (using normalized names)
-    const requiredHeaders = ['email', 'name', 'year', 'department'];
+    const requiredHeaders = ['email', 'name', 'year', 'department', 'semester'];
     const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
     
     if (missingHeaders.length > 0) {
@@ -133,7 +134,8 @@ class GoogleSheetsService {
           name: user.name,
           year: user.year,
           department: user.department,
-          
+          semester: user.semester,
+
           // Additional fields from new header format
           registrationId: user.registrationId,
           eventName: user.eventName,

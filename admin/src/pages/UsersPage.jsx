@@ -8,7 +8,9 @@ import {
   Shield,
   Calendar,
   Mail,
-  MoreVertical
+  MoreVertical,
+  Tags,
+  X
 } from 'lucide-react';
 import { userAPI } from '../api';
 import toast from 'react-hot-toast';
@@ -20,6 +22,9 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [editForm, setEditForm] = useState({ accessTags: '' });
 
   useEffect(() => {
     fetchUsers();
@@ -75,6 +80,33 @@ export default function UsersPage() {
     } catch (error) {
       console.error('Delete error:', error);
       toast.error('Failed to delete user');
+    }
+  };
+
+  const handleEditAccessTags = (user) => {
+    setSelectedUser(user);
+    setEditForm({
+      accessTags: Array.isArray(user.accessTags) ? user.accessTags.join(', ') : ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateAccessTags = async (e) => {
+    e.preventDefault();
+    try {
+      const accessTags = editForm.accessTags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag);
+      
+      await userAPI.updateUser(selectedUser._id, { accessTags });
+      toast.success('Access tags updated successfully');
+      setShowEditModal(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Update access tags error:', error);
+      toast.error('Failed to update access tags');
     }
   };
 
@@ -164,6 +196,9 @@ export default function UsersPage() {
                     Department
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Access Tags
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Joined
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
@@ -211,6 +246,22 @@ export default function UsersPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {user.department || 'N/A'}
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {user.accessTags && user.accessTags.length > 0 ? (
+                          user.accessTags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-900 bg-opacity-40 text-blue-300 border border-blue-700"
+                            >
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-400 text-xs">No tags</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-white">
                         <Calendar className="h-4 w-4 mr-1" />
@@ -219,6 +270,13 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => handleEditAccessTags(user)}
+                          className="text-blue-400 hover:text-blue-300"
+                          title="Edit Access Tags"
+                        >
+                          <Tags className="h-4 w-4" />
+                        </button>
                         {/* <button
                           onClick={() => handleRoleToggle(user._id, user.role)}
                           className="text-primary-600 hover:text-primary-900"
@@ -269,6 +327,56 @@ export default function UsersPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Access Tags Modal */}
+      {showEditModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <h2 className="text-xl font-bold text-white">Edit Access Tags</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateAccessTags} className="p-6">
+              <div className="mb-4">
+                <label className="block text-gray-300 mb-2">
+                  User: <span className="font-semibold text-white">{selectedUser.name}</span>
+                </label>
+                <label className="block text-gray-300 mb-2">Access Tags</label>
+                <input
+                  type="text"
+                  value={editForm.accessTags}
+                  onChange={(e) => setEditForm({ accessTags: e.target.value })}
+                  className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Enter tags separated by commas (e.g., honors-students, research-group)"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  These tags control access to folders with access control restrictions
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700"
+                >
+                  Update Tags
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

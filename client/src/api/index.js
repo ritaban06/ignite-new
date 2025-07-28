@@ -33,12 +33,9 @@ api.interceptors.response.use(
     //   return Promise.resolve({ data: {} });
     // }
     if (error.response?.status === 401) {
-      // Check if this is a device switch error
-      if (error.response?.data?.code === 'DEVICE_SWITCHED') {
-        // Show specific message for device switch
-        console.log('Session terminated due to device switch:', error.response.data.error);
-        // Don't show a toast here as it might be confusing - let the login page handle it
-      }
+      // Handle authentication errors
+      console.log('Authentication error:', error.response.data.error);
+      // Don't show a toast here as it might be confusing - let the login page handle it
       
       // Clear auth data and redirect to login
       localStorage.removeItem('authToken');

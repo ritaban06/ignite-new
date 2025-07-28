@@ -64,7 +64,7 @@ const userSchema = new mongoose.Schema({
   },
   deviceId: {
     type: String,
-    default: null // For single device restriction
+    default: null // Tracks most recent device for reference
   },
   loginAttempts: {
     type: Number,
@@ -87,7 +87,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['traditional', 'google'],
     default: 'traditional'
-  }
+  },
+  // Access control tags for fine-grained folder permissions
+  accessTags: [{
+    type: String,
+    trim: true,
+    maxlength: [50, 'Access tag cannot exceed 50 characters']
+  }]
 }, {
   timestamps: true
 });

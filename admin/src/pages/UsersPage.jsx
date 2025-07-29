@@ -10,9 +10,10 @@ import {
   Mail,
   MoreVertical,
   Tags,
-  X
+  X,
+  Check
 } from 'lucide-react';
-import { userAPI } from '../api';
+import { userAPI, accessTagAPI } from '../api';
 import toast from 'react-hot-toast';
 
 export default function UsersPage() {
@@ -24,6 +25,8 @@ export default function UsersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [editForm, setEditForm] = useState({ accessTags: '' });
 
   useEffect(() => {
@@ -83,31 +86,61 @@ export default function UsersPage() {
     }
   };
 
-  const handleEditAccessTags = (user) => {
+  const handleEditAccessTags = async (user) => {
     setSelectedUser(user);
+    setSelectedTags(user.accessTags || []);
     setEditForm({
       accessTags: Array.isArray(user.accessTags) ? user.accessTags.join(', ') : ''
     });
+    
+    // Fetch available tags
+    try {
+      const response = await accessTagAPI.getAvailableTags();
+      setAvailableTags(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch available tags:', error);
+      toast.error('Failed to load available tags');
+      setAvailableTags([]);
+    }
+    
     setShowEditModal(true);
   };
 
   const handleUpdateAccessTags = async (e) => {
     e.preventDefault();
     try {
-      const accessTags = editForm.accessTags
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag);
-      
-      await userAPI.updateUser(selectedUser._id, { accessTags });
+      await userAPI.updateUser(selectedUser._id, { accessTags: selectedTags });
       toast.success('Access tags updated successfully');
       setShowEditModal(false);
       setSelectedUser(null);
+      setSelectedTags([]);
       fetchUsers();
     } catch (error) {
       console.error('Update access tags error:', error);
       toast.error('Failed to update access tags');
     }
+  };
+
+  const toggleTagSelection = (tagName) => {
+    setSelectedTags(prev => 
+      prev.includes(tagName)
+        ? prev.filter(tag => tag !== tagName)
+        : [...prev, tagName]
+    );
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      'academic': '#10B981',
+      'department': '#F59E0B', 
+      'special-group': '#8B5CF6',
+      'course': '#06B6D4',
+      'project': '#EF4444',
+      'research': '#84CC16',
+      'temporary': '#F97316',
+      'other': '#6B7280'
+    };
+    return colors[category] || colors.other;
   };
 
   const formatDate = (dateString) => {
@@ -346,15 +379,78 @@ export default function UsersPage() {
                 <label className="block text-gray-300 mb-2">
                   User: <span className="font-semibold text-white">{selectedUser.name}</span>
                 </label>
-                <label className="block text-gray-300 mb-2">Access Tags</label>
-                <input
-                  type="text"
-                  value={editForm.accessTags}
-                  onChange={(e) => setEditForm({ accessTags: e.target.value })}
-                  className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="Enter tags separated by commas (e.g., honors-students, research-group)"
-                />
-                <p className="text-xs text-gray-400 mt-1">
+                <label className="block text-gray-300 mb-3">Select Access Tags</label>
+                
+                {/* Selected Tags Display */}
+                {selectedTags.length > 0 && (
+                  <div className="mb-4 p-3 bg-gray-700 rounded-lg">
+                    <div className="text-sm text-gray-300 mb-2">Selected Tags:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTags.map(tagName => {
+                        const tag = availableTags.find(t => t.name === tagName);
+                        return (
+                          <span
+                            key={tagName}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white border"
+                            style={{ 
+                              backgroundColor: tag?.color + '40' || '#3B82F640',
+                              borderColor: tag?.color || '#3B82F6'
+                            }}
+                          >
+                            {tagName}
+                            <button
+                              type="button"
+                              onClick={() => toggleTagSelection(tagName)}
+                              className="ml-1 text-white hover:text-red-300"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Available Tags */}
+                <div className="max-h-64 overflow-y-auto border border-gray-600 rounded-lg">
+                  {availableTags.length === 0 ? (
+                    <div className="p-4 text-center text-gray-400">
+                      No predefined tags available. Create tags in Access Tags Management.
+                    </div>
+                  ) : (
+                    <div className="p-2">
+                      {availableTags.map(tag => (
+                        <div
+                          key={tag._id}
+                          className={`flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-600 ${
+                            selectedTags.includes(tag.name) ? 'bg-gray-600' : ''
+                          }`}
+                          onClick={() => toggleTagSelection(tag.name)}
+                        >
+                          <div className="flex items-center flex-1">
+                            <div
+                              className="w-3 h-3 rounded-full mr-3"
+                              style={{ backgroundColor: tag.color }}
+                            />
+                            <div className="flex-1">
+                              <div className="text-white text-sm font-medium">{tag.name}</div>
+                              {tag.description && (
+                                <div className="text-gray-400 text-xs">{tag.description}</div>
+                              )}
+                              <div className="text-gray-500 text-xs capitalize">{tag.category.replace('-', ' ')}</div>
+                            </div>
+                          </div>
+                          {selectedTags.includes(tag.name) && (
+                            <Check className="h-4 w-4 text-green-400" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <p className="text-xs text-gray-400 mt-2">
                   These tags control access to folders with access control restrictions
                 </p>
               </div>

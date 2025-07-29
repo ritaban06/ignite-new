@@ -75,4 +75,16 @@ export const userAPI = {
   getSheetsStatus: () => api.get('/admin/sheets-status'),
 };
 
+export const accessTagAPI = {
+  getAllTags: (params) => api.get('/access-tags', { params }),
+  getTagStats: () => api.get('/access-tags/stats'),
+  getAvailableTags: (params) => api.get('/access-tags/available', { params }),
+  getTagsByCategory: (category) => api.get(`/access-tags/category/${category}`),
+  getPopularTags: (limit) => api.get('/access-tags/popular', { params: { limit } }),
+  createTag: (data) => api.post('/access-tags', data),
+  updateTag: (id, data) => api.put(`/access-tags/${id}`, data),
+  deleteTag: (id) => api.delete(`/access-tags/${id}`),
+  bulkAction: (action, tagIds) => api.post('/access-tags/bulk', { action, tagIds }),
+};
+
 export default api;

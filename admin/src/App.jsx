@@ -15,6 +15,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import DebugPage from './pages/DebugPage';
 import Docs from './pages/Docs';
 import FolderManagementPage from './pages/FolderManagementPage';
+import AccessTagsPage from './pages/AccessTagsPage';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -45,6 +46,7 @@ function AppContent() {
             {/* <Route path="/pdfs" element={<PDFManagementPage />} /> */} {/* Removed for folder-based management */}
             <Route path="/folders" element={<FolderManagementPage />} />
             <Route path="/users" element={<UsersPage />} />
+            <Route path="/access-tags" element={<AccessTagsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/debug" element={<DebugPage />} />
             <Route path="/docs" element={<Docs />} />

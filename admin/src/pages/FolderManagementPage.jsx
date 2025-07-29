@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 const DEPARTMENTS = ['AIML', 'CSE', 'ECE', 'EEE', 'IT'];
 const YEARS = ['1', '2', '3', '4'];
 const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8'];
-import { Folder, FileText, Edit, Trash2, Plus, User, ChevronRight, ChevronDown } from 'lucide-react';
-import { folderAPI, pdfAPI } from '../api';
+import { Folder, FileText, Edit, Trash2, Plus, User, ChevronRight, ChevronDown, Check, X } from 'lucide-react';
+import { folderAPI, pdfAPI, accessTagAPI } from '../api';
 import { gdriveAPI } from '../api';
 import toast from 'react-hot-toast';
 
@@ -23,6 +23,8 @@ export default function FolderManagementPage() {
   const [pdfs, setPdfs] = useState([]);
   const [expandedFolders, setExpandedFolders] = useState(new Set());
   const [showAllFolders, setShowAllFolders] = useState(false);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedAccessTags, setSelectedAccessTags] = useState([]);
 
   useEffect(() => {
     fetchGDriveFolders();
@@ -330,6 +332,21 @@ export default function FolderManagementPage() {
         tags: Array.isArray(selectedFolder.tags) ? selectedFolder.tags.join(', ') : '',
         accessControlTags: Array.isArray(selectedFolder.accessControlTags) ? selectedFolder.accessControlTags.join(', ') : '',
       });
+      setSelectedAccessTags(Array.isArray(selectedFolder.accessControlTags) ? selectedFolder.accessControlTags : []);
+      
+      // Fetch available tags
+      const fetchAvailableTags = async () => {
+        try {
+          const response = await accessTagAPI.getAvailableTags();
+          setAvailableTags(response.data || []);
+        } catch (error) {
+          console.error('Failed to fetch available tags:', error);
+          toast.error('Failed to load available tags');
+          setAvailableTags([]);
+        }
+      };
+      
+      fetchAvailableTags();
     }
   }, [showEditModal, selectedFolder]);
 
@@ -365,7 +382,7 @@ export default function FolderManagementPage() {
       years: editForm.years.map(year => Number(year)),
       semesters: editForm.semesters.map(semester => Number(semester)),
       tags: editForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      accessControlTags: editForm.accessControlTags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      accessControlTags: selectedAccessTags,
     };
     try {
       // Use gdriveId instead of id for folder identification
@@ -373,11 +390,20 @@ export default function FolderManagementPage() {
       toast.success('Folder updated successfully! Metadata will be inherited by subfolders.');
       setShowEditModal(false);
       setSelectedFolder(null);
+      setSelectedAccessTags([]);
       fetchGDriveFolders();
     } catch (error) {
       console.error('Error updating folder:', error);
       toast.error('Failed to update folder');
     }
+  };
+
+  const toggleAccessTagSelection = (tagName) => {
+    setSelectedAccessTags(prev => 
+      prev.includes(tagName)
+        ? prev.filter(tag => tag !== tagName)
+        : [...prev, tagName]
+    );
   };
 
   return (
@@ -530,14 +556,53 @@ export default function FolderManagementPage() {
               </div>
               <div>
                 <label className="block text-gray-300 mb-1">Access Control Tags</label>
-                <input
-                  type="text"
-                  name="accessControlTags"
-                  value={editForm.accessControlTags}
-                  onChange={handleEditFolderChange}
-                  className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none"
-                  placeholder="Separate access control tags with commas"
-                />
+                <div className="space-y-2">
+                  {availableTags.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2 p-3 rounded bg-gray-700 border border-gray-600 max-h-40 overflow-y-auto">
+                      {availableTags.map(tag => (
+                        <div key={tag.name} className="flex items-center justify-between p-2 bg-gray-600 rounded">
+                          <div className="flex items-center flex-1">
+                            <span className="text-white text-sm">{tag.name}</span>
+                            {tag.description && (
+                              <span className="text-gray-400 text-xs ml-2">({tag.description})</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleAccessTagSelection(tag.name)}
+                            className={`ml-2 p-1 rounded ${
+                              selectedAccessTags.includes(tag.name)
+                                ? 'bg-green-600 text-white'
+                                : 'bg-gray-500 text-gray-300'
+                            }`}
+                          >
+                            {selectedAccessTags.includes(tag.name) ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-gray-700 border border-gray-600 rounded text-gray-400 text-sm">
+                      No access tags available. Create some access tags first.
+                    </div>
+                  )}
+                  {selectedAccessTags.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-300 mb-1">Selected tags:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedAccessTags.map(tagName => (
+                          <span key={tagName} className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                            {tagName}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <p className="text-xs text-gray-400 mt-1">These tags control who can access this folder</p>
               </div>
               <div className="flex justify-end gap-2 mt-4">

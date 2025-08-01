@@ -72,7 +72,7 @@ const AccessTagsPage = () => {
       if (searchTerm) params.append('search', searchTerm);
       params.append('sort', sortBy);
 
-      const response = await fetch(`/api/access-tags?${params}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/access-tags?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
@@ -91,7 +91,7 @@ const AccessTagsPage = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/access-tags/stats', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/access-tags/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
@@ -109,7 +109,7 @@ const AccessTagsPage = () => {
   const createTag = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/access-tags', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/access-tags`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ const AccessTagsPage = () => {
   const updateTag = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`/api/access-tags/${selectedTag._id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/access-tags/${selectedTag._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -164,7 +164,7 @@ const AccessTagsPage = () => {
     if (!confirm('Are you sure you want to delete this access tag?')) return;
     
     try {
-      const response = await fetch(`/api/access-tags/${tagId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/access-tags/${tagId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
@@ -194,7 +194,7 @@ const AccessTagsPage = () => {
     if (!confirm(`Are you sure you want to ${actionText} ${selectedTags.length} selected tag(s)?`)) return;
 
     try {
-      const response = await fetch('/api/access-tags/bulk', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/access-tags/bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

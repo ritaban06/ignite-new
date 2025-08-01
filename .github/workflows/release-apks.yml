@@ -12,6 +12,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Cache pnpm store
+      uses: actions/cache@v4
+      with:
+        path: ~/.pnpm-store
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('client/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
@@ -68,6 +76,17 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+
+    - name: Cache Android Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          client/android/.gradle
+        key: ${{ runner.os }}-gradle-${{ hashFiles('client/android/**/*.gradle*', 'client/android/**/*.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
 
     - name : Make gradlew executable
       run: chmod +x gradlew

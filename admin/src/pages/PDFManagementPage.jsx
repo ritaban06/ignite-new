@@ -14,6 +14,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { pdfAPI } from '../api';
+import { folderAPI } from '../api';
 import toast from 'react-hot-toast';
 
 const DEPARTMENTS = [
@@ -23,12 +24,12 @@ const DEPARTMENTS = [
 const YEARS = ['All', '1', '2', '3', '4'];
 
 export default function PDFManagementPage() {
+  const [folders, setFolders] = useState([]);
   const [pdfs, setPdfs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    department: 'All',
-    year: 'All',
+    folder: 'All',
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -36,24 +37,32 @@ export default function PDFManagementPage() {
   const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
+  useEffect(() => {
+    const fetchFolders = async () => {
+      try {
+        const response = await folderAPI.getAllFolders();
+        setFolders(response.data);
+      } catch (error) {
+        toast.error('Failed to load folders');
+      }
+    };
+    fetchFolders();
+  }, []);
     fetchPdfs();
   }, [currentPage, searchTerm, filters]);
 
   const fetchPdfs = async () => {
     setLoading(true);
     try {
-      const params = {
-        page: currentPage,
-        limit: 10,
-        // Only add department/year if not 'All'
-        ...(filters.department !== 'All' && { department: filters.department }),
-        ...(filters.year !== 'All' && { year: filters.year }),
-      };
-      // Only add search if not empty
-      if (searchTerm.trim()) params.search = searchTerm.trim();
-      const response = await pdfAPI.getAllPdfs(params);
-      setPdfs(response.data.pdfs);
-      setTotalPages(response.data.pagination ? response.data.pagination.totalPages : 1);
+    const params = {
+      page: currentPage,
+      limit: 10,
+      ...(filters.folder !== 'All' && { folder: filters.folder }),
+    };
+    if (searchTerm.trim()) params.search = searchTerm.trim();
+    const response = await pdfAPI.getAllPdfs(params);
+    setPdfs(response.data.pdfs);
+    setTotalPages(response.data.pagination ? response.data.pagination.totalPages : 1);
     } catch (error) {
       console.error('Failed to fetch PDFs:', error);
       toast.error('Failed to load PDFs');
@@ -146,37 +155,19 @@ export default function PDFManagementPage() {
               />
             </div>
           </div>
-          
           <div className="flex gap-4">
             <select
               className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              value={filters.department}
-              onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+              value={filters.folder}
+              onChange={(e) => setFilters(prev => ({ ...prev, folder: e.target.value }))}
             >
-              {DEPARTMENTS.map(dept => (
-                <option key={dept} value={dept} className="bg-gray-700 text-white">{dept}</option>
-              ))}
-            </select>
-            
-            <select
-              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              value={filters.year}
-              onChange={(e) => setFilters(prev => ({ ...prev, year: e.target.value }))}
-            >
-              {YEARS.map(year => (
-                <option key={year} value={year} className="bg-gray-700 text-white">
-                  {year === 'All' ? 'All Years' : `Year ${year}`}
+              <option value="All" className="bg-gray-700 text-white">All Folders</option>
+              {folders.map(folder => (
+                <option key={folder._id} value={folder._id} className="bg-gray-700 text-white">
+                  {folder.name}
                 </option>
               ))}
             </select>
-            
-            {/* <button
-              onClick={handleFixOrphanedUploaders}
-              className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md text-sm font-medium transition-colors"
-              title="Fix missing uploader information"
-            >
-              Fix Uploaders
-            </button> */}
           </div>
         </div>
       </div>

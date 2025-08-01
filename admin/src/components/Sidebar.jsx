@@ -9,18 +9,19 @@ import {
   Settings,
   RefreshCw,
   Bug,
-  Download
+  Download,
+  Folder,
+  Tags
 } from 'lucide-react';
 import { userAPI, pdfAPI } from '../api';
+import api from '../api';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  // { name: 'Upload PDF', href: '/upload', icon: Upload },
-  { name: 'Manage PDFs', href: '/pdfs', icon: FileText },
+  { name: 'Manage Folders', href: '/folders', icon: Folder },
   { name: 'Users', href: '/users', icon: Users },
+  { name: 'Access Tags', href: '/access-tags', icon: Tags },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  // { name: 'Settings', href: '/settings', icon: Settings },
-  // { name: 'Debug', href: '/debug', icon: Bug },
 ];
 
 export default function Sidebar() {
@@ -56,16 +57,15 @@ export default function Sidebar() {
     }
   };
 
-  const handleCacheDrivePdfs = async () => {
+  const handleCacheDriveFolders = async () => {
     setCacheLoading(true);
     setCacheResult(null);
     try {
-      const res = await pdfAPI.cacheDrivePdfs();
+      const res = await api.post('/folders/gdrive/cache');
       setCacheResult({ success: true, ...res.data });
-      // Clear cache result after 3 seconds if success, 5 seconds if error
-      setTimeout(() => setCacheResult(null), res.data.success ? 3000 : 5000);
+      setTimeout(() => setCacheResult(null), 3000);
     } catch (err) {
-      setCacheResult({ success: false, error: err?.response?.data?.error || 'Failed to cache PDFs' });
+      setCacheResult({ success: false, error: err?.response?.data?.error || 'Failed to cache folders' });
       setTimeout(() => setCacheResult(null), 5000);
     } finally {
       setCacheLoading(false);
@@ -110,16 +110,16 @@ export default function Sidebar() {
             <RefreshCw className={`mr-3 h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />
             {isSyncing ? 'Syncing...' : 'Sync Google Sheets'}
           </button>
-          {/* Sync PDFs from Google Drive Button */}
+          {/* Sync Folders from Google Drive Button */}
           <button
-            onClick={handleCacheDrivePdfs}
+            onClick={handleCacheDriveFolders}
             disabled={cacheLoading}
             className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-60"
           >
             <Download className="mr-3 h-5 w-5 text-yellow-300" />
-            {cacheLoading ? 'Caching PDFs...' : 'Sync PDFs from Google Drive'}
+            {cacheLoading ? 'Caching Folders...' : 'Sync Folders from Google Drive'}
           </button>
-          {/* Status Message for PDF Sync */}
+          {/* Status Message for Folder Sync */}
           {cacheResult && (
             <div className={`mt-2 px-3 py-2 text-xs rounded-md ${
               cacheResult.success
@@ -127,7 +127,7 @@ export default function Sidebar() {
                 : 'bg-red-800 text-red-200'
             }`}>
               {cacheResult.success
-                ? `Cache complete: ${cacheResult.cached} of ${cacheResult.total} files.`
+                ? `Sync complete: ${cacheResult.added ?? 0} added, ${cacheResult.updated ?? 0} updated, ${cacheResult.removed ?? 0} removed. Total scanned: ${cacheResult.total ?? 0}.`
                 : `Error: ${cacheResult.error}`}
             </div>
           )}

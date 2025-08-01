@@ -404,7 +404,9 @@ router.put('/users/:userId', [
   body('isActive').optional().isBoolean(),
   body('name').optional().trim().isLength({ min: 2, max: 50 }),
   body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
-  body('year').optional().isInt({ min: 1, max: 4 })
+  body('year').optional().isInt({ min: 1, max: 4 }),
+  body('accessTags').optional().isArray(),
+  body('accessTags.*').optional().isString().trim().isLength({ min: 1, max: 50 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -427,7 +429,7 @@ router.put('/users/:userId', [
       });
     }
 
-    const allowedUpdates = ['isActive', 'name', 'department', 'year'];
+    const allowedUpdates = ['isActive', 'name', 'department', 'year', 'accessTags'];
     const updates = {};
 
     allowedUpdates.forEach(field => {

@@ -1,0 +1,6 @@
+{
+  "iconPath": "assets/icon.png",
+  "android": {
+    "iconBackgroundColor": "#000000"
+  }
+}

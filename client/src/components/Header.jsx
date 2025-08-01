@@ -42,7 +42,7 @@ const Header = () => {
     <div className="flex justify-between items-center h-16">
       
       {/* Logo */}
-      <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
+      <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
         <img src="/newlogo.webp" alt="Ignite" className="h-6 w-auto sm:h-8" />
         <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
           Ignite
@@ -103,7 +103,7 @@ const Header = () => {
             <div className="hidden lg:block">
               <div className="text-sm font-medium text-white">{user?.name}</div>
               <div className="text-xs text-white/70 font-medium">
-                {user?.department} - Year {user?.year}
+                {user?.department} - Year {user?.year} - Sem {user?.semester}
               </div>
             </div>
           </div>

@@ -29,16 +29,10 @@ const pdfSchema = new mongoose.Schema({
     required: [true, 'MIME type is required'],
     enum: ['application/pdf']
   },
-  departments: {
-    type: [String],
-    required: [true, 'At least one department is required'],
-    enum: ['AIML', 'CSE', 'ECE', 'EEE', 'IT'],
-    validate: {
-      validator: function(arr) {
-        return Array.isArray(arr) && arr.length > 0;
-      },
-      message: 'At least one department must be selected.'
-    }
+  folder: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Folder',
+    required: [true, 'Folder is required']
   },
   year: {
     type: Number,
@@ -76,13 +70,10 @@ const pdfSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  downloadCount: {
-    type: Number,
-    default: 0
-  },
-  viewCount: {
-    type: Number,
-    default: 0
+  folder: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Folder',
+    required: [true, 'Folder is required']
   },
   lastAccessed: {
     type: Date,
@@ -97,21 +88,22 @@ const pdfSchema = new mongoose.Schema({
     type: Date,
     required: false,
     default: null,
+  },
+  viewCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
 });
 
 // Indexes for efficient querying
-pdfSchema.index({ departments: 1, year: 1 });
+pdfSchema.index({ folder: 1 });
 pdfSchema.index({ subject: 1 });
 pdfSchema.index({ tags: 1 });
 pdfSchema.index({ uploadedBy: 1 });
 pdfSchema.index({ isActive: 1 });
 pdfSchema.index({ createdAt: -1 });
-
-// Compound index for user access queries
-pdfSchema.index({ departments: 1, year: 1, isActive: 1 });
 
 // Text search index
 pdfSchema.index({ 
@@ -138,9 +130,13 @@ pdfSchema.methods.incrementViewCount = function() {
 pdfSchema.methods.canUserAccess = function(user) {
   if (user.role === 'admin') return true;
   
-  return Array.isArray(this.departments) && this.departments.includes(user.department) &&
-         this.year === user.year && 
-         this.isActive;
+  // Check if PDF is active
+  if (!this.isActive) return false;
+  
+  // For now, allow access to all active PDFs for authenticated users
+  // This can be enhanced later with folder-based access control
+  // when folder metadata is properly configured
+  return true;
 };
 
 // Static method to find PDFs for a specific user
@@ -148,26 +144,21 @@ pdfSchema.statics.findForUser = function(user, filters = {}) {
   const query = {
     isActive: true
   };
-  
-  // Non-admin users can only see PDFs for their department and year
-  if (user.role !== 'admin') {
-    query.departments = user.department;
-    query.year = user.year;
-  }
-  
+  // Non-admin users: filter PDFs by accessible folders (to be implemented)
+  // TODO: Implement folder access logic here
   // Apply additional filters
+  if (filters.folder) {
+    query.folder = filters.folder;
+  }
   if (filters.subject) {
     query.subject = new RegExp(filters.subject, 'i');
   }
-  
   if (filters.tags && filters.tags.length > 0) {
     query.tags = { $in: filters.tags };
   }
-  
   if (filters.search) {
     query.$text = { $search: filters.search };
   }
-  
   return this.find(query)
     .populate('uploadedBy', 'name email')
     .sort({ createdAt: -1 });

@@ -54,10 +54,10 @@ export const AuthProvider = ({ children }) => {
             // Token is invalid, clear auth state
             console.error('Token validation failed:', error);
             
-            // Check if this is a device switch error
-            if (error.response?.data?.code === 'DEVICE_SWITCHED') {
-              console.log('Session was terminated due to login from another device');
-              // Don't show error toast for device switches as it's expected behavior
+            // Handle authentication errors
+            if (error.response?.status === 401) {
+              console.log('Session expired or invalid');
+              // Don't show error toast for auth errors as login page will handle it
 
           // // In development, skip backend token validation
           // if (!import.meta.env.DEV) {
@@ -108,13 +108,8 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         setIsAuthenticated(true);
         
-        // Show appropriate welcome message based on device switch
-        const welcomeMessage = response.data.deviceSwitched 
-          ? `Welcome back, ${userData.name}! You've been logged out from your previous device.`
-          : `Welcome back, ${userData.name}!`;
-        
-        toast.success(welcomeMessage);
-        return { success: true, user: userData, deviceSwitched: response.data.deviceSwitched };
+        toast.success(`Welcome back, ${userData.name}!`);
+        return { success: true, user: userData };
       } else {
         throw new Error('Invalid response format');
       }
@@ -145,7 +140,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         
         toast.success(`Welcome to Ignite, ${newUser.name}!`);
-        return { success: true, user: newUser, deviceSwitched: false };
+        return { success: true, user: newUser };
       } else {
         throw new Error('Invalid response format');
       }
@@ -205,13 +200,8 @@ export const AuthProvider = ({ children }) => {
         setUser(backendUser);
         setIsAuthenticated(true);
         
-        // Show appropriate welcome message based on device switch
-        const welcomeMessage = response.data.deviceSwitched 
-          ? `Welcome, ${backendUser.name}! You've been logged out from your previous device.`
-          : `Welcome, ${backendUser.name}!`;
-        
-        toast.success(welcomeMessage);
-        return { success: true, user: backendUser, deviceSwitched: response.data.deviceSwitched };
+        toast.success(`Welcome, ${backendUser.name}!`);
+        return { success: true, user: backendUser };
       } else {
         throw new Error('Invalid response format');
       }

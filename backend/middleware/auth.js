@@ -97,16 +97,8 @@ const authenticate = async (req, res, next) => {
       });
     }
     
-    // Check device restriction for clients
-    if (user.role === 'client' && user.deviceId && user.deviceId !== decoded.deviceId) {
-      // If device mismatch, it means the user was logged out from this device
-      // due to login from another device. Clear this session.
-      ensureCORS(req, res);
-      return res.status(401).json({ 
-        error: 'Your session has been terminated due to login from another device. Please login again.',
-        code: 'DEVICE_SWITCHED'
-      });
-    }
+    // Device restriction removed - allow multiple device logins
+    // JWT token expiration (7 days) will handle session management
     
     req.user = user;
     req.deviceId = decoded.deviceId;
@@ -197,13 +189,52 @@ const logAccess = (action) => {
 const validatePdfAccess = async (req, res, next) => {
   try {
     const PDF = require('../models/PDF');
+    const GoogleDriveService = require('../services/googleDriveService');
     const pdfId = req.params.pdfId || req.params.id;
     
     if (!pdfId) {
       return res.status(400).json({ error: 'PDF ID is required.' });
     }
     
-    const pdf = await PDF.findById(pdfId);
+    let pdf;
+    
+    // Try to find PDF by MongoDB ObjectId first
+    if (/^[a-fA-F0-9]{24}$/.test(pdfId)) {
+      pdf = await PDF.findById(pdfId);
+    }
+    
+    // If not found and looks like Google Drive file ID, create a virtual PDF object
+    if (!pdf && pdfId.length > 24) {
+      try {
+        const googleDriveService = new GoogleDriveService(
+          JSON.parse(process.env.GDRIVE_CREDENTIALS),
+          process.env.GDRIVE_BASE_FOLDER_ID
+        );
+        
+        // Get file metadata from Google Drive to verify it exists
+        const fileMetadata = await googleDriveService.drive.files.get({
+          fileId: pdfId,
+          fields: 'id, name, size, createdTime, mimeType'
+        });
+        
+        if (fileMetadata.data && fileMetadata.data.mimeType === 'application/pdf') {
+          // Create a virtual PDF object for Google Drive files
+          pdf = {
+            _id: pdfId,
+            googleDriveFileId: pdfId,
+            title: fileMetadata.data.name,
+            fileName: fileMetadata.data.name,
+            isActive: true,
+            canUserAccess: () => true, // Allow access for authenticated users
+            incrementViewCount: async () => {}, // No-op for Google Drive files
+            viewCount: 0
+          };
+        }
+      } catch (driveError) {
+        console.error('Google Drive file validation error:', driveError);
+        return res.status(404).json({ error: 'PDF not found.' });
+      }
+    }
     
     if (!pdf) {
       return res.status(404).json({ error: 'PDF not found.' });

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import toast from 'react-hot-toast';
+
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -10,12 +12,13 @@ export default function LoginPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await login(formData);
     if (result.success) {
-      toast.success('Welcome to Admin Dashboard!');
+      navigate('/');
     } else {
       toast.error(result.error);
     }

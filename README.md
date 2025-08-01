@@ -1,4 +1,4 @@
-# Ignite - Samarth's Study Material Platform  
+# Ignite - Samarth's Study Material Platform
 
 [![PNPM](https://img.shields.io/badge/PNPM-10.12.1-orange?logo=pnpm)](https://pnpm.io/)
 [![React](https://img.shields.io/badge/React-19.1.0-blue?logo=react)](https://reactjs.org/)
@@ -7,15 +7,22 @@
 [![Vercel](https://img.shields.io/badge/Vercel-Full%20Stack-black?logo=vercel)](https://vercel.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. 
+A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. Now with Capacitor integration for Android apps.
 
-## 🏗️ Project Structure
+---
+
+## 🏗️ Monorepo Structure
+
+This project uses **PNPM workspaces** for monorepo management. The main workspace folders are:
 
 ```
 ignite-new/
-├── admin/          # React admin dashboard for PDF uploads
+├── admin/          # React admin dashboard for PDF management
 ├── backend/        # Express.js API server
 ├── client/         # Public React client for PDF viewing
+├── docs/           # Project and API documentation
+├── setup.js        # Setup script for environment files
+├── generate-docs.js # Internal documentation generator
 └── pnpm-workspace.yaml
 ```
 
@@ -25,15 +32,18 @@ ignite-new/
 - **Node.js**: v18.0.0 or higher
 - **PNPM**: v8.0.0 or higher (preferred package manager)
 - **MongoDB**: Local installation or MongoDB Atlas account
-- **Cloudflare Account**: For R2 storage (free tier available)
+- **Google Drive Account**: For PDF storage
+- **Android Studio**: For building Android apps
 
 ### 1. Clone and Setup Environment
+
 ```bash
 git clone https://github.com/ritaban06/ignite-new
 cd ignite-new
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 # Install all workspace dependencies
 pnpm install
@@ -42,11 +52,13 @@ pnpm install
 ### 3. Start Development Servers
 
 **Option A: Start All Services (Recommended)**
+
 ```bash
 pnpm dev:all
 ```
 
 **Option B: Start Services Individually**
+
 ```bash
 # Terminal 1 - Backend API (Port 5000)
 pnpm dev:backend
@@ -59,39 +71,49 @@ pnpm dev:client
 ```
 
 ### 4. Access Applications
+
 - **Client App**: http://localhost:3000 (Public PDF viewer)
 - **Admin Dashboard**: http://localhost:3001 (PDF management)
 - **Backend API**: http://localhost:5000 (REST API)
 
+---
+
 ## 🔧 Features
 
 ### 🔒 Security Features
-- ✅ JWT-based authentication with refresh tokens
-- ✅ Google OAuth 2.0 integration
-- ✅ Single device login restriction
-- ✅ Role-based access control (Admin/Client)
-- ✅ Signed URLs with short TTL (Time To Live)
-- ✅ PDF viewing without download capability
-- ✅ Comprehensive access logging and analytics
-- ✅ Rate limiting and request validation
-- ✅ Secure headers with Helmet.js
+- JWT-based authentication with refresh tokens
+- Google OAuth 2.0 integration
+- Single device login restriction
+- Role-based access control (Admin/Client)
+- Signed URLs with short TTL (Time To Live)
+- PDF viewing without download capability
+- Comprehensive access logging and analytics
+- Rate limiting and request validation
+- Secure headers with Helmet.js
 
 ### 👨‍💼 Admin Features
-- ✅ Secure admin login dashboard
-- ✅ PDF upload with metadata (department/year/category)
-- ✅ Bulk PDF management operations
-- ✅ User management and role assignment
-- ✅ Real-time analytics and access logs
-- ✅ System configuration and settings
+- Secure admin login dashboard
+- PDF upload with metadata (department/year/category)
+- Bulk PDF management operations
+- User management and role assignment
+- Real-time analytics and access logs
+- System configuration and settings
 
 ### 👥 Client Features
-- ✅ Google OAuth and email-based authentication
-- ✅ Department and year-based PDF filtering
-- ✅ Advanced search functionality
-- ✅ Secure PDF viewing (no download/share/print)
-- ✅ Mobile-responsive design
-- ✅ Clean, intuitive user interface
-- ✅ Access history tracking
+- Google OAuth and email-based authentication
+- Department and year-based PDF filtering
+- Advanced search functionality
+- Secure PDF viewing (no download/share/print)
+- Mobile-responsive design
+- Clean, intuitive user interface
+- Access history tracking
+
+### 📱 Android Features
+- Capacitor integration for Android apps
+- Offline PDF viewing support
+- Push notifications for updates
+
+---
 
 ## 🛠️ Tech Stack
 
@@ -118,12 +140,24 @@ pnpm dev:client
 - **Process Manager**: PM2 (production)
 - **Deployment**: Vercel (frontend), Railway/Heroku (backend)
 
+---
+
+## 📝 Internal Documentation
+
+- The project includes an internal documentation generator: `generate-docs.js`.
+- Running this script will scan the `admin`, `backend`, and `client` folders and output a structured JSON to `admin/docs/docs.json`.
+- The admin dashboard includes a Docs page that renders this documentation for contributors.
+
+---
+
 ## 📋 Setup Requirements
 
 ### System Requirements
 1. **Node.js**: v18.0.0 or higher
-2. **PNPM**: v8.0.0 or higher (install with `npm install -g pnpm`)
-3. **Git**: For version control
+2. **PNPM**: v8.0.0 or higher
+3. **MongoDB**: Local or Atlas
+
+---
 
 ### External Services
 1. **MongoDB**: 
@@ -137,6 +171,9 @@ pnpm dev:client
 3. **Google Cloud Console** (Optional, for OAuth):
    - OAuth 2.0 client credentials
    - Enable Google+ API
+
+4. **Android Studio**:
+   - Required for building Android apps
 
 ### Development Tools (Recommended)
 - **VS Code**: With ESLint and Prettier extensions
@@ -162,6 +199,7 @@ pnpm dev:client       # Start client app only
 
 # Building
 pnpm build:all        # Build admin and client for production
+pnpm build:android    # Build Android app
 
 # Maintenance
 pnpm clean           # Clean all node_modules
@@ -226,6 +264,12 @@ pm2 startup
 pm2 save
 ```
 
+### Android Deployment
+```bash
+cd client
+pnpm build:android
+```
+
 ## 📚 API Documentation
 
 ### Authentication Endpoints
@@ -281,6 +325,10 @@ pnpm install
 - Verify Google Client ID in both backend and frontend `.env`
 - Check authorized origins in Google Cloud Console
 - Ensure Google+ API is enabled
+
+**Android Build Issues:**
+- Ensure Android Studio is installed and configured
+- Verify Capacitor dependencies are installed
 
 ### Development Tips
 - Use `pnpm dev:all` for concurrent development

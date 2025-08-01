@@ -33,12 +33,9 @@ api.interceptors.response.use(
     //   return Promise.resolve({ data: {} });
     // }
     if (error.response?.status === 401) {
-      // Check if this is a device switch error
-      if (error.response?.data?.code === 'DEVICE_SWITCHED') {
-        // Show specific message for device switch
-        console.log('Session terminated due to device switch:', error.response.data.error);
-        // Don't show a toast here as it might be confusing - let the login page handle it
-      }
+      // Handle authentication errors
+      console.log('Authentication error:', error.response.data.error);
+      // Don't show a toast here as it might be confusing - let the login page handle it
       
       // Clear auth data and redirect to login
       localStorage.removeItem('authToken');
@@ -84,6 +81,33 @@ export const pdfAPI = {
   
   // Get all PDFs from Google Drive
   getAllPDFsFromGoogleDrive: () => api.get('/pdfs/gdrive/list'),
+};
+
+// Folder API for folder-based management
+export const folderAPI = {
+  // Get all folders from Google Drive with hierarchy
+  getFolders: () => api.get('/folders/gdrive'),
+  
+  // Get folders from MongoDB with metadata
+  getFoldersWithMetadata: () => api.get('/folders'),
+  
+  // Get PDFs in a specific folder
+  getPdfsInFolder: (folderId) => api.get(`/folders/${folderId}/pdfs`),
+  
+  // Update folder metadata (access control, etc.)
+  updateFolder: (folderId, folderData) => api.put(`/folders/${folderId}`, folderData),
+  
+  // Cache/sync folders from Google Drive
+  cacheFolders: () => api.post('/folders/gdrive/cache'),
+  
+  // Get Google Drive base folder ID
+  getBaseFolderId: () => api.get('/folders/gdrive-base-id'),
+};
+
+// Legacy Google Drive API (kept for backward compatibility)
+export const gdriveAPI = {
+  getFolders: () => folderAPI.getFolders(),
+  getPdfsInFolder: (folderId) => folderAPI.getPdfsInFolder(folderId),
 };
 
 // User API

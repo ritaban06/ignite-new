@@ -62,6 +62,18 @@ router.get('/', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+// Get all access tags
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const { sort = 'name' } = req.query;
+    const tags = await AccessTag.find().sort({ [sort]: 1 });
+    res.json(tags);
+  } catch (error) {
+    console.error('Fetch access tags error:', error);
+    res.status(500).json({ error: 'Failed to fetch access tags', message: error.message });
+  }
+});
+
 // Get access tags by category
 router.get('/category/:category', authenticate, requireAdmin, async (req, res) => {
   try {

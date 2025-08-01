@@ -1,4 +1,3 @@
-
 # Ignite - Samarth's Study Material Platform
 
 [![PNPM](https://img.shields.io/badge/PNPM-10.12.1-orange?logo=pnpm)](https://pnpm.io/)
@@ -8,7 +7,7 @@
 [![Vercel](https://img.shields.io/badge/Vercel-Full%20Stack-black?logo=vercel)](https://vercel.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. 
+A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. Now with Capacitor integration for Android apps.
 
 ---
 
@@ -33,7 +32,8 @@ ignite-new/
 - **Node.js**: v18.0.0 or higher
 - **PNPM**: v8.0.0 or higher (preferred package manager)
 - **MongoDB**: Local installation or MongoDB Atlas account
-- **Google Drive Account**: For PDF storage  
+- **Google Drive Account**: For PDF storage
+- **Android Studio**: For building Android apps
 
 ### 1. Clone and Setup Environment
 
@@ -108,6 +108,11 @@ pnpm dev:client
 - Clean, intuitive user interface
 - Access history tracking
 
+### 📱 Android Features
+- Capacitor integration for Android apps
+- Offline PDF viewing support
+- Push notifications for updates
+
 ---
 
 ## 🛠️ Tech Stack
@@ -167,6 +172,9 @@ pnpm dev:client
    - OAuth 2.0 client credentials
    - Enable Google+ API
 
+4. **Android Studio**:
+   - Required for building Android apps
+
 ### Development Tools (Recommended)
 - **VS Code**: With ESLint and Prettier extensions
 - **MongoDB Compass**: GUI for database management
@@ -191,6 +199,7 @@ pnpm dev:client       # Start client app only
 
 # Building
 pnpm build:all        # Build admin and client for production
+pnpm build:android    # Build Android app
 
 # Maintenance
 pnpm clean           # Clean all node_modules
@@ -255,6 +264,12 @@ pm2 startup
 pm2 save
 ```
 
+### Android Deployment
+```bash
+cd client
+pnpm build:android
+```
+
 ## 📚 API Documentation
 
 ### Authentication Endpoints
@@ -310,6 +325,10 @@ pnpm install
 - Verify Google Client ID in both backend and frontend `.env`
 - Check authorized origins in Google Cloud Console
 - Ensure Google+ API is enabled
+
+**Android Build Issues:**
+- Ensure Android Studio is installed and configured
+- Verify Capacitor dependencies are installed
 
 ### Development Tips
 - Use `pnpm dev:all` for concurrent development

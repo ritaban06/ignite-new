@@ -93,7 +93,8 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
         // Find existing folder in DB
         const existingFolder = await Folder.findOne({ gdriveId: folder.gdriveId });
         
-        // Prepare metadata with inheritance from parent if needed
+        // Prepare default metadata for new folders only
+        // For existing folders, we'll preserve their current metadata
         const folderMetadata = {
           name: folder.name,
           gdriveId: folder.gdriveId,
@@ -141,16 +142,33 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           });
           added++;
         } else {
-          // Update existing folder
-          existingFolder.name = folderMetadata.name;
-          existingFolder.description = folderMetadata.description;
-          existingFolder.departments = folderMetadata.departments;
-          existingFolder.years = folderMetadata.years;
-          existingFolder.semesters = folderMetadata.semesters;
-          existingFolder.tags = folderMetadata.tags;
-          existingFolder.accessControlTags = folderMetadata.accessControlTags;
-          existingFolder.createdByName = folderMetadata.createdByName;
-          existingFolder.children = processedChildren;
+          // Update existing folder - preserve existing metadata, only update structural info
+          existingFolder.name = folderMetadata.name; // Update name from Google Drive
+          existingFolder.children = processedChildren; // Update children structure
+          
+          // Preserve all existing metadata - don't overwrite what was set through admin panel
+          // Only set defaults for metadata fields that are currently null/undefined/empty
+          if (!existingFolder.description) {
+            existingFolder.description = folderMetadata.description;
+          }
+          if (!existingFolder.departments || existingFolder.departments.length === 0) {
+            existingFolder.departments = folderMetadata.departments;
+          }
+          if (!existingFolder.years || existingFolder.years.length === 0) {
+            existingFolder.years = folderMetadata.years;
+          }
+          if (!existingFolder.semesters || existingFolder.semesters.length === 0) {
+            existingFolder.semesters = folderMetadata.semesters;
+          }
+          if (!existingFolder.tags || existingFolder.tags.length === 0) {
+            existingFolder.tags = folderMetadata.tags;
+          }
+          if (!existingFolder.accessControlTags || existingFolder.accessControlTags.length === 0) {
+            existingFolder.accessControlTags = folderMetadata.accessControlTags;
+          }
+          if (!existingFolder.createdByName) {
+            existingFolder.createdByName = folderMetadata.createdByName;
+          }
           
           await existingFolder.save();
           updated++;

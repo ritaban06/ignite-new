@@ -20,7 +20,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Manage Folders', href: '/folders', icon: Folder },
   { name: 'Users', href: '/users', icon: Users },
-  { name: 'Access Tags', href: '/access-tags', icon: Tags },
+  // { name: 'Access Tags', href: '/access-tags', icon: Tags },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 

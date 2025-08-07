@@ -108,10 +108,10 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
           <div className="mt-4 pt-3 border-t border-white/10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-white/60">
               <div className="flex items-center space-x-4">
-                <span>Size: {formatSize(pdf.fileSize || 0)}</span>
-                {pdf.viewCount !== undefined && (
+                {/* <span>Size: {formatSize(pdf.fileSize || 0)}</span> */}
+                {/* {pdf.viewCount !== undefined && (
                   <span>{pdf.viewCount} views</span>
-                )}
+                )} */}
               </div>
               
               {pdf.lastAccessed && (

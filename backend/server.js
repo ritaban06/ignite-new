@@ -59,6 +59,11 @@ const allowedOrigins = [
   'https://ignite-backend-eight.vercel.app',
   'http://localhost:3000',
   'http://localhost:3001',
+  // Add Google Drive API domain for CORS
+  'https://www.googleapis.com',
+  'https://accounts.google.com',
+  'https://oauth2.googleapis.com',
+  'https://drive.google.com'
 ];
 
 // Simplified CORS middleware
@@ -80,11 +85,20 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     console.log('Global CORS: No origin, allowing all');
   } else {
-    // Log unknown origins but still allow them for debugging
-    console.log('Global CORS: Unknown origin:', origin);
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    console.log('Global CORS: Unknown origin allowed with credentials:', origin);
+    // For client access, we need to be more permissive
+    // This is especially important for the /api/folders/gdrive endpoint
+    if (origin.includes('ignite-client') || origin.includes('localhost')) {
+      console.log('Global CORS: Client origin detected:', origin);
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      console.log('Global CORS: Client origin allowed with credentials');
+    } else {
+      // Log unknown origins but still allow them for debugging
+      console.log('Global CORS: Unknown origin:', origin);
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      console.log('Global CORS: Unknown origin allowed with credentials:', origin);
+    }
   }
   
   // Always set these headers regardless of origin

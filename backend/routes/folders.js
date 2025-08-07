@@ -199,6 +199,14 @@ router.get('/gdrive-base-id', (req, res) => {
 
 // List Google Drive folders and subfolders with hierarchy
 router.get('/gdrive', async (req, res) => {
+  // Set specific CORS headers for this endpoint to ensure client access
+  const origin = req.get('Origin');
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    console.log('Folders CORS: Setting specific headers for /gdrive endpoint, origin:', origin);
+  }
+  
   try {
     // Instead of fetching from Google Drive directly, get from MongoDB with children
     const folders = await Folder.find({ parent: null }).lean();
@@ -242,6 +250,13 @@ router.get('/gdrive', async (req, res) => {
     
     res.json(transformedFolders);
   } catch (err) {
+    console.error('Error fetching folders from MongoDB:', err);
+    // Ensure CORS headers are set even for errors
+    const origin = req.get('Origin');
+    if (origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
     res.status(500).json({ error: 'Failed to fetch folders', details: err.message });
   }
 });

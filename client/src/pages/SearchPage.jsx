@@ -51,14 +51,14 @@ const SearchPage = () => {
         });
         
         if (response.data.pdfs.length === 0) {
-          toast.info('No PDFs found matching your search criteria');
+          toast('No PDFs found matching your search criteria');
         } else {
           toast.success(`Found ${response.data.pdfs.length} PDF(s)`);
         }
       } else {
         console.log('Unexpected response format:', response.data);
         setSearchResults([]);
-        toast.info('No results found');
+        toast('No results found');
       }
     } catch (error) {
       console.error('Search error:', error);

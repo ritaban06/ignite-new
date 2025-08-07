@@ -132,13 +132,13 @@ const DashboardPage = () => {
         );
 
         if (response.data.pdfs.length === 0) {
-          toast.info("No PDFs found matching your search criteria");
+          toast(`No PDFs found matching your search criteria`);
         } else {
           toast.success(`Found ${response.data.pdfs.length} PDF(s)`);
         }
       } else {
         setPdfs([]);
-        toast.info("No results found");
+        toast("No results found");
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -578,7 +578,7 @@ const DashboardPage = () => {
             <div className="ml-3 sm:ml-4">
               <p className="text-xs sm:text-sm font-medium text-white/80">Available PDFs</p>
               <p className="text-xl sm:text-2xl font-bold text-white">{pagination.totalCount}</p>
-            </div>
+            </div> 
           </div>
         </div>
 

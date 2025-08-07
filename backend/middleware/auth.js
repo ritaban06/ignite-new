@@ -303,12 +303,12 @@ const createRateLimit = (windowMs, max, message) => {
 // Specific rate limits for different operations
 const authRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  5, // 5 attempts
+  14, // 14 attempts
   'Too many authentication attempts, please try again later.'
 );
 
 const pdfViewRateLimit = createRateLimit(
-  60 * 1000, // 1 minute
+  1800 * 1000, // 30 minutes
   10, // 10 views
   'Too many PDF view requests, please slow down.'
 );

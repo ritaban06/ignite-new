@@ -141,15 +141,18 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           });
           added++;
         } else {
-          // Update existing folder
+          // Update existing folder - PRESERVE EXISTING METADATA
           existingFolder.name = folderMetadata.name;
-          existingFolder.description = folderMetadata.description;
-          existingFolder.departments = folderMetadata.departments;
-          existingFolder.years = folderMetadata.years;
-          existingFolder.semesters = folderMetadata.semesters;
-          existingFolder.tags = folderMetadata.tags;
-          existingFolder.accessControlTags = folderMetadata.accessControlTags;
-          existingFolder.createdByName = folderMetadata.createdByName;
+          
+          // Only update these fields if they don't already exist or are empty
+          existingFolder.description = existingFolder.description || folderMetadata.description;
+          existingFolder.departments = existingFolder.departments?.length > 0 ? existingFolder.departments : folderMetadata.departments;
+          existingFolder.years = existingFolder.years?.length > 0 ? existingFolder.years : folderMetadata.years;
+          existingFolder.semesters = existingFolder.semesters?.length > 0 ? existingFolder.semesters : folderMetadata.semesters;
+          existingFolder.tags = existingFolder.tags?.length > 0 ? existingFolder.tags : folderMetadata.tags;
+          existingFolder.accessControlTags = existingFolder.accessControlTags?.length > 0 ? existingFolder.accessControlTags : folderMetadata.accessControlTags;
+          
+          existingFolder.createdByName = existingFolder.createdByName || folderMetadata.createdByName;
           existingFolder.children = processedChildren;
           
           await existingFolder.save();

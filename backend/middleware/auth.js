@@ -13,6 +13,7 @@ const ensureCORS = (req, res) => {
     'https://ignite-client.ritaban.me',
     'https://ignite-admin.ritaban.me',
     'https://ignite-backend-eight.vercel.app',
+    'https://ignite-backend-droplet.ritaban.me',
     'http://localhost:3000',
     'http://localhost:3001'
   ];

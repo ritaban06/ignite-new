@@ -53,7 +53,8 @@ export const authAPI = {
   logout: () => api.post('/auth/logout'),
   refreshToken: () => api.post('/auth/refresh'),
   getProfile: () => api.get('/auth/me'),
-  googleVerify: (googleData) => api.post('/auth/google-verify', googleData),
+  // googleVerify: (googleData) => api.post('/auth/google-verify', googleData),
+  googleVerify: (googleData) => api.post('/api/auth/google-verify', googleData),
 };
 
 // PDF API

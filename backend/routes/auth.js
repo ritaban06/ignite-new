@@ -20,16 +20,6 @@ router.options('*', (req, res) => {
   res.header('Access-Control-Max-Age', '86400');
   res.sendStatus(200);
 });
-// Specific OPTIONS handler for /google-verify to support CORS preflight
-// router.options('/google-verify', (req, res) => {
-//   const origin = req.get('Origin');
-//   res.header('Access-Control-Allow-Origin', origin || '*');
-//   res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
-//   res.header('Access-Control-Allow-Credentials', 'true');
-//   res.header('Access-Control-Max-Age', '86400');
-//   res.sendStatus(204);
-// });
 
 // Initialize Google OAuth2 client with multiple client IDs
 const GOOGLE_WEB_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;

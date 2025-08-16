@@ -47,14 +47,24 @@ api.interceptors.response.use(
 );
 
 // Auth API
+
+// export const authAPI = {
+//   register: (userData) => api.post('/auth/register', userData),
+//   login: (credentials) => api.post('/auth/login', credentials),
+//   logout: () => api.post('/auth/logout'),
+//   refreshToken: () => api.post('/auth/refresh'),
+//   getProfile: () => api.get('/auth/me'),
+//   googleVerify: (googleData) => api.post('/auth/google-verify', googleData),
+// };
 export const authAPI = {
-  register: (userData) => api.post('/auth/register', userData),
-  login: (credentials) => api.post('/auth/login', credentials),
-  logout: () => api.post('/auth/logout'),
-  refreshToken: () => api.post('/auth/refresh'),
-  getProfile: () => api.get('/auth/me'),
-  googleVerify: (googleData) => api.post('/auth/google-verify', googleData),
+  register: (userData) => api.post('/api/auth/register', userData),
+  login: (credentials) => api.post('/api/auth/login', credentials),
+  logout: () => api.post('/api/auth/logout'),
+  refreshToken: () => api.post('/api/auth/refresh'),
+  getProfile: () => api.get('/api/auth/me'),
+  googleVerify: (googleData) => api.post('/api/auth/google-verify', googleData),
 };
+
 
 // PDF API
 export const pdfAPI = {

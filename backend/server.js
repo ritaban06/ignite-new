@@ -200,6 +200,24 @@ app.get('/', (req, res) => {
   });
 });
 
+// Add /api endpoint to return API info (same as /)
+app.get('/api', (req, res) => {
+  res.json({ 
+    message: 'Ignite Backend API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      pdfs: '/api/pdfs',
+      users: '/api/users',
+      admin: '/api/admin',
+      accessTags: '/api/access-tags',
+      // annotations: '/api/annotations'
+    }
+  });
+});
+
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ 

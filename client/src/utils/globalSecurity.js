@@ -1,4 +1,3 @@
-// globalSecurity.js
 // Handles global disabling of F12, Ctrl+S, Ctrl+P, Ctrl+A, DevTools shortcuts
 
 const SECURE_GLOBAL_DISABLE = import.meta.env.VITE_SECURE_GLOBAL_DISABLE === 'true';

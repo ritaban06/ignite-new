@@ -57,12 +57,9 @@ const DashboardPage = () => {
     try {
       const params = {
         page: pagination.currentPage,
-        limit: 12,
+        limit: 12
+        // No subject/folder filter
       };
-
-      if (filters.subject && filters.subject.trim()) {
-        params.subject = filters.subject.trim();
-      }
 
       // console.log("Loading files with params:", params);
 
@@ -76,7 +73,7 @@ const DashboardPage = () => {
       console.error("Error loading files:", error);
       toast.error("Failed to load files");
     }
-  }, [filters, pagination.currentPage]);
+  }, [pagination.currentPage]);
 
   useEffect(() => {
     loadFiles();
@@ -142,30 +139,32 @@ const DashboardPage = () => {
       const searchParams = {
         q: searchQuery.trim(),
         page: 1,
-        limit: 12,
+        limit: 12
+        // No subject/folder filter
       };
 
       console.log("Dashboard searching with params:", searchParams);
 
       const response = await pdfAPI.searchPDFs(searchParams);
 
-      if (response.data && response.data.pdfs) {
+      if (response.data && Array.isArray(response.data.pdfs)) {
         setFiles(response.data.pdfs);
         setPagination(
           response.data.pagination || {
             currentPage: 1,
             totalPages: 1,
-            totalCount: response.data.files.length,
+            totalCount: response.data.pdfs ? response.data.pdfs.length : 0,
           }
         );
 
-        if (response.data.files.length === 0) {
+        if (!response.data.pdfs || response.data.pdfs.length === 0) {
           toast(`No files found matching your search criteria`);
         } else {
-          toast.success(`Found ${response.data.files.length} file(s)`);
+          toast.success(`Found ${response.data.pdfs.length} file(s)`);
         }
       } else {
         setFiles([]);
+        setPagination({ currentPage: 1, totalPages: 1, totalCount: 0 });
         toast("No results found");
       }
     } catch (error) {
@@ -173,7 +172,8 @@ const DashboardPage = () => {
       const errorMessage =
         error.response?.data?.error || error.message || "Search failed";
       toast.error(`Search failed: ${errorMessage}`);
-      setPdfs([]);
+      setFiles([]);
+      setPagination({ currentPage: 1, totalPages: 1, totalCount: 0 });
     } finally {
       setIsLoading(false);
     }

@@ -1,3 +1,10 @@
+// Simple loading spinner
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-8">
+    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-4 border-t-blue-500 mx-auto"></div>
+    <span className="ml-4 text-white/80">Loading...</span>
+  </div>
+);
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
@@ -750,7 +757,11 @@ const DashboardPage = () => {
         
         {/* Display current level folders */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {getCurrentSubfolders() && getCurrentSubfolders().length > 0 ? (
+          {isLoading ? (
+            <div className="col-span-full">
+              <LoadingSpinner />
+            </div>
+          ) : getCurrentSubfolders() && getCurrentSubfolders().length > 0 ? (
             getCurrentSubfolders().map(folder => (
               <button
                 key={folder.id}
@@ -768,7 +779,7 @@ const DashboardPage = () => {
                 <span className="text-white font-semibold text-center">{folder.name}</span>
                 {folder.metadata && (
                   <div className="mt-2 text-xs text-white/60 text-center">
-                    {folder.metadata.departments && folder.metadata.departments.length > 0 && (
+                    {/* {folder.metadata.departments && folder.metadata.departments.length > 0 && (
                       <div>Dept: {folder.metadata.departments.join(', ')}</div>
                     )}
                     {folder.metadata.years && folder.metadata.years.length > 0 && (
@@ -776,19 +787,19 @@ const DashboardPage = () => {
                     )}
                     {folder.metadata.semesters && folder.metadata.semesters.length > 0 && (
                       <div>Sem: {folder.metadata.semesters.join(', ')}</div>
-                    )}
+                    )} */}
                   </div>
                 )}
-                {folder.children && folder.children.length > 0 && (
+                {/* {folder.children && folder.children.length > 0 && (
                   <div className="mt-1 text-xs text-blue-300">
                     {folder.children.length} subfolder{folder.children.length !== 1 ? 's' : ''}
                   </div>
-                )}
+                )} */}
               </button>
             ))
           ) : (
             <div className="col-span-full text-center text-white/70 py-4">
-              {isLoading ? 'Loading folders...' : 'No subfolders in this directory.'}
+              No subfolders in this directory.
             </div>
           )}
         </div>
@@ -812,8 +823,13 @@ const DashboardPage = () => {
                 {files.length} file{files.length !== 1 ? 's' : ''} found
               </div>
             </div>
-            
-            {files && files.length > 0 ? (
+            {/* Show loading spinner inside the Files in section */}
+            {isLoading && (
+              <div className="py-8">
+                <LoadingSpinner />
+              </div>
+            )}
+            {!isLoading && files && files.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {files
                   .filter(file => !file.mimeType?.startsWith('application/vnd.google-apps.folder'))
@@ -837,7 +853,8 @@ const DashboardPage = () => {
                     );
                   })}
               </div>
-            ) : (
+            ) : null}
+            {!isLoading && (!files || files.length === 0) && (
               <div className="text-center text-white/70 py-8">
                 <BookOpen className="h-12 w-12 text-white/40 mx-auto mb-4" />
                 <p>No files found in this folder.</p>

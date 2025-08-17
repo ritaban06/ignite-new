@@ -25,7 +25,11 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h3 className="text-base sm:text-lg font-semibold text-white truncate group-hover:text-white transition-colors">
-              {pdf.title}
+              {(() => {
+                if (!pdf.title) return '';
+                const base = pdf.title.replace(/\.[^.]+$/, '');
+                return base.charAt(0).toUpperCase() + base.slice(1);
+              })()}
             </h3>
             <p className="text-sm text-white/80 mt-1">
               {pdf.subject}
@@ -70,7 +74,7 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
         <div className="flex items-center space-x-2 text-white/70">
           <User className="h-4 w-4 flex-shrink-0" />
           <span className="truncate">
-            {pdf.uploadedByName || pdf.uploadedBy?.name || <span className="italic text-white/60">Unknown</span>}
+            {pdf.ownerName || pdf.createdByName || pdf.uploadedByName || pdf.uploadedBy?.name || <span className="italic text-white/60">Unknown</span>}
           </span>
         </div>
 

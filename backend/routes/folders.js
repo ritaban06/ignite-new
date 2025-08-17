@@ -378,6 +378,65 @@ router.get('/with-metadata', authenticate, async (req, res) => {
 // Get PDFs in a folder
 // Get PDFs in a folder (Google Drive first, MongoDB fallback)
 // Get all files in a folder (universal: PDFs, images, docs, etc.)
+// Universal proxy route to securely stream any file type from Google Drive
+const jwt = require('jsonwebtoken');
+const { Readable } = require('stream');
+function getContentType(ext) {
+  if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext)) return `image/${ext === "jpg" ? "jpeg" : ext}`;
+  if (["pdf"].includes(ext)) return "application/pdf";
+  if (["doc", "docx"].includes(ext)) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (["xls", "xlsx"].includes(ext)) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (["ppt", "pptx"].includes(ext)) return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+  if (["txt"].includes(ext)) return "text/plain";
+  return "application/octet-stream";
+}
+
+// POST: get a secure token for file viewing
+router.post('/file/:fileId/view', authenticate, async (req, res) => {
+  const fileId = req.params.fileId;
+  try {
+    // You can add access control checks here
+    const token = jwt.sign({ fileId, userId: req.user._id }, process.env.JWT_SECRET, { expiresIn: '10m' });
+    const viewUrl = `/api/folders/proxy/${fileId}?token=${token}`;
+    res.json({ viewUrl });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate file view token', message: error.message });
+  }
+});
+
+// GET: proxy/stream any file type securely
+router.get('/proxy/:fileId', authenticate, async (req, res) => {
+  const token = req.query.token;
+  if (!token) return res.status(401).json({ error: 'Token required' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.fileId !== req.params.fileId) return res.status(403).json({ error: 'Invalid token for this file' });
+    // Stream file from Google Drive
+    const googleDriveService = new GoogleDriveService(
+      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      null // folderId not needed for download
+    );
+    const driveResult = await googleDriveService.downloadPdf(req.params.fileId); // downloadPdf streams any file
+    if (!driveResult.success) return res.status(500).json({ error: 'Failed to fetch file from Google Drive', message: driveResult.error });
+    // Set headers for secure inline viewing
+    const ext = req.query.ext || '';
+    res.set({
+      'Content-Type': getContentType(ext),
+      'Content-Disposition': 'inline; filename="secured.' + ext + '"',
+      'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-Download-Options': 'noopen',
+      'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
+    });
+    driveResult.stream.pipe(res);
+    driveResult.stream.on('error', (err) => {
+      if (!res.headersSent) res.status(500).json({ error: 'Error streaming file' });
+    });
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid or expired token', message: error.message });
+  }
+});
 router.get('/:folderId/files', authenticate, async (req, res) => {
   const folderId = req.params.folderId;
   try {

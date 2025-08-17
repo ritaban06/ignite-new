@@ -9,7 +9,7 @@ import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
-import SearchPage from './pages/SearchPage';
+// import SearchPage from './pages/SearchPage';
 import AuthDebug from './components/AuthDebug';
 
 // Get the appropriate Google OAuth Client ID based on platform
@@ -65,7 +65,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/search" element={<SearchPage />} />
+          {/* <Route path="/search" element={<SearchPage />} /> */}
           {/* <Route path="/gdrive-manager" element={<GoogleDrivePDFManager />} /> */}
           {/* Catch all other routes and redirect to dashboard */}
           <Route path="*" element={<DashboardPage />} />

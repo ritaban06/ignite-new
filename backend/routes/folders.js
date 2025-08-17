@@ -377,6 +377,51 @@ router.get('/with-metadata', authenticate, async (req, res) => {
 
 // Get PDFs in a folder
 // Get PDFs in a folder (Google Drive first, MongoDB fallback)
+// Get all files in a folder (universal: PDFs, images, docs, etc.)
+router.get('/:folderId/files', authenticate, async (req, res) => {
+  const folderId = req.params.folderId;
+  try {
+    // Google Drive logic
+    const googleDriveService = new GoogleDriveService(
+      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      folderId // Use requested folderId as Google Drive folder
+    );
+    const driveResult = await googleDriveService.listFiles();
+    if (driveResult.success && Array.isArray(driveResult.files)) {
+      // Transform Google Drive files to a universal format
+      const transformedFiles = driveResult.files.map(file => ({
+        _id: file.id,
+        googleDriveFileId: file.id,
+        title: file.name || 'Untitled File',
+        fileName: file.name,
+        mimeType: file.mimeType,
+        fileType: (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : '',
+        fileSize: file.size ? parseInt(file.size) : 0,
+        uploadedBy: null,
+        uploadedByName: 'Unknown',
+        uploadedAt: file.createdTime || new Date(),
+        createdAt: file.createdTime || new Date(),
+        updatedAt: file.createdTime || new Date(),
+        webViewLink: file.webViewLink,
+        webContentLink: file.webContentLink,
+        url: file.webContentLink || file.webViewLink || '',
+      }));
+      return res.json(transformedFiles);
+    } else {
+      // Fallback to MongoDB: get PDFs only (legacy)
+      const pdfs = await PDF.find({ folder: folderId });
+      return res.json(pdfs);
+    }
+  } catch (err) {
+    // Fallback to MongoDB if Google Drive throws
+    try {
+      const pdfs = await PDF.find({ folder: folderId });
+      return res.json(pdfs);
+    } catch (mongoErr) {
+      return res.status(500).json({ error: 'Failed to fetch files', details: err.message, mongoError: mongoErr.message });
+    }
+  }
+});
 router.get('/:folderId/pdfs', authenticate, async (req, res) => {
   const folderId = req.params.folderId;
   try {

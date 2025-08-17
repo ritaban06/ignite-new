@@ -25,7 +25,7 @@ const YEARS = ['All', '1', '2', '3', '4'];
 
 export default function PDFManagementPage() {
   const [folders, setFolders] = useState([]);
-  const [pdfs, setPdfs] = useState([]);
+  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
@@ -61,7 +61,7 @@ export default function PDFManagementPage() {
     };
     if (searchTerm.trim()) params.search = searchTerm.trim();
     const response = await pdfAPI.getAllPdfs(params);
-    setPdfs(response.data.pdfs);
+    setFiles(response.data.files);
     setTotalPages(response.data.pagination ? response.data.pagination.totalPages : 1);
     } catch (error) {
       console.error('Failed to fetch PDFs:', error);
@@ -179,7 +179,7 @@ export default function PDFManagementPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
             <p className="mt-2 text-gray-300">Loading PDFs...</p>
           </div>
-        ) : pdfs.length === 0 ? (
+        ) : files.length === 0 ? (
           <div className="p-8 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-300">No PDFs found</p>
@@ -207,7 +207,7 @@ export default function PDFManagementPage() {
                 </tr>
               </thead>
               <tbody className="bg-gray-800 divide-y divide-gray-600">
-                {pdfs.map((pdf) => (
+                {files.map((pdf) => (
                   <tr key={pdf._id} className="hover:bg-gray-700">
                     <td className="px-6 py-4">
                       <div className="flex items-start">

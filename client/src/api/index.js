@@ -91,6 +91,8 @@ export const folderAPI = {
   // Get folders from MongoDB with metadata
   getFoldersWithMetadata: () => api.get('/folders'),
   
+  // Get files in a specific folder (universal)
+  getFilesInFolder: (folderId) => api.get(`/folders/${folderId}/files`),
   // Get PDFs in a specific folder
   getPdfsInFolder: (folderId) => api.get(`/folders/${folderId}/pdfs`),
   

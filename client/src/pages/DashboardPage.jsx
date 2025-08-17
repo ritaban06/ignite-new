@@ -12,19 +12,20 @@ import { pdfAPI, folderAPI } from "../api";
 import { useAuth } from "../contexts/AuthContext";
 import PDFCard from "../components/PDFCard";
 import SecurePDFViewer from "../components/SecurePDFViewer";
+import FileViewer from "../components/FileViewer";
 import toast from "react-hot-toast";
 
 const DashboardPage = () => {
   const { user } = useAuth();
-  const [pdfs, setPdfs] = useState([]);
-  const [recentPdfs, setRecentPdfs] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [recentFiles, setRecentFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     // Removed department and year filters since backend handles user restrictions
     subject: "",
   });
-  const [selectedPdfId, setSelectedPdfId] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null); // { id, url, name, type }
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -44,8 +45,8 @@ const DashboardPage = () => {
     loadDashboardData();
   }, []);
 
-  // Load PDFs when filters change
-  const loadPDFs = useCallback(async () => {
+  // Load files (all types) when filters change
+  const loadFiles = useCallback(async () => {
     try {
       const params = {
         page: pagination.currentPage,
@@ -56,41 +57,41 @@ const DashboardPage = () => {
         params.subject = filters.subject.trim();
       }
 
-      // console.log("Loading PDFs with params:", params);
+      // console.log("Loading files with params:", params);
 
-      const response = await pdfAPI.getPDFs(params);
+      const response = await pdfAPI.getPDFs(params); // This API should return all file types
 
       if (response.data.pdfs) {
-        setPdfs(response.data.pdfs);
+        setFiles(response.data.pdfs);
         setPagination(response.data.pagination);
       }
     } catch (error) {
-      console.error("Error loading PDFs:", error);
-      toast.error("Failed to load PDFs");
+      console.error("Error loading files:", error);
+      toast.error("Failed to load files");
     }
   }, [filters, pagination.currentPage]);
 
   useEffect(() => {
-    loadPDFs();
-  }, [loadPDFs]);
+    loadFiles();
+  }, [loadFiles]);
 
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
 
       // Load recent PDFs and initial PDF list
-      const [recentResponse, pdfsResponse] = await Promise.all([
+      const [recentResponse, filesResponse] = await Promise.all([
         pdfAPI.getRecentPDFs(5),
         pdfAPI.getPDFs({ page: 1, limit: 12 }),
       ]);
 
       if (recentResponse.data.recentPdfs) {
-        setRecentPdfs(recentResponse.data.recentPdfs);
+        setRecentFiles(recentResponse.data.recentPdfs);
       }
 
-      if (pdfsResponse.data.pdfs) {
-        setPdfs(pdfsResponse.data.pdfs);
-        setPagination(pdfsResponse.data.pagination);
+      if (filesResponse.data.pdfs) {
+        setFiles(filesResponse.data.pdfs);
+        setPagination(filesResponse.data.pagination);
       }
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -122,22 +123,22 @@ const DashboardPage = () => {
       const response = await pdfAPI.searchPDFs(searchParams);
 
       if (response.data && response.data.pdfs) {
-        setPdfs(response.data.pdfs);
+        setFiles(response.data.pdfs);
         setPagination(
           response.data.pagination || {
             currentPage: 1,
             totalPages: 1,
-            totalCount: response.data.pdfs.length,
+            totalCount: response.data.files.length,
           }
         );
 
-        if (response.data.pdfs.length === 0) {
-          toast(`No PDFs found matching your search criteria`);
+        if (response.data.files.length === 0) {
+          toast(`No files found matching your search criteria`);
         } else {
-          toast.success(`Found ${response.data.pdfs.length} PDF(s)`);
+          toast.success(`Found ${response.data.files.length} file(s)`);
         }
       } else {
-        setPdfs([]);
+        setFiles([]);
         toast("No results found");
       }
     } catch (error) {
@@ -169,14 +170,15 @@ const DashboardPage = () => {
     loadDashboardData();
   };
 
-  const handleViewPDF = (pdfId) => {
-    setSelectedPdfId(pdfId);
+  // Handles view for any file type
+  const handleViewFile = (file) => {
+    setSelectedFile(file);
     setIsViewerOpen(true);
   };
 
   const handleCloseViewer = () => {
     setIsViewerOpen(false);
-    setSelectedPdfId(null);
+    setSelectedFile(null);
   };
 
   const changePage = (newPage) => {
@@ -423,13 +425,13 @@ const DashboardPage = () => {
     return rootFolders;
   };
 
-  const fetchPdfsInFolder = async (folderId) => {
+  const fetchFilesInFolder = async (folderId) => {
     try {
-      const response = await folderAPI.getPdfsInFolder(folderId);
-      setPdfs(response.data);
+      const response = await folderAPI.getFilesInFolder(folderId);
+      setFiles(response.data);
     } catch (error) {
-      console.error('Failed to load PDFs:', error);
-      toast.error("Failed to load PDFs");
+      console.error('Failed to load files:', error);
+      toast.error("Failed to load files");
     }
   };
   
@@ -484,8 +486,8 @@ const DashboardPage = () => {
       setCurrentPath([{ id: folderId, name: folderName }]);
     }
     
-    // console.log(`Fetching PDFs for folder: ${folderName}`);
-    fetchPdfsInFolder(folderId);
+  // console.log(`Fetching files for folder: ${folderName}`);
+  fetchFilesInFolder(folderId);
     setSelectedFolder(folderId);
     setIsLoading(false);
   };
@@ -497,11 +499,11 @@ const DashboardPage = () => {
       const parentFolder = newPath[newPath.length - 1];
       setCurrentPath(newPath);
       setSelectedFolder(parentFolder.id);
-      fetchPdfsInFolder(parentFolder.id);
+      fetchFilesInFolder(parentFolder.id);
     } else {
       // Go back to root (show all folders)
       setSelectedFolder(null);
-      setPdfs([]);
+      setFiles([]);
       setCurrentPath([]);
     }
   };
@@ -536,7 +538,7 @@ const DashboardPage = () => {
     return (currentFolder && Array.isArray(currentFolder.children)) ? currentFolder.children : [];
   };
 
-  if (isLoading && pdfs.length === 0) {
+  if (isLoading && files.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] flex items-center justify-center">
         <div className="text-center bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl px-6 py-8 shadow-lg border border-[rgba(255,255,255,0.15)]">
@@ -693,7 +695,7 @@ const DashboardPage = () => {
             <button
               onClick={() => {
                 setSelectedFolder(null);
-                setPdfs([]);
+                setFiles([]);
                 setCurrentPath([]);
               }}
               className="hover:text-white transition-colors flex-shrink-0"
@@ -709,7 +711,7 @@ const DashboardPage = () => {
                     const newPath = currentPath.slice(0, index + 1);
                     setCurrentPath(newPath);
                     setSelectedFolder(pathItem.id);
-                    fetchPdfsInFolder(pathItem.id);
+                    fetchFilesInFolder(pathItem.id);
                   }}
                   className={`hover:text-white transition-colors flex-shrink-0 ${
                     index === currentPath.length - 1 ? 'text-white font-semibold' : ''
@@ -798,34 +800,48 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {/* PDF List for selected subject/folder */}
+      {/* File List for selected subject/folder */}
       {selectedFolder && (
         <div className="mb-8">
           <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-6 border border-[rgba(255,255,255,0.15)]">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">
-                PDFs in {currentPath.length > 0 ? currentPath[currentPath.length - 1].name : 'Selected Folder'}
+                Files in {currentPath.length > 0 ? currentPath[currentPath.length - 1].name : 'Selected Folder'}
               </h2>
               <div className="text-sm text-white/60">
-                {pdfs.length} PDF{pdfs.length !== 1 ? 's' : ''} found
+                {files.length} file{files.length !== 1 ? 's' : ''} found
               </div>
             </div>
             
-            {pdfs && pdfs.length > 0 ? (
+            {files && files.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pdfs.map((pdf) => (
-                  <PDFCard 
-                    key={pdf._id || pdf.id || pdf.name} 
-                    pdf={pdf} 
-                    onView={() => handleViewPDF(pdf._id || pdf.id)} 
-                  />
-                ))}
+                {files
+                  .filter(file => !file.mimeType?.startsWith('application/vnd.google-apps.folder'))
+                  .map((file) => {
+                    // Determine file type and url
+                    const fileName = file.fileName || file.name || file.title || "file";
+                    const fileType = fileName.split('.').pop().toLowerCase();
+                    const fileUrl = file.url || file.fileUrl || file.downloadUrl || file.link || file.path;
+                    return (
+                      <PDFCard
+                        key={file._id || file.id || file.name}
+                        pdf={file}
+                        onView={() => handleViewFile({
+                          id: file._id || file.id,
+                          url: fileUrl,
+                          name: fileName,
+                          type: fileType,
+                          user: user,
+                        })}
+                      />
+                    );
+                  })}
               </div>
             ) : (
               <div className="text-center text-white/70 py-8">
                 <BookOpen className="h-12 w-12 text-white/40 mx-auto mb-4" />
-                <p>No PDFs found in this folder.</p>
-                <p className="text-sm mt-2">PDFs may be located in subfolders or this folder may be empty.</p>
+                <p>No files found in this folder.</p>
+                <p className="text-sm mt-2">Files may be located in subfolders or this folder may be empty.</p>
               </div>
             )}
           </div>
@@ -886,13 +902,29 @@ const DashboardPage = () => {
     </div>
   </div>
 
-  {/* PDF Viewer Modal */}
-  <SecurePDFViewer
-    pdfId={selectedPdfId}
-    isOpen={isViewerOpen}
-    onClose={handleCloseViewer}
-    user={user}
-  />
+  {/* File Viewer Modal */}
+  {isViewerOpen && selectedFile && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+      <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-4 relative">
+        <button
+          className="absolute top-2 right-2 text-gray-700 hover:text-red-500 text-xl font-bold"
+          onClick={handleCloseViewer}
+        >
+          &times;
+        </button>
+        {selectedFile.type === "pdf" ? (
+          <SecurePDFViewer
+            pdfId={selectedFile.id}
+            isOpen={isViewerOpen}
+            onClose={handleCloseViewer}
+            user={user}
+          />
+        ) : (
+          <FileViewer fileUrl={selectedFile.url} fileName={selectedFile.name} />
+        )}
+      </div>
+    </div>
+  )}
 </div>
 
   );

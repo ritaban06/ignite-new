@@ -77,11 +77,12 @@ class GoogleDriveService {
   }
 
   // List PDF files in the folder
+  // List all files (PDFs, images, docs, etc.) in the folder
   async listFiles() {
     try {
       const response = await this.drive.files.list({
-        q: `'${this.folderId}' in parents and mimeType='application/pdf' and trashed=false`,
-        fields: 'files(id, name, webViewLink, webContentLink, createdTime, size)',
+        q: `'${this.folderId}' in parents and trashed=false`,
+        fields: 'files(id, name, mimeType, webViewLink, webContentLink, createdTime, size)',
         orderBy: 'createdTime desc',
       });
       return { success: true, files: response.data.files };

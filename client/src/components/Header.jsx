@@ -42,7 +42,18 @@ const Header = () => {
     <div className="flex justify-between items-center h-16">
       
       {/* Logo */}
-      <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+      <Link
+        to="/"
+        className="flex items-center hover:opacity-80 transition-opacity"
+        onClick={e => {
+          // Simulate click on Home button in Dashboard
+          const homeBtn = document.querySelector('button[class*="hover:text-white"][class*="flex-shrink-0"]');
+          if (homeBtn) {
+            e.preventDefault();
+            homeBtn.click();
+          }
+        }}
+      >
         <img src="/newlogo.webp" alt="Ignite" className="h-6 w-auto sm:h-8" />
         <span className="ml-2 text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
           Ignite
@@ -51,7 +62,7 @@ const Header = () => {
 
       {/* Desktop Navigation */}
       <nav className="hidden md:flex space-x-4">
-        <Link
+        {/* <Link
           to="/dashboard"
           className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             isActive('/dashboard') || isActive('/')
@@ -61,9 +72,9 @@ const Header = () => {
         >
           <Home className="h-4 w-4" />
           <span>Dashboard</span>
-        </Link>
+        </Link> */}
 
-        <Link
+        {/* <Link
           to="/search"
           className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             isActive('/search')
@@ -73,7 +84,7 @@ const Header = () => {
         >
           <Search className="h-4 w-4" />
           <span>Search</span>
-        </Link>
+        </Link> */}
 
         
       </nav>

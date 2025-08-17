@@ -82,6 +82,26 @@ const DashboardPage = () => {
     loadFiles();
   }, [loadFiles]);
 
+        // Listen for refresh event from Header logo click
+        useEffect(() => {
+          const refreshHandler = () => {
+            loadDashboardData();
+          };
+          window.addEventListener('refresh-available-subjects', refreshHandler);
+          // Listen for dashboard-home event to reset folder state and refresh subjects
+          const homeHandler = () => {
+            setSelectedFolder(null);
+            setFiles([]);
+            setCurrentPath([]);
+            loadDashboardData();
+          };
+          window.addEventListener('dashboard-home', homeHandler);
+          return () => {
+            window.removeEventListener('refresh-available-subjects', refreshHandler);
+            window.removeEventListener('dashboard-home', homeHandler);
+          };
+        }, []);
+
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
@@ -704,6 +724,7 @@ const DashboardPage = () => {
                 setSelectedFolder(null);
                 setFiles([]);
                 setCurrentPath([]);
+                loadDashboardData();
               }}
               className="hover:text-white transition-colors flex-shrink-0"
             >

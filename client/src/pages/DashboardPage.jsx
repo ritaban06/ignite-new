@@ -844,7 +844,7 @@ const DashboardPage = () => {
                         pdf={file}
                         onView={() => handleViewFile({
                           id: file._id || file.id,
-                          url: fileUrl,
+                          url: file._id || file.id,
                           name: fileName,
                           type: fileType,
                           user: user,

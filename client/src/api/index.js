@@ -96,6 +96,9 @@ export const folderAPI = {
   // Get PDFs in a specific folder
   getPdfsInFolder: (folderId) => api.get(`/folders/${folderId}/pdfs`),
   
+  // Get secure view URL for any file
+  getViewURL: (fileId) => api.post(`/folders/file/${fileId}/view`),
+  
   // Update folder metadata (access control, etc.)
   updateFolder: (folderId, folderData) => api.put(`/folders/${folderId}`, folderData),
   

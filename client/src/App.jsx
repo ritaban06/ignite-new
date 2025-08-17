@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { enableGlobalSecurity, disableGlobalSecurity, isGlobalSecurityEnabled } from './utils/globalSecurity';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -29,6 +30,18 @@ const GOOGLE_CLIENT_ID = getGoogleClientId() || 'your-google-client-id-here';
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Enable/disable global security listeners based on env value
+  useEffect(() => {
+    if (isGlobalSecurityEnabled()) {
+      enableGlobalSecurity();
+    } else {
+      disableGlobalSecurity();
+    }
+    // Cleanup on unmount
+    return () => {
+      disableGlobalSecurity();
+    };
+  }, []);
   if (isLoading) {
     return (
       <div className="min-h-screen bg-purple-100 flex items-center justify-center">

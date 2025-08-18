@@ -7,7 +7,7 @@
 [![Vercel](https://img.shields.io/badge/Vercel-Full%20Stack-black?logo=vercel)](https://vercel.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Cloudflare R2 storage. Now with Capacitor integration for Android apps.
+A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Google Drive storage. Now with Capacitor integration for Android apps.
 
 ---
 

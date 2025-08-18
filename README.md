@@ -29,8 +29,8 @@ ignite-new/
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **PNPM**: v8.0.0 or higher (preferred package manager)
+- **Node.js**: v22.13.0 or higher
+- **PNPM**: v10.12.1 or higher (preferred package manager)
 - **MongoDB**: Local installation or MongoDB Atlas account
 - **Google Drive Account**: For PDF storage
 - **Android Studio**: For building Android apps
@@ -46,7 +46,7 @@ cd ignite-new
 
 ```bash
 # Install all workspace dependencies
-pnpm install
+pnpm i
 ```
 
 ### 3. Start Development Servers
@@ -83,19 +83,18 @@ pnpm dev:client
 ### 🔒 Security Features
 - JWT-based authentication with refresh tokens
 - Google OAuth 2.0 integration
-- Single device login restriction
 - Role-based access control (Admin/Client)
 - Signed URLs with short TTL (Time To Live)
 - PDF viewing without download capability
 - Comprehensive access logging and analytics
-- Rate limiting and request validation
+- Request validation
 - Secure headers with Helmet.js
 
 ### 👨‍💼 Admin Features
 - Secure admin login dashboard
-- PDF upload with metadata (department/year/category)
+-  PDF metadata management (department/year/category) in admin panel; actual PDF upload handled separately
 - Bulk PDF management operations
-- User management and role assignment
+- User management
 - Real-time analytics and access logs
 - System configuration and settings
 
@@ -103,7 +102,7 @@ pnpm dev:client
 - Google OAuth and email-based authentication
 - Department and year-based PDF filtering
 - Advanced search functionality
-- Secure PDF viewing (no download/share/print)
+- Secure PDF viewing (no download/share/print/dev tools)
 - Mobile-responsive design
 - Clean, intuitive user interface
 - Access history tracking
@@ -112,33 +111,33 @@ pnpm dev:client
 - Capacitor integration for Android apps
 - Offline PDF viewing support
 - Push notifications for updates
+- Screenshot & screenrecorder protection
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: React 18 with Vite
+- **Framework**: React 18 with Vite (Vite JS)
 - **Styling**: Tailwind CSS
 - **State Management**: Context API
-- **PDF Rendering**: PDF.js
+- **PDF Rendering**: Primary - `react-pdf-viewer` Backup - `PDF.js`
 - **HTTP Client**: Axios
 - **Build Tool**: Vite
 
 ### Backend
-- **Runtime**: Node.js (v18+)
+- **Runtime**: Node.js (v22+)
 - **Framework**: Express.js
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: JWT + Google OAuth 2.0
-- **File Upload**: Multer + Express-fileupload
-- **Security**: Helmet.js, CORS, Rate Limiting
+- **Security**: Helmet.js, CORS
 - **Validation**: Express-validator
 
 ### Infrastructure
-- **Storage**: Cloudflare R2 (S3-compatible)
+- **Storage**: Google Drive
 - **Package Manager**: PNPM Workspaces
-- **Process Manager**: PM2 (production)
-- **Deployment**: Vercel (frontend), Railway/Heroku (backend)
+- **Google Cloud**: Google Sheets API
+- **Deployment**: Vercel (frontend), Vercel/DigitalOcean (backend)
 
 ---
 
@@ -153,8 +152,8 @@ pnpm dev:client
 ## 📋 Setup Requirements
 
 ### System Requirements
-1. **Node.js**: v18.0.0 or higher
-2. **PNPM**: v8.0.0 or higher
+1. **Node.js**: v22.13.0 or higher
+2. **PNPM**: v10.12.0 or higher
 3. **MongoDB**: Local or Atlas
 
 ---
@@ -164,9 +163,9 @@ pnpm dev:client
    - Local installation OR
    - MongoDB Atlas (cloud) - Free tier available
    
-2. **Cloudflare Account** (Free tier sufficient):
-   - R2 Object Storage bucket
-   - API tokens for R2 access
+2. **Google Account** (Free tier sufficient):
+   - Google Drive storage
+   - Easy management for admins
    
 3. **Google Cloud Console** (Optional, for OAuth):
    - OAuth 2.0 client credentials
@@ -211,23 +210,34 @@ Create `.env` files in each package directory:
 
 **Backend (.env)**
 ```env
-NODE_ENV=development
+NODE_ENV=development or production
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/ignite
 JWT_SECRET=your-super-secret-jwt-key
-JWT_REFRESH_SECRET=your-refresh-secret
+APPROVED_USERS_SHEET_URL=your-google-sheets-url-here
+APPROVED_USERS_SHEET_GID=your-google-sheets-gid-here
+ADMIN_URL=http://localhost:3001
+CLIENT_URL=http://localhost:3000
+SESSION_SECRET=your-session-secret-key
+ADMIN_USERNAME=your-admin-username-here
+ADMIN_PASSWORD=your-secure-admin-password-here
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
-CLOUDFLARE_R2_ACCESS_KEY=your-r2-access-key
-CLOUDFLARE_R2_SECRET_KEY=your-r2-secret-key
-CLOUDFLARE_R2_BUCKET=your-bucket-name
-CLOUDFLARE_R2_REGION=auto
+GDRIVE_BASE_FOLDER_ID=your-google-drive-base-folder-id-here
+GDRIVE_CREDENTIALS=your-google-drive-credentials-json-content-here (replace \\n with \n)
 ```
 
-**Frontend (.env)**
+**Client (.env)**
 ```env
-VITE_API_URL=http://localhost:5000
-VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
+VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-web-client-id-here
+VITE_SECURE_GLOBAL_DISABLE=true
+```
+
+**Admin (.env)**
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_GDRIVE_BASE_FOLDER_ID=your-gdrive-base-folder-id
 ```
 
 ## 🚀 Production Deployment
@@ -248,14 +258,13 @@ vercel --prod
 ### Backend Deployment
 The backend can be deployed to various platforms:
 
-**Railway/Heroku:**
+**Vercel:**
 ```bash
 cd backend
-# Ensure your Procfile exists: web: node server.js
-git push heroku main
+vercel --prod
 ```
 
-**Digital Ocean/AWS/GCP:**
+**Digital Ocean:**
 ```bash
 # Use PM2 for production process management
 npm install -g pm2
@@ -317,8 +326,6 @@ pnpm install
 ```
 
 **PDF Upload/Viewing Issues:**
-- Verify Cloudflare R2 credentials in `.env`
-- Check R2 bucket permissions
 - Ensure signed URLs are not expired
 
 **Google OAuth Issues:**

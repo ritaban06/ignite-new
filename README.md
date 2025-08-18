@@ -224,7 +224,7 @@ ADMIN_PASSWORD=your-secure-admin-password-here
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 GDRIVE_BASE_FOLDER_ID=your-google-drive-base-folder-id-here
-GDRIVE_CREDENTIALS=your-google-drive-credentials-json-content-here (replace \\n with \n)
+GDRIVE_CREDENTIALS=your-google-drive-credentials-json-content-here
 ```
 
 **Client (.env)**

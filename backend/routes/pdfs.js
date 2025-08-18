@@ -4,8 +4,13 @@ const { body, query, validationResult } = require('express-validator');
 const PDF = require('../models/PDF');
 const AccessLog = require('../models/AccessLog');
 const GoogleDriveService = require('../services/googleDriveService');
+
+const credentials = process.env.GDRIVE_CREDENTIALS
+  .replace(/\\n/g, '\n')
+  .replace(/\n/g, '\n');
+  
 const googleDriveService = new GoogleDriveService(
-  JSON.parse(process.env.GDRIVE_CREDENTIALS),
+  JSON.parse(credentials),
   process.env.GDRIVE_BASE_FOLDER_ID
 );
 const { 
@@ -848,6 +853,6 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
   }
 });
 
-// console.log('GDRIVE_CREDENTIALS:', process.env.GDRIVE_CREDENTIALS);
+// console.log('GDRIVE_CREDENTIALS:', credentials);
 
 module.exports = router;

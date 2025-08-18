@@ -13,8 +13,11 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
     }
+    const credentials = process.env.GDRIVE_CREDENTIALS
+      .replace(/\\n/g, '\n')
+      .replace(/\n/g, '\n');
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      JSON.parse(credentials),
       process.env.GDRIVE_BASE_FOLDER_ID
     );
     
@@ -412,7 +415,7 @@ router.get('/proxy/:fileId', authenticate, async (req, res) => {
     if (decoded.fileId !== req.params.fileId) return res.status(403).json({ error: 'Invalid token for this file' });
     // Stream file from Google Drive
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      JSON.parse(credentials),
       null // folderId not needed for download
     );
     const driveResult = await googleDriveService.downloadPdf(req.params.fileId); // downloadPdf streams any file
@@ -441,7 +444,7 @@ router.get('/:folderId/files', authenticate, async (req, res) => {
   try {
     // Google Drive logic
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      JSON.parse(credentials),
       folderId // Use requested folderId as Google Drive folder
     );
     const driveResult = await googleDriveService.listFiles();
@@ -485,7 +488,7 @@ router.get('/:folderId/pdfs', authenticate, async (req, res) => {
   try {
     // Google Drive logic
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      JSON.parse(credentials),
       folderId // Use requested folderId as Google Drive folder
     );
     const driveResult = await googleDriveService.listFiles();
@@ -644,7 +647,7 @@ router.get('/search', authenticate, async (req, res) => {
     const user = req.user;
     const rootFolders = await Folder.find({ parent: null }).lean();
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      JSON.parse(credentials),
       null
     );
     const results = await searchFilesInFolders(rootFolders, user, q, googleDriveService);

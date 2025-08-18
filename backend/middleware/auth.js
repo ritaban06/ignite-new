@@ -207,8 +207,11 @@ const validatePdfAccess = async (req, res, next) => {
     // If not found and looks like Google Drive file ID, create a virtual PDF object
     if (!pdf && pdfId.length > 24) {
       try {
+        const credentials = process.env.GDRIVE_CREDENTIALS
+          .replace(/\\n/g, '\n')
+          .replace(/\n/g, '\n');
         const googleDriveService = new GoogleDriveService(
-          JSON.parse(process.env.GDRIVE_CREDENTIALS),
+          JSON.parse(credentials),
           process.env.GDRIVE_BASE_FOLDER_ID
         );
         

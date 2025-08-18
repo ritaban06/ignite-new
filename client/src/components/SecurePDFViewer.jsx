@@ -422,7 +422,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
         <div className="flex items-center justify-between p-3 sm:p-4 border-b">
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
             <h2 className="text-base sm:text-xl font-semibold text-gray-800 truncate">
-              {pdfInfo?.title || `PDF Document ${pdfId}`}
+              {pdfInfo?.title || `PDF File`}
             </h2>
             {pdfInfo && (
               <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">

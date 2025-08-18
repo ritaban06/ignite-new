@@ -1,10 +1,3 @@
-// Simple loading spinner
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center py-8">
-    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-4 border-t-blue-500 mx-auto"></div>
-    <span className="ml-4 text-white/80">Loading...</span>
-  </div>
-);
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
@@ -21,6 +14,14 @@ import PDFCard from "../components/PDFCard";
 import SecurePDFViewer from "../components/SecurePDFViewer";
 import FileViewer from "../components/FileViewer";
 import toast from "react-hot-toast";
+
+// Simple loading spinner
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-8">
+    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-4 border-t-blue-500 mx-auto"></div>
+    <span className="ml-4 text-white/80">Loading...</span>
+  </div>
+);
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -44,8 +45,6 @@ const DashboardPage = () => {
   const [folderHierarchy, setFolderHierarchy] = useState([]);
   const [currentPath, setCurrentPath] = useState([]);
   const [accessibleFolders, setAccessibleFolders] = useState([]);
-
-  // Remove unused filter variables since backend handles user department/year restrictions
 
   // Load initial data
   useEffect(() => {

@@ -24,6 +24,21 @@ const LoadingSpinner = () => (
 );
 
 const DashboardPage = () => {
+  // Academic year calculation (e.g., 25-26)
+  const getAcademicYear = () => {
+    const now = new Date();
+    let year = now.getFullYear();
+    let startYear, endYear;
+    // Academic year starts in July (adjust as needed)
+    if (now.getMonth() >= 6) {
+      startYear = year % 100;
+      endYear = (year + 1) % 100;
+    } else {
+      startYear = (year - 1) % 100;
+      endYear = year % 100;
+    }
+    return `${startYear.toString().padStart(2, '0')}-${endYear.toString().padStart(2, '0')}`;
+  };
   const { user } = useAuth();
   const [files, setFiles] = useState([]);
   const [recentFiles, setRecentFiles] = useState([]);
@@ -617,20 +632,6 @@ const DashboardPage = () => {
     <div className="py-8">
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        {/* PDF Stat */}
-        {/* <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 border border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,255,255,0.25)] transition-all text-white">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-500 rounded-lg flex items-center justify-center">
-                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-              </div>
-            </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-white/80">Available PDFs</p>
-              <p className="text-xl sm:text-2xl font-bold text-white">{pagination.totalCount}</p>
-            </div> 
-          </div>
-        </div> */}
 
         {/* Year Stat */}
         <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 border border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,255,255,0.25)] transition-all text-white">
@@ -674,6 +675,21 @@ const DashboardPage = () => {
               <p className="text-xs sm:text-sm font-medium text-white/80">Your Department</p>
               <p className="text-xl sm:text-2xl font-bold text-white">{user?.department}</p>
             </div>
+          </div>
+        </div>
+
+        {/* Academic Year Stat */}
+        <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 border border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,255,255,0.25)] transition-all text-white">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-500 rounded-lg flex items-center justify-center">
+                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+            </div>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm font-medium text-white/80">Academic Year</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{getAcademicYear()}</p>
+            </div> 
           </div>
         </div>
       </div>

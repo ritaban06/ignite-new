@@ -1,8 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const Folder = require('../models/Folder');
 const GoogleDriveService = require('../services/googleDriveService');
-const PDF = require('../models/PDF');
+const Folder = require('../models/Folder');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
@@ -606,6 +605,56 @@ router.put('/:id', authenticate, async (req, res) => {
     res.json(folder);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update folder', details: err.message });
+  }
+});
+
+// Helper: check if user can access folder
+function userCanAccessFolder(folder, user) {
+  const deptMatch = !folder.departments || folder.departments.length === 0 || folder.departments.includes(user.department);
+  const yearMatch = !folder.years || folder.years.length === 0 || folder.years.includes(user.year);
+  const semMatch = !folder.semesters || folder.semesters.length === 0 || folder.semesters.includes(user.semester);
+  return deptMatch && yearMatch && semMatch;
+}
+
+// Recursively search folders and files
+async function searchFilesInFolders(folders, user, searchTerm, googleDriveService) {
+  let results = [];
+  for (const folder of folders) {
+    if (!userCanAccessFolder(folder, user)) continue;
+    // Recursively search subfolders
+    if (folder.children && folder.children.length > 0) {
+      results = results.concat(await searchFilesInFolders(folder.children, user, searchTerm, googleDriveService));
+    }
+    // Search files in this folder
+    if (folder.gdriveId) {
+      const files = await googleDriveService.listFilesRecursive(folder.gdriveId);
+      const matchingFiles = files.filter(file =>
+        file.name && file.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      results = results.concat(matchingFiles);
+    }
+  }
+  return results;
+}
+
+// Route: /folders/search
+router.get('/search', authenticate, async (req, res) => {
+  try {
+    const { q } = req.query;
+    const user = req.user;
+    const rootFolders = await Folder.find({ parent: null }).lean();
+    const googleDriveService = new GoogleDriveService(
+      JSON.parse(process.env.GDRIVE_CREDENTIALS),
+      null
+    );
+    const results = await searchFilesInFolders(rootFolders, user, q, googleDriveService);
+    res.json({
+      query: q,
+      files: results,
+      totalCount: results.length
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Search failed', message: error.message });
   }
 });
 

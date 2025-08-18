@@ -71,7 +71,7 @@ export const pdfAPI = {
   getPDFBase64: (pdfId) => api.post(`/pdfs/${pdfId}/view-base64`),
   
   // Search PDFs
-  searchPDFs: (params) => api.get('/pdfs/search/query', { params }),
+  searchPDFs: (params) => api.get('/folders/search', { params }),
   
   // Get recent PDFs
   getRecentPDFs: (limit = 10) => api.get('/pdfs/user/recent', { params: { limit } }),

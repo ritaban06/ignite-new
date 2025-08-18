@@ -131,6 +131,8 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 connectDB();
 
 // Routes
+// NOTE: All folder routes (including /folders/search) are mounted under /api/folders
+// So, /folders/search is actually available at /api/folders/search
 app.use('/api/auth', authRoutes);
 app.use('/api/pdfs', pdfRoutes);
 app.use('/api/folders', folderRoutes);

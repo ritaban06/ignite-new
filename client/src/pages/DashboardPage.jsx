@@ -146,20 +146,42 @@ const DashboardPage = () => {
 
       const response = await pdfAPI.searchPDFs(searchParams);
 
-      if (response.data && Array.isArray(response.data.pdfs)) {
-        setFiles(response.data.pdfs);
+      if (response.data && Array.isArray(response.data.files)) {
+        setFiles(response.data.files);
         setPagination(
           response.data.pagination || {
             currentPage: 1,
             totalPages: 1,
-            totalCount: response.data.pdfs ? response.data.pdfs.length : 0,
+            totalCount: response.data.files ? response.data.files.length : 0,
           }
         );
 
-        if (!response.data.pdfs || response.data.pdfs.length === 0) {
+        if (!response.data.files || response.data.files.length === 0) {
           toast(`No files found matching your search criteria`);
         } else {
-          toast.success(`Found ${response.data.pdfs.length} file(s)`);
+          toast.success(`Found ${response.data.files.length} file(s)`);
+          // If only one file is found, navigate to its folder/subfolder
+          if (response.data.files.length === 1) {
+            const file = response.data.files[0];
+            // Try to find the folder/subfolder in the hierarchy
+            if (file.parents && file.parents.length > 0) {
+              // Use the first parent as the folder ID
+              const parentId = file.parents[0];
+              // Find the folder name from the hierarchy
+              const findFolderName = (folders, id) => {
+                for (const folder of folders) {
+                  if (folder.id === id) return folder.name;
+                  if (folder.children && folder.children.length > 0) {
+                    const name = findFolderName(folder.children, id);
+                    if (name) return name;
+                  }
+                }
+                return null;
+              };
+              const folderName = findFolderName(folderHierarchy, parentId) || "Folder";
+              navigateToFolder(parentId, folderName);
+            }
+          }
         }
       } else {
         setFiles([]);

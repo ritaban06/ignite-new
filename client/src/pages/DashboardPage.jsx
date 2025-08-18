@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
-  Filter,
+  MoveUp,
   BookOpen,
-  Clock,
+  GraduationCap,
+  Notebook,
   TrendingUp,
-  Plus,
+  
   Folder,
 } from "lucide-react";
 import { pdfAPI, folderAPI } from "../api";
@@ -638,7 +639,7 @@ const DashboardPage = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-600 to-pink-500 rounded-lg flex items-center justify-center">
-                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <MoveUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
             <div className="ml-3 sm:ml-4">
@@ -653,7 +654,7 @@ const DashboardPage = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-600 to-teal-500 rounded-lg flex items-center justify-center">
-                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <Notebook className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
             <div className="ml-3 sm:ml-4">
@@ -668,7 +669,7 @@ const DashboardPage = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
             <div className="ml-3 sm:ml-4">
@@ -683,7 +684,7 @@ const DashboardPage = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-500 rounded-lg flex items-center justify-center">
-                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
             <div className="ml-3 sm:ml-4">

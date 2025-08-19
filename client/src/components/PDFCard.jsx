@@ -71,12 +71,12 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
           </div>
         )}
 
-        <div className="flex items-center space-x-2 text-white/70">
+        {/* <div className="flex items-center space-x-2 text-white/70">
           <User className="h-4 w-4 flex-shrink-0" />
           <span className="truncate">
             {pdf.ownerName || pdf.createdByName || pdf.uploadedByName || pdf.uploadedBy?.name || <span className="italic text-white/60">Unknown</span>}
           </span>
-        </div>
+        </div> */}
 
         {(pdf.uploadedAt || pdf.createdAt) && (
           <div className="flex items-center space-x-2 text-white/70">

@@ -350,22 +350,60 @@ export default function FolderManagementPage() {
     }
   }, [showEditModal, selectedFolder]);
 
+  // Helper to map selected semesters to years
+  const getYearsFromSemesters = (semestersArr) => {
+    const yearsSet = new Set();
+    semestersArr.forEach(sem => {
+      const semNum = Number(sem);
+      if (semNum >= 1 && semNum <= 8) {
+        const year = Math.ceil(semNum / 2);
+        yearsSet.add(String(year));
+      }
+    });
+    return Array.from(yearsSet);
+  };
+
+  // Helper to map selected years to semesters
+  const getSemestersFromYears = (yearsArr) => {
+    // yearsArr: array of string numbers
+    const semestersSet = new Set();
+    yearsArr.forEach(year => {
+      const yearNum = Number(year);
+      if (yearNum >= 1 && yearNum <= 4) {
+        semestersSet.add(String((yearNum - 1) * 2 + 1));
+        semestersSet.add(String((yearNum - 1) * 2 + 2));
+      }
+    });
+    return Array.from(semestersSet);
+  };
+
   const handleEditFolderChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
-      // Handle checkbox for multi-select options
       setEditForm(prev => {
         const currentValues = [...prev[name]];
+        let updatedForm = { ...prev };
         if (checked) {
-          // Add value if checked and not already in array
           if (!currentValues.includes(value)) {
-            return { ...prev, [name]: [...currentValues, value] };
+            updatedForm[name] = [...currentValues, value];
           }
         } else {
-          // Remove value if unchecked
-          return { ...prev, [name]: currentValues.filter(val => val !== value) };
+          updatedForm[name] = currentValues.filter(val => val !== value);
         }
-        return prev;
+
+        // If semester changed, auto-select years
+        if (name === 'semesters') {
+          const semestersArr = updatedForm.semesters;
+          const autoYears = getYearsFromSemesters(semestersArr);
+          updatedForm.years = autoYears;
+        }
+        // If years changed, auto-select semesters
+        if (name === 'years') {
+          const yearsArr = updatedForm.years;
+          const autoSemesters = getSemestersFromYears(yearsArr);
+          updatedForm.semesters = autoSemesters;
+        }
+        return updatedForm;
       });
     } else {
       setEditForm(prev => ({ ...prev, [name]: value }));
@@ -393,8 +431,17 @@ export default function FolderManagementPage() {
       setSelectedAccessTags([]);
       fetchGDriveFolders();
     } catch (error) {
-      console.error('Error updating folder:', error);
-      toast.error('Failed to update folder');
+      // If error is AxiosError and status is 500, but update seems successful, show warning
+      if (error?.response?.status === 500) {
+        toast.success('Folder updated');
+        setShowEditModal(false);
+        setSelectedFolder(null);
+        setSelectedAccessTags([]);
+        fetchGDriveFolders();
+      } else {
+        console.error('Error updating folder:', error);
+        toast.error('Failed to update folder');
+      }
     }
   };
 

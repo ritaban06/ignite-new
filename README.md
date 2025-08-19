@@ -5,6 +5,7 @@
 [![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)](https://www.mongodb.com/atlas)
 [![Vite](https://img.shields.io/badge/Vite-7.0.0-646CFF?logo=vite)](https://vitejs.dev/)
 [![Vercel](https://img.shields.io/badge/Vercel-Full%20Stack-black?logo=vercel)](https://vercel.com/)
+[![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Backend%20Only-blue?logo=digitalocean)](https://www.digitalocean.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 A secure PDF viewing platform built with the MERN stack, featuring role-based access control, Google OAuth integration, and Google Drive storage. Now with Capacitor integration for Android apps.

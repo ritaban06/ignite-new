@@ -72,77 +72,96 @@ export default function Sidebar() {
     }
   };
 
+  const [open, setOpen] = useState(false);
   return (
-    <div className="w-64 bg-gray-800 shadow-sm border-r border-gray-700 min-h-screen">
-      <nav className="mt-8 px-4">
-        <ul className="space-y-2">
-          {navigation.map((item) => (
-            <li key={item.name}>
-              <NavLink
-                to={item.href}
-                end={item.href === '/'}
-                className={({ isActive }) =>
-                  `flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive
-                      ? 'bg-primary-900 text-primary-300 border-r-2 border-primary-500'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700'
-                  }`
-                }
-              >
-                <item.icon className="mr-3 h-5 w-5" />
-                {item.name}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-        
-        {/* Sync from Google Sheets Section */}
-        <div className="mt-8 pt-4 border-t border-gray-700">
-          <button
-            onClick={handleSyncSheets}
-            disabled={isSyncing}
-            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-              isSyncing
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'text-gray-300 hover:text-white hover:bg-blue-600 bg-blue-700'
-            }`}
-          >
-            <RefreshCw className={`mr-3 h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'Syncing...' : 'Sync Google Sheets'}
-          </button>
-          {/* Sync Folders from Google Drive Button */}
-          <button
-            onClick={handleCacheDriveFolders}
-            disabled={cacheLoading}
-            className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-60"
-          >
-            <Download className="mr-3 h-5 w-5 text-yellow-300" />
-            {cacheLoading ? 'Caching Folders...' : 'Sync Folders from Google Drive'}
-          </button>
-          {/* Status Message for Folder Sync */}
-          {cacheResult && (
-            <div className={`mt-2 px-3 py-2 text-xs rounded-md ${
-              cacheResult.success
-                ? 'bg-green-800 text-green-200'
-                : 'bg-red-800 text-red-200'
-            }`}>
-              {cacheResult.success
-                ? `Sync complete: ${cacheResult.added ?? 0} added, ${cacheResult.updated ?? 0} updated, ${cacheResult.removed ?? 0} removed. Total scanned: ${cacheResult.total ?? 0}.`
-                : `Error: ${cacheResult.error}`}
-            </div>
-          )}
-          {/* Status Message for Sheets Sync */}
-          {syncStatus && (
-            <div className={`mt-2 px-3 py-2 text-xs rounded-md ${
-              syncStatus.type === 'success'
-                ? 'bg-green-800 text-green-200'
-                : 'bg-red-800 text-red-200'
-            }`}>
-              {syncStatus.message}
-            </div>
-          )}
-        </div>
-      </nav>
-    </div>
+    <>
+      {/* Hamburger for mobile */}
+      <button
+        className="md:hidden fixed top-4 left-4 z-50 bg-gray-800 text-white p-2 rounded"
+        onClick={() => setOpen(!open)}
+        aria-label="Open sidebar"
+      >
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <aside
+        className={`bg-gray-800 shadow-sm border-r border-gray-700 min-h-screen w-64 transition-transform duration-300
+          fixed top-16 left-0 z-40 ${open ? 'translate-x-0' : '-translate-x-full'}
+          md:static md:top-auto md:left-auto md:z-0 md:translate-x-0 md:block`}
+      >
+        {/* Close button for mobile */}
+        {/* <button className="md:hidden absolute top-4 right-4 bg-gray-700 text-white p-2 rounded" onClick={() => setOpen(false)} aria-label="Close sidebar">
+          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button> */}
+        <nav className="mt-8 px-4">
+          <ul className="space-y-2">
+            {navigation.map((item) => (
+              <li key={item.name}>
+                <NavLink
+                  to={item.href}
+                  end={item.href === '/'}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isActive
+                        ? 'bg-primary-900 text-primary-300 border-r-2 border-primary-500'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                    }`
+                  }
+                  onClick={() => setOpen(false)} // Close sidebar on mobile nav
+                >
+                  <item.icon className="mr-3 h-5 w-5" />
+                  {item.name}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+          {/* Sync from Google Sheets Section */}
+          <div className="mt-8 pt-4 border-t border-gray-700">
+            <button
+              onClick={handleSyncSheets}
+              disabled={isSyncing}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                isSyncing
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'text-gray-300 hover:text-white hover:bg-blue-600 bg-blue-700'
+              }`}
+            >
+              <RefreshCw className={`mr-3 h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Sync Google Sheets'}
+            </button>
+            {/* Sync Folders from Google Drive Button */}
+            <button
+              onClick={handleCacheDriveFolders}
+              disabled={cacheLoading}
+              className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-60"
+            >
+              <Download className="mr-3 h-5 w-5 text-yellow-300" />
+              {cacheLoading ? 'Caching Folders...' : 'Sync Folders from Google Drive'}
+            </button>
+            {/* Status Message for Folder Sync */}
+            {cacheResult && (
+              <div className={`mt-2 px-3 py-2 text-xs rounded-md ${
+                cacheResult.success
+                  ? 'bg-green-800 text-green-200'
+                  : 'bg-red-800 text-red-200'
+              }`}>
+                {cacheResult.success
+                  ? `Sync complete: ${cacheResult.added ?? 0} added, ${cacheResult.updated ?? 0} updated, ${cacheResult.removed ?? 0} removed. Total scanned: ${cacheResult.total ?? 0}.`
+                  : `Error: ${cacheResult.error}`}
+              </div>
+            )}
+            {/* Status Message for Sheets Sync */}
+            {syncStatus && (
+              <div className={`mt-2 px-3 py-2 text-xs rounded-md ${
+                syncStatus.type === 'success'
+                  ? 'bg-green-800 text-green-200'
+                  : 'bg-red-800 text-red-200'
+              }`}>
+                {syncStatus.message}
+              </div>
+            )}
+          </div>
+        </nav>
+      </aside>
+    </>
   );
 }

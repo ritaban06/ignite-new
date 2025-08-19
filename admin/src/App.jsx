@@ -38,7 +38,8 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-900">
       <Header />
-      <div className="flex">
+      <div className="flex pt-16">
+        {/* pt-16 ensures content and sidebar are below the fixed header (h-16 = 4rem) */}
         <Sidebar />
         <main className="flex-1">
           <Routes>

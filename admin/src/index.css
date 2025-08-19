@@ -3,6 +3,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom mobile tweaks */
+.mobile-hide {
+  @apply hidden md:block;
+}
+.mobile-only {
+  @apply block md:hidden;
+}
+
 * {
   box-sizing: border-box;
 }

@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         setIsAuthenticated(true);
         
-        toast.success(`Welcome back, ${userData.name}!`);
+        // toast.success(`Welcome back, ${userData.name}!`);
         return { success: true, user: userData };
       } else {
         throw new Error('Invalid response format');
@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }) => {
         setUser(newUser);
         setIsAuthenticated(true);
         
-        toast.success(`Welcome to Ignite, ${newUser.name}!`);
+        // toast.success(`Welcome to Ignite, ${newUser.name}!`);
         return { success: true, user: newUser };
       } else {
         throw new Error('Invalid response format');
@@ -170,7 +170,7 @@ export const AuthProvider = ({ children }) => {
       
       // Only show success message for manual logouts
       if (!isAutomatic) {
-        toast.success('Logged out successfully');
+        // toast.success('Logged out successfully');
       }
     }
   };

@@ -19,6 +19,13 @@ import {
 import toast from 'react-hot-toast';
 
 const AccessTagsPage = () => {
+  // Temporary: show construction message only
+  return (
+    <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+      <div className="text-4xl font-bold text-yellow-400 mb-4">🚧 In Construction 🚧</div>
+      <div className="text-lg text-gray-300 mb-2">Coming in V2, stay tuned!</div>
+    </div>
+  );
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,8 +64,7 @@ const AccessTagsPage = () => {
   ];
 
   const predefinedColors = [
-    '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-    '#8B5CF6', '#06B6D4', '#84CC16', '#F97316',
+    '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4', '#EF4444', '#84CC16', '#F97316',
     '#EC4899', '#6366F1', '#14B8A6', '#F43F5E'
   ];
 

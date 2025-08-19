@@ -11,9 +11,15 @@ const api = axios.create({
 });
 
 // Request interceptor to add auth token
+// Use a consistent key for JWT token storage
+function getJwtToken() {
+  // Try multiple keys for compatibility
+  return localStorage.getItem('jwtToken') || localStorage.getItem('authToken') || '';
+}
+
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = getJwtToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

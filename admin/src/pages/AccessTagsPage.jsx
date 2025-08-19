@@ -22,8 +22,8 @@ const AccessTagsPage = () => {
   // Temporary: show construction message only
   return (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-      <div className="text-4xl font-bold text-yellow-400 mb-4">🚧 In Construction 🚧</div>
-      <div className="text-lg text-gray-300 mb-2">Coming in V2, stay tuned!</div>
+      <div className="text-6xl font-bold text-yellow-400 mb-6">🚧 In Construction 🚧</div>
+      <div className="text-2xl text-gray-300 mb-4">Coming in V2, stay tuned!</div>
     </div>
   );
   const [tags, setTags] = useState([]);

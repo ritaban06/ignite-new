@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const GoogleDriveService = require('../services/googleDriveService');
 const Folder = require('../models/Folder');
+const AccessLog = require('../models/AccessLog');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
@@ -13,11 +14,9 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
     }
-    const credentials = process.env.GDRIVE_CREDENTIALS
-      .replace(/\\n/g, '\n')
-      .replace(/\n/g, '\n');
+    const credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(credentials),
+      credentials,
       process.env.GDRIVE_BASE_FOLDER_ID
     );
     
@@ -283,6 +282,15 @@ router.post('/', [
       createdBy: req.user._id
     });
     await folder.save();
+    // Log folder creation
+    await AccessLog.logAccess({
+      userId: req.user._id,
+      action: 'folder_create',
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      folderId: folder._id,
+      metadata: { name: folder.name, parent: folder.parent, description: folder.description }
+    });
     res.status(201).json(folder);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create folder', details: err.message });
@@ -415,7 +423,7 @@ router.get('/proxy/:fileId', authenticate, async (req, res) => {
     if (decoded.fileId !== req.params.fileId) return res.status(403).json({ error: 'Invalid token for this file' });
     // Stream file from Google Drive
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(credentials),
+      parseGoogleCredentials(process.env.GDRIVE_CREDENTIALS),
       null // folderId not needed for download
     );
     const driveResult = await googleDriveService.downloadPdf(req.params.fileId); // downloadPdf streams any file
@@ -444,7 +452,7 @@ router.get('/:folderId/files', authenticate, async (req, res) => {
   try {
     // Google Drive logic
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(credentials),
+      parseGoogleCredentials(process.env.GDRIVE_CREDENTIALS),
       folderId // Use requested folderId as Google Drive folder
     );
     const driveResult = await googleDriveService.listFiles();
@@ -488,7 +496,7 @@ router.get('/:folderId/pdfs', authenticate, async (req, res) => {
   try {
     // Google Drive logic
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(credentials),
+      parseGoogleCredentials(process.env.GDRIVE_CREDENTIALS),
       folderId // Use requested folderId as Google Drive folder
     );
     const driveResult = await googleDriveService.listFiles();
@@ -558,7 +566,6 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 
     if (!folder) {
-      // Create new folder if not found
       folder = new Folder({
         gdriveId: req.params.id,
         name: name || 'Google Drive Folder',
@@ -567,18 +574,22 @@ router.put('/:id', authenticate, async (req, res) => {
       });
       await folder.save();
     } else {
-      // Update existing folder
+      // Track changes
+      let changes = {};
+      if (name !== undefined && name !== folder.name) changes.name = { from: folder.name, to: name };
+      if (description !== undefined && description !== folder.description) changes.description = { from: folder.description, to: description };
+      if (years !== undefined && JSON.stringify(years) !== JSON.stringify(folder.years)) changes.years = { from: folder.years, to: years };
+      if (departments !== undefined && JSON.stringify(departments) !== JSON.stringify(folder.departments)) changes.departments = { from: folder.departments, to: departments };
+      if (semesters !== undefined && JSON.stringify(semesters) !== JSON.stringify(folder.semesters)) changes.semesters = { from: folder.semesters, to: semesters };
+      if (tags !== undefined && JSON.stringify(tags) !== JSON.stringify(folder.tags)) changes.tags = { from: folder.tags, to: tags };
+      if (accessControlTags !== undefined && JSON.stringify(accessControlTags) !== JSON.stringify(folder.accessControlTags)) changes.accessControlTags = { from: folder.accessControlTags, to: accessControlTags };
+
       Object.assign(folder, update);
-      
-      // If this is a subject folder (direct child of root), apply inheritance to children
       if (folder.children && folder.children.length > 0 && req.user.role === 'admin') {
-        // Apply inheritance to all children recursively
         const applyInheritanceToChildren = (children) => {
           return children.map(child => {
-            // Only inherit fields if they're not explicitly set on the child
             const updatedChild = {
               ...child,
-              // Only update these fields if they're not already set on the child
               description: child.description || description,
               departments: child.departments?.length > 0 ? child.departments : departments,
               years: child.years?.length > 0 ? child.years : years,
@@ -586,45 +597,62 @@ router.put('/:id', authenticate, async (req, res) => {
               tags: child.tags?.length > 0 ? child.tags : (tags ? [...tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
               accessControlTags: child.accessControlTags?.length > 0 ? child.accessControlTags : accessControlTags
             };
-            
-            // Recursively apply to nested children
             if (child.children && child.children.length > 0) {
               updatedChild.children = applyInheritanceToChildren(child.children);
             }
-            
             return updatedChild;
           });
         };
-        
-        // Apply inheritance to all children
         folder.children = applyInheritanceToChildren(folder.children);
       }
-      
       await folder.save();
+      // Log folder metadata update
+      await AccessLog.logAccess({
+        userId: req.user._id,
+        action: 'folder_update_metadata',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        folderId: folder._id,
+        metadata: { changes }
+      });
     }
-    
     if (!folder) return res.status(404).json({ error: 'Folder not found or could not be created' });
-    
     res.json(folder);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update folder', details: err.message });
   }
 });
 
-// Helper: check if user can access folder
-function userCanAccessFolder(folder, user) {
-  const deptMatch = !folder.departments || folder.departments.length === 0 || folder.departments.includes(user.department);
-  const yearMatch = !folder.years || folder.years.length === 0 || folder.years.includes(user.year);
-  const semMatch = !folder.semesters || folder.semesters.length === 0 || folder.semesters.includes(user.semester);
-  return deptMatch && yearMatch && semMatch;
-}
+// Folder delete route
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    let folder = null;
+    if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
+      folder = await Folder.findById(req.params.id);
+    } else {
+      folder = await Folder.findOne({ gdriveId: req.params.id });
+    }
+    if (!folder) return res.status(404).json({ error: 'Folder not found' });
+    await Folder.deleteOne({ _id: folder._id });
+    // Log folder deletion
+    await AccessLog.logAccess({
+      userId: req.user._id,
+      action: 'folder_delete',
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      folderId: folder._id,
+      metadata: { name: folder.name, description: folder.description }
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete folder', details: err.message });
+  }
+});
 
-// Recursively search folders and files
+// Helper function for searching files in folders
 async function searchFilesInFolders(folders, user, searchTerm, googleDriveService) {
   let results = [];
   for (const folder of folders) {
-    if (!userCanAccessFolder(folder, user)) continue;
-    // Recursively search subfolders
     if (folder.children && folder.children.length > 0) {
       results = results.concat(await searchFilesInFolders(folder.children, user, searchTerm, googleDriveService));
     }
@@ -647,7 +675,7 @@ router.get('/search', authenticate, async (req, res) => {
     const user = req.user;
     const rootFolders = await Folder.find({ parent: null }).lean();
     const googleDriveService = new GoogleDriveService(
-      JSON.parse(credentials),
+      parseGoogleCredentials(process.env.GDRIVE_CREDENTIALS),
       null
     );
     const results = await searchFilesInFolders(rootFolders, user, q, googleDriveService);

@@ -31,7 +31,15 @@ const accessLogSchema = new mongoose.Schema({
       'register',
       'forced_logout',
       'google_login',
-      'unauthorized_access_attempt'
+      'unauthorized_access_attempt',
+      // Folder-related actions
+      'folder_create',
+      'folder_update_metadata',
+      'folder_delete',
+      'folder_restore',
+      'folder_move',
+      'folder_share',
+      'folder_access_attempt'
     ]
   },
   ipAddress: {
@@ -77,7 +85,7 @@ accessLogSchema.index({ createdAt: -1 });
 accessLogSchema.index({ user: 1, action: 1, createdAt: -1 });
 accessLogSchema.index({ pdf: 1, action: 1, success: 1 });
 
-// Static method to log access
+// Static method to log access or folder events
 accessLogSchema.statics.logAccess = function(data) {
   const logData = {
     user: data.userId,
@@ -94,6 +102,14 @@ accessLogSchema.statics.logAccess = function(data) {
   // Only include PDF if provided (for auth actions, there's no PDF)
   if (data.pdfId) {
     logData.pdf = data.pdfId;
+  }
+
+  // For folder actions, include folderId and changes in metadata
+  if (data.folderId) {
+    logData.metadata.folderId = data.folderId;
+    if (data.changes) {
+      logData.metadata.changes = data.changes;
+    }
   }
 
   return this.create(logData);

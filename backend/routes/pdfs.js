@@ -5,12 +5,10 @@ const PDF = require('../models/PDF');
 const AccessLog = require('../models/AccessLog');
 const GoogleDriveService = require('../services/googleDriveService');
 
-const credentials = process.env.GDRIVE_CREDENTIALS
-  .replace(/\\n/g, '\n')
-  .replace(/\n/g, '\n');
-  
+const credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
+
 const googleDriveService = new GoogleDriveService(
-  JSON.parse(credentials),
+  credentials,
   process.env.GDRIVE_BASE_FOLDER_ID
 );
 const { 

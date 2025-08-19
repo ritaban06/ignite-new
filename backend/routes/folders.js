@@ -6,6 +6,7 @@ const AccessLog = require('../models/AccessLog');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
+const PDF = require('../models/PDF');
 
 // Utility route: Sync/caches all Google Drive folders into MongoDB
 router.post('/gdrive/cache', authenticate, async (req, res) => {
@@ -423,7 +424,7 @@ router.get('/proxy/:fileId', authenticate, async (req, res) => {
     if (decoded.fileId !== req.params.fileId) return res.status(403).json({ error: 'Invalid token for this file' });
     // Stream file from Google Drive
     const googleDriveService = new GoogleDriveService(
-      parseGoogleCredentials(process.env.GDRIVE_CREDENTIALS),
+      credentials,
       null // folderId not needed for download
     );
     const driveResult = await googleDriveService.downloadPdf(req.params.fileId); // downloadPdf streams any file
@@ -449,13 +450,16 @@ router.get('/proxy/:fileId', authenticate, async (req, res) => {
 });
 router.get('/:folderId/files', authenticate, async (req, res) => {
   const folderId = req.params.folderId;
+  console.log(`[FILES] Request for folderId: ${folderId}`);
   try {
     // Google Drive logic
+    const credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
     const googleDriveService = new GoogleDriveService(
-      parseGoogleCredentials(process.env.GDRIVE_CREDENTIALS),
+      credentials,
       folderId // Use requested folderId as Google Drive folder
     );
     const driveResult = await googleDriveService.listFiles();
+    console.log('[FILES] Google Drive result:', JSON.stringify(driveResult, null, 2));
     if (driveResult.success && Array.isArray(driveResult.files)) {
       // Transform Google Drive files to a universal format
       const transformedFiles = driveResult.files.map(file => ({
@@ -475,18 +479,23 @@ router.get('/:folderId/files', authenticate, async (req, res) => {
         webContentLink: file.webContentLink,
         url: file.webContentLink || file.webViewLink || '',
       }));
+      console.log(`[FILES] Returning ${transformedFiles.length} files.`);
       return res.json(transformedFiles);
     } else {
-      // Fallback to MongoDB: get PDFs only (legacy)
+      console.warn('[FILES] Google Drive failed or returned no files. Falling back to MongoDB.');
       const pdfs = await PDF.find({ folder: folderId });
+      console.log(`[FILES] MongoDB fallback returned ${pdfs.length} PDFs.`);
       return res.json(pdfs);
     }
   } catch (err) {
+    console.error('[FILES] Error in Google Drive logic:', err);
     // Fallback to MongoDB if Google Drive throws
     try {
       const pdfs = await PDF.find({ folder: folderId });
+      console.log(`[FILES] Error fallback: MongoDB returned ${pdfs.length} PDFs.`);
       return res.json(pdfs);
     } catch (mongoErr) {
+      console.error('[FILES] MongoDB fallback error:', mongoErr);
       return res.status(500).json({ error: 'Failed to fetch files', details: err.message, mongoError: mongoErr.message });
     }
   }
@@ -496,7 +505,7 @@ router.get('/:folderId/pdfs', authenticate, async (req, res) => {
   try {
     // Google Drive logic
     const googleDriveService = new GoogleDriveService(
-      parseGoogleCredentials(process.env.GDRIVE_CREDENTIALS),
+      credentials,
       folderId // Use requested folderId as Google Drive folder
     );
     const driveResult = await googleDriveService.listFiles();
@@ -675,7 +684,7 @@ router.get('/search', authenticate, async (req, res) => {
     const user = req.user;
     const rootFolders = await Folder.find({ parent: null }).lean();
     const googleDriveService = new GoogleDriveService(
-      parseGoogleCredentials(process.env.GDRIVE_CREDENTIALS),
+      credentials,
       null
     );
     const results = await searchFilesInFolders(rootFolders, user, q, googleDriveService);

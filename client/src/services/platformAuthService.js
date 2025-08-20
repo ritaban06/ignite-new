@@ -58,8 +58,10 @@ class PlatformAuthService {
   async nativeGoogleSignIn() {
     try {
       console.log('🔐 Starting native Google sign-in...');
+      const clientId = this.getGoogleClientId();
       const result = await SocialLogin.login({
         provider: 'google',
+        clientId,
         options: {
           scopes: ['email', 'profile'],
         },
@@ -67,7 +69,7 @@ class PlatformAuthService {
       console.log('✅ Native Google sign-in successful:', result);
       return {
         credential: result.idToken,
-        clientId: this.getGoogleClientId()
+        clientId
       };
     } catch (error) {
       console.error('❌ Native Google sign-in failed:', error);

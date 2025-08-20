@@ -112,7 +112,7 @@ jobs:
     - name: 🔨 Build APKs...
       run: |
         echo "🧱 Building Vite web assets for DEBUG..."
-        RELEASE=false pnpm build
+        pnpm build
         echo "📂 Copying web assets to Android for DEBUG..."
         rm -rf app/src/main/assets/public || true
         mkdir -p app/src/main/assets
@@ -144,6 +144,7 @@ jobs:
         VITE_SOCIAL_LOGIN_PROVIDER: google
         VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
         VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE }}
+        RELEASE: false
 
 
     - name: Rename APKs to include run number

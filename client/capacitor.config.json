@@ -9,7 +9,6 @@
     "SocialLogin": {
       "providers": {
         "google": {
-          "serverClientId": "164410585415-lc2ofbhvaqd028453ff66tq2na9n4uov.apps.googleusercontent.com"
         }
       }
     },

@@ -1,0 +1,7 @@
+User-agent: *
+# Block API calls
+Disallow: /api
+
+# Block query-string endpoints
+Disallow: /*?*
+Disallow: /*&*

@@ -15,7 +15,15 @@ import PDFCard from "../components/PDFCard";
 import SecurePDFViewer from "../components/SecurePDFViewer";
 import FileViewer from "../components/FileViewer";
 import toast from "react-hot-toast";
-import { debounce } from 'lodash';
+
+// Custom debounce function
+const debounce = (func, delay) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), delay);
+  };
+};
 
 // Simple loading spinner
 const LoadingSpinner = () => (

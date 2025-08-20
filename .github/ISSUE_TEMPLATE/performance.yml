@@ -1,0 +1,234 @@
+name: ⚡ Performance Issue
+description: Report performance problems or suggest optimizations
+title: "[PERFORMANCE] "
+labels: ["performance", "needs-investigation"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve the performance of the Ignite platform! Please provide detailed information about the performance issue you've encountered.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of the platform has the performance issue?
+      options:
+        - Admin Dashboard (Web UI)
+        - Client App (Web UI)
+        - Backend API
+        - Android App
+        - Database Operations
+        - PDF Loading/Viewing
+        - Google Drive Integration
+        - Authentication/Login
+        - File Upload/Download
+        - Search Functionality
+        - Page Loading
+        - Mobile Responsiveness
+        - Network Requests
+        - Overall Application
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: performance-type
+    attributes:
+      label: Performance Issue Type
+      description: What kind of performance problem is this?
+      options:
+        - Slow Loading Times
+        - High Memory Usage
+        - High CPU Usage
+        - Slow Database Queries
+        - Large Bundle Size
+        - Slow Network Requests
+        - UI Lag/Responsiveness
+        - Mobile App Performance
+        - PDF Rendering Performance
+        - Search Performance
+        - Batch Operations
+        - Memory Leaks
+        - Other (please describe)
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Performance Issue Description
+      description: Describe the performance problem you're experiencing
+      placeholder: |
+        - What specific operation or functionality is slow?
+        - When does this performance issue occur?
+        - How does it impact the user experience?
+    validations:
+      required: true
+
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Performance Metrics
+      description: If you have specific measurements, please share them
+      placeholder: |
+        - Load times (e.g., "PDF takes 15 seconds to load")
+        - Memory usage (e.g., "Memory usage increases from 100MB to 800MB")
+        - CPU usage (e.g., "CPU usage stays at 90% during operation")
+        - Network transfer sizes (e.g., "API response is 5MB")
+        - Bundle analysis results
+        - Browser DevTools measurements
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the performance issue
+      placeholder: |
+        1. Go to...
+        2. Perform action...
+        3. Observe slow performance when...
+        4. Measure using...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      description: How often does this performance issue occur?
+      options:
+        - Always - Every time I perform this action
+        - Frequently - Most of the time (>75%)
+        - Sometimes - Occasionally (25-75%)
+        - Rarely - Infrequently (<25%)
+        - Only in specific conditions
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Impact Severity
+      description: How severely does this affect the user experience?
+      options:
+        - Critical - Makes the feature unusable
+        - High - Significantly impacts usability
+        - Medium - Noticeable but manageable
+        - Low - Minor impact on user experience
+      default: 2
+    validations:
+      required: true
+
+  - type: input
+    id: device-info
+    attributes:
+      label: Device Information
+      description: What device/system are you using?
+      placeholder: e.g., iPhone 13, Samsung Galaxy S21, MacBook Pro M1, Windows 11 Desktop
+    validations:
+      required: true
+
+  - type: input
+    id: browser-info
+    attributes:
+      label: Browser/App Information
+      description: What browser or app version are you using?
+      placeholder: e.g., Chrome 120, Firefox 121, Safari 17, Ignite Android v1.0.15
+
+  - type: input
+    id: connection
+    attributes:
+      label: Network Connection
+      description: What type of internet connection are you using?
+      placeholder: e.g., WiFi, 4G, 5G, Fiber broadband, etc.
+
+  - type: textarea
+    id: data-size
+    attributes:
+      label: Data/Content Information
+      description: Information about the data involved in the performance issue
+      placeholder: |
+        - Number of PDFs being loaded
+        - Size of files being processed
+        - Amount of data in the database
+        - Number of users accessing simultaneously
+        - Any large datasets involved
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Additional environment information that might be relevant
+      placeholder: |
+        - Development vs Production environment
+        - Server specifications (if known)
+        - Database size and configuration
+        - CDN usage
+        - Caching configuration
+
+  - type: textarea
+    id: profiling-data
+    attributes:
+      label: Profiling Data
+      description: Any profiling or debugging information you've collected
+      placeholder: |
+        - Browser DevTools performance traces
+        - Network tab analysis
+        - Memory profiling results
+        - Server logs showing slow queries
+        - APK size analysis
+      render: shell
+
+  - type: textarea
+    id: suggested-optimization
+    attributes:
+      label: Suggested Optimizations
+      description: Do you have ideas for how to improve the performance?
+      placeholder: |
+        - Code optimizations you've identified
+        - Caching strategies
+        - Database query improvements
+        - Bundle optimization techniques
+        - Infrastructure improvements
+
+  - type: textarea
+    id: workarounds
+    attributes:
+      label: Workarounds
+      description: Have you found any temporary workarounds?
+      placeholder: |
+        - Alternative approaches that work better
+        - Configuration changes that help
+        - User behavior adjustments
+
+  - type: checkboxes
+    id: analysis
+    attributes:
+      label: Analysis Done
+      description: What analysis have you performed?
+      options:
+        - label: I have measured specific performance metrics
+        - label: I have tested on multiple devices/browsers
+        - label: I have compared with similar functionality
+        - label: I have checked browser DevTools
+        - label: I have tested different network conditions
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this performance issue hasn't been reported
+          required: true
+        - label: I have provided specific steps to reproduce the performance issue
+          required: true
+        - label: I have included relevant device and environment information
+          required: true
+        - label: I understand that performance optimization may require trade-offs
+          required: true

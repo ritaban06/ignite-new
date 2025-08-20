@@ -1,0 +1,166 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in the Ignite platform
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please fill out the information below to help us understand and reproduce the issue.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component Affected
+      description: Which part of the Ignite platform is experiencing the issue?
+      options:
+        - Admin Dashboard
+        - Client App (Web)
+        - Backend API
+        - Android App
+        - Setup/Installation
+        - Documentation
+        - Authentication/OAuth
+        - PDF Management
+        - Database/MongoDB
+        - Google Drive Integration
+        - Not sure
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened and what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: Describe what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots/Videos
+      description: If applicable, add screenshots or videos to help explain your problem
+      placeholder: Drag and drop images/videos here or paste URLs
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical - System unusable/major functionality broken
+        - High - Important functionality affected
+        - Medium - Minor functionality affected
+        - Low - Cosmetic or minor issue
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: environment-os
+    attributes:
+      label: Operating System
+      placeholder: e.g., Windows 11, macOS 14, Ubuntu 22.04, Android 13
+    validations:
+      required: true
+
+  - type: input
+    id: environment-browser
+    attributes:
+      label: Browser/App Version
+      placeholder: e.g., Chrome 120, Firefox 121, Safari 17, Ignite Android v1.0.15
+    validations:
+      required: true
+
+  - type: input
+    id: environment-node
+    attributes:
+      label: Node.js Version (if applicable)
+      placeholder: e.g., v22.13.0
+      
+  - type: input
+    id: environment-pnpm
+    attributes:
+      label: PNPM Version (if applicable)
+      placeholder: e.g., 10.12.1
+
+  - type: textarea
+    id: console-logs
+    attributes:
+      label: Console Logs/Error Messages
+      description: Any relevant console output, error messages, or logs
+      placeholder: Paste any error messages or logs here
+      render: shell
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem
+      placeholder: |
+        - Does this happen consistently or intermittently?
+        - Does it work in other browsers/devices?
+        - Any relevant configuration details?
+        - Any workarounds you've found?
+
+  - type: checkboxes
+    id: user-type
+    attributes:
+      label: User Type
+      description: What type of user are you?
+      options:
+        - label: Student (using client app)
+        - label: Administrator (using admin dashboard)
+        - label: Developer (contributing to the project)
+        - label: Mobile user (using Android app)
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this bug hasn't been reported yet
+          required: true
+        - label: I have provided clear steps to reproduce the issue
+          required: true
+        - label: I have included relevant screenshots/logs where applicable
+          required: true
+        - label: This bug is reproducible and not related to my local setup only
+          required: true

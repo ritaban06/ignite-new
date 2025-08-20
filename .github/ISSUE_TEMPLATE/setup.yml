@@ -1,0 +1,241 @@
+name: 🛠️ Environment/Setup Issue
+description: Report problems with installation, setup, or development environment
+title: "[SETUP] "
+labels: ["setup", "environment", "needs-help"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Having trouble setting up or running the Ignite platform? Please provide detailed information so we can help you get up and running!
+
+  - type: dropdown
+    id: setup-stage
+    attributes:
+      label: Setup Stage
+      description: At what stage are you encountering the issue?
+      options:
+        - Initial cloning/download
+        - Node.js/PNPM installation
+        - Running setup script (setup.js)
+        - Environment file configuration
+        - Dependency installation (pnpm install)
+        - Database setup (MongoDB)
+        - Google OAuth configuration
+        - Google Drive integration setup
+        - Development server startup
+        - Building the application
+        - Android app setup (Capacitor)
+        - Production deployment
+        - Already working but having issues
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component-setup
+    attributes:
+      label: Component Having Issues
+      description: Which part of the platform is causing setup problems?
+      options:
+        - Backend (Express.js API)
+        - Admin Dashboard (React)
+        - Client App (React)
+        - Android App (Capacitor)
+        - Database (MongoDB)
+        - Environment Variables
+        - Google OAuth Setup
+        - Google Drive Integration
+        - PNPM Workspace Configuration
+        - Build Process
+        - Deployment
+        - All components
+      default: 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Issue Description
+      description: Describe the setup problem you're experiencing
+      placeholder: |
+        - What exactly is happening?
+        - What error messages are you seeing?
+        - What step in the setup process is failing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-taken
+    attributes:
+      label: Steps You've Taken
+      description: What setup steps have you completed successfully?
+      placeholder: |
+        1. Cloned the repository
+        2. Installed Node.js version...
+        3. Installed PNPM...
+        4. Ran setup.js script...
+        5. Issue occurred when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-messages
+    attributes:
+      label: Error Messages/Logs
+      description: Please share any error messages or relevant log output
+      placeholder: Paste error messages, stack traces, or log output here
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      placeholder: e.g., Windows 11, macOS 14.2, Ubuntu 22.04, etc.
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      description: What version of Node.js do you have installed?
+      placeholder: Run "node --version" - e.g., v22.13.0
+
+  - type: input
+    id: pnpm-version
+    attributes:
+      label: PNPM Version
+      description: What version of PNPM do you have installed?
+      placeholder: Run "pnpm --version" - e.g., 10.12.1
+
+  - type: input
+    id: git-version
+    attributes:
+      label: Git Version
+      description: What version of Git do you have installed?
+      placeholder: Run "git --version" - e.g., git version 2.40.0
+
+  - type: textarea
+    id: environment-files
+    attributes:
+      label: Environment File Status
+      description: Do you have the required .env files? Are they configured correctly?
+      placeholder: |
+        - Did the setup.js script download .env files successfully?
+        - Do you have .env files in backend/, client/, and admin/ folders?
+        - Have you configured the required environment variables?
+        - Are you missing any specific environment variables?
+
+  - type: dropdown
+    id: mongodb-setup
+    attributes:
+      label: MongoDB Setup
+      description: How are you running MongoDB?
+      options:
+        - Local MongoDB installation
+        - MongoDB Atlas (cloud)
+        - Docker container
+        - Other cloud provider
+        - Haven't set up MongoDB yet
+        - Not sure
+      default: 4
+
+  - type: textarea
+    id: google-setup
+    attributes:
+      label: Google Services Setup
+      description: Have you configured Google OAuth and Google Drive integration?
+      placeholder: |
+        - Google OAuth Client ID configured?
+        - Google Drive API enabled?
+        - Service account credentials set up?
+        - Appropriate permissions granted?
+
+  - type: textarea
+    id: network-environment
+    attributes:
+      label: Network/Firewall
+      description: Are there any network restrictions or firewall issues?
+      placeholder: |
+        - Corporate firewall/proxy?
+        - VPN usage?
+        - Port restrictions?
+        - Internet connectivity issues?
+
+  - type: textarea
+    id: attempted-solutions
+    attributes:
+      label: Solutions Attempted
+      description: What have you tried to resolve this issue?
+      placeholder: |
+        - Clearing cache/node_modules?
+        - Reinstalling dependencies?
+        - Checking documentation?
+        - Following troubleshooting guides?
+        - Searching for similar issues?
+
+  - type: dropdown
+    id: experience-level
+    attributes:
+      label: Development Experience
+      description: What's your experience level with these technologies?
+      options:
+        - Beginner - New to React/Node.js/MongoDB
+        - Intermediate - Some experience with these technologies
+        - Advanced - Experienced with MERN stack
+        - Expert - Very experienced developer
+      default: 1
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information that might help diagnose the issue
+      placeholder: |
+        - Are you setting this up for development or production?
+        - Is this your first time setting up this project?
+        - Any unique aspects of your development environment?
+        - Similar projects you've set up successfully?
+
+  - type: checkboxes
+    id: documentation-followed
+    attributes:
+      label: Documentation Followed
+      description: Which documentation have you consulted?
+      options:
+        - label: I have read the README.md file
+        - label: I have followed the Quick Start guide
+        - label: I have checked the Troubleshooting section
+        - label: I have reviewed the setup requirements
+
+  - type: checkboxes
+    id: help-needed
+    attributes:
+      label: Help Needed
+      options:
+        - label: I need help understanding the error messages
+        - label: I need guidance on the correct setup process
+        - label: I need help with environment configuration
+        - label: I would benefit from a video call or screen sharing session
+        - label: I can provide additional information if needed
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues for similar setup problems
+          required: true
+        - label: I have provided my system information and versions
+          required: true
+        - label: I have included the actual error messages I'm seeing
+          required: true
+        - label: I have attempted basic troubleshooting steps
+          required: true

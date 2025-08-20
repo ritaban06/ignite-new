@@ -15,6 +15,7 @@ import PDFCard from "../components/PDFCard";
 import SecurePDFViewer from "../components/SecurePDFViewer";
 import FileViewer from "../components/FileViewer";
 import toast from "react-hot-toast";
+import { debounce } from 'lodash';
 
 // Simple loading spinner
 const LoadingSpinner = () => (
@@ -97,7 +98,7 @@ const DashboardPage = () => {
         // Listen for refresh event from Header logo click
         useEffect(() => {
           const refreshHandler = () => {
-            loadDashboardData();
+            debouncedLoadDashboardData();
           };
           window.addEventListener('refresh-available-subjects', refreshHandler);
           // Listen for dashboard-home event to reset folder state and refresh subjects
@@ -105,7 +106,7 @@ const DashboardPage = () => {
             setSelectedFolder(null);
             setFiles([]);
             setCurrentPath([]);
-            loadDashboardData();
+            debouncedLoadDashboardData();
           };
           window.addEventListener('dashboard-home', homeHandler);
           return () => {
@@ -114,7 +115,12 @@ const DashboardPage = () => {
           };
         }, []);
 
+  let isLoadingDashboardData = false;
+
   const loadDashboardData = async () => {
+    if (isLoadingDashboardData) return; // Prevent duplicate requests
+
+    isLoadingDashboardData = true;
     try {
       setIsLoading(true);
 
@@ -137,8 +143,11 @@ const DashboardPage = () => {
       toast.error("Failed to load dashboard data");
     } finally {
       setIsLoading(false);
+      isLoadingDashboardData = false;
     }
   };
+
+  const debouncedLoadDashboardData = debounce(loadDashboardData, 300);
 
   const handleSearch = async (e) => {
     e.preventDefault();

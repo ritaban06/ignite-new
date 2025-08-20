@@ -269,20 +269,6 @@ const DashboardPage = () => {
   useEffect(() => {
     // Fetch folders when component mounts
     fetchFolders();
-    
-    // Set up a timer to log folder hierarchy for debugging
-    const debugTimer = setTimeout(() => {
-      // console.log('Current folder hierarchy state:', folderHierarchy);
-      // console.log('Current selected folder:', selectedFolder);
-      // console.log('Current path:', currentPath);
-      
-      if (folderHierarchy.length === 0) {
-        // console.log('No folders in hierarchy, retrying fetch...');
-        fetchFolders();
-      }
-    }, 2000);
-    
-    return () => clearTimeout(debugTimer);
   }, []);
 
   const fetchFolders = async () => {

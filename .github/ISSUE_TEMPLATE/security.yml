@@ -1,0 +1,210 @@
+name: 🔒 Security Issue
+description: Report a security vulnerability (please be responsible and discreet)
+title: "[SECURITY] "
+labels: ["security", "urgent"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **IMPORTANT SECURITY NOTICE** ⚠️
+        
+        If you believe you have found a security vulnerability, please be responsible:
+        - **DO NOT** disclose the vulnerability publicly until it has been addressed
+        - **DO NOT** include sensitive details that could be exploited by malicious actors
+        - Consider reaching out privately to the maintainers first for critical vulnerabilities
+        
+        Thank you for helping keep the Ignite platform secure!
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of the platform has the security issue?
+      options:
+        - Authentication/OAuth System
+        - Admin Dashboard
+        - Client Application
+        - Backend API
+        - Database/MongoDB
+        - Google Drive Integration
+        - PDF Access Control
+        - Mobile App (Android)
+        - Session Management
+        - User Data Handling
+        - File Upload/Download
+        - Access Logging
+        - Environment Configuration
+        - Third-party Dependencies
+        - Infrastructure/Deployment
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      description: How severe is this security issue?
+      options:
+        - Critical - Remote code execution, privilege escalation, or data breach
+        - High - Authentication bypass, unauthorized access to sensitive data
+        - Medium - Information disclosure, denial of service
+        - Low - Minor security improvement or configuration issue
+      default: 1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: vulnerability-type
+    attributes:
+      label: Vulnerability Type
+      description: What type of security vulnerability is this?
+      options:
+        - Authentication/Authorization Bypass
+        - SQL/NoSQL Injection
+        - Cross-Site Scripting (XSS)
+        - Cross-Site Request Forgery (CSRF)
+        - Insecure Direct Object References
+        - Security Misconfiguration
+        - Sensitive Data Exposure
+        - Broken Access Control
+        - Insufficient Logging/Monitoring
+        - Using Components with Known Vulnerabilities
+        - Unvalidated Redirects
+        - File Upload/Download Security
+        - API Security Issue
+        - Mobile App Security
+        - Other (please describe)
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Vulnerability Description
+      description: Describe the security issue (avoid sensitive implementation details)
+      placeholder: |
+        Provide a general description of the vulnerability:
+        - What is the security concern?
+        - What could an attacker potentially do?
+        - What data or functionality is at risk?
+        
+        Note: Be careful not to include specific exploit details
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could happen if this vulnerability is exploited?
+      placeholder: |
+        Describe the potential impact:
+        - What data could be compromised?
+        - What operations could be performed unauthorized?
+        - How many users could be affected?
+        - Could this lead to further exploitation?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce (General)
+      description: High-level steps to reproduce the issue (avoid detailed exploit instructions)
+      placeholder: |
+        Provide general steps that demonstrate the vulnerability exists:
+        1. Navigate to...
+        2. Attempt to...
+        3. Observe that...
+        
+        Note: Avoid detailed exploitation steps that could be misused
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-users
+    attributes:
+      label: Affected User Types
+      description: What types of users could be affected by this vulnerability?
+      options:
+        - All Users (Students and Admins)
+        - Students Only
+        - Administrators Only
+        - Mobile App Users
+        - Unauthenticated Users
+        - Specific User Roles (please specify)
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested Mitigation
+      description: Do you have suggestions for how to fix this vulnerability?
+      placeholder: |
+        If you have ideas for mitigation:
+        - What security controls should be implemented?
+        - Are there best practices that should be followed?
+        - Any recommended libraries or approaches?
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment Information
+      description: What environment did you discover this in?
+      placeholder: e.g., Development, Production, Local setup, etc.
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other relevant information about this security issue
+      placeholder: |
+        - Have you found any related vulnerabilities?
+        - Are there any workarounds?
+        - Any relevant security research or CVEs?
+
+  - type: checkboxes
+    id: responsible-disclosure
+    attributes:
+      label: Responsible Disclosure Agreement
+      description: Please confirm your commitment to responsible disclosure
+      options:
+        - label: I commit to not publicly disclose details of this vulnerability until it is resolved
+          required: true
+        - label: I understand that security fixes may take time and require careful testing
+          required: true
+        - label: I agree to provide additional information privately if needed for resolution
+          required: true
+
+  - type: checkboxes
+    id: verification
+    attributes:
+      label: Verification
+      description: Please confirm the following
+      options:
+        - label: I have verified this is a legitimate security concern
+          required: true
+        - label: I have not disclosed this vulnerability publicly
+          required: true
+        - label: I have provided sufficient information for the maintainers to understand and reproduce the issue
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        **Next Steps:**
+        
+        After submitting this report:
+        1. The maintainers will review and assess the vulnerability
+        2. You may be contacted for additional information
+        3. A fix will be developed and tested
+        4. The fix will be deployed and the vulnerability disclosed responsibly
+        
+        Thank you for your responsible disclosure! 🙏

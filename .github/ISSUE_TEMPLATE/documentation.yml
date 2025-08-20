@@ -1,0 +1,163 @@
+name: 📚 Documentation Issue
+description: Report issues with documentation or suggest documentation improvements
+title: "[DOCS] "
+labels: ["documentation", "needs-review"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve the Ignite platform documentation! Please provide details about the documentation issue or improvement you'd like to suggest.
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation needs attention?
+      options:
+        - README.md
+        - API Documentation
+        - Setup/Installation Guide
+        - Development Guide
+        - User Guide (for students)
+        - Admin Guide
+        - Mobile App Guide
+        - Contributing Guidelines
+        - Code Comments
+        - Internal Documentation (admin docs page)
+        - Environment Setup
+        - Troubleshooting Guide
+        - Architecture Documentation
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of documentation issue is this?
+      options:
+        - Missing Documentation - Information is completely missing
+        - Outdated Information - Information is incorrect or outdated
+        - Unclear Instructions - Instructions are confusing or hard to follow
+        - Incomplete Information - Information is partial or missing details
+        - Typos/Grammar - Text contains errors or typos
+        - Broken Links - Links are not working
+        - Missing Examples - Need more examples or code samples
+        - Better Organization - Structure needs improvement
+        - Translation/Accessibility - Needs better accessibility or translations
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Documentation Location
+      description: Where is this documentation located?
+      placeholder: e.g., README.md line 45, /docs/api.md, admin dashboard docs page, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-content
+    attributes:
+      label: Current Content (if applicable)
+      description: What does the current documentation say?
+      placeholder: Copy and paste the current content that needs to be fixed/improved
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Issue Description
+      description: Describe the documentation problem in detail
+      placeholder: |
+        - What is wrong or missing?
+        - What makes it confusing or unclear?
+        - What information would be helpful?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Suggested Improvement
+      description: How should this be improved?
+      placeholder: |
+        - What content should be added/changed?
+        - How should it be restructured?
+        - What examples would be helpful?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Target Audience
+      description: Who is the primary audience for this documentation?
+      options:
+        - Students/End Users
+        - Administrators
+        - Developers/Contributors
+        - Mobile App Users
+        - System Administrators
+        - All Users
+      default: 5
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this documentation fix?
+      options:
+        - Critical - Blocks users from using the platform
+        - High - Causes significant confusion or errors
+        - Medium - Improvement would be helpful
+        - Low - Minor improvement
+      default: 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any additional context about this documentation issue
+      placeholder: |
+        - What were you trying to accomplish when you found this issue?
+        - Have you seen this confusion affect other users?
+        - Are there related documentation sections that might need updates?
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples or References
+      description: Any examples, screenshots, or references that would help
+      placeholder: |
+        - Screenshots of confusing UI
+        - Links to helpful documentation from other projects
+        - Code examples that should be included
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to help write or improve this documentation
+        - label: I can provide examples or additional information
+        - label: I can help review updated documentation
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this documentation issue hasn't been reported
+          required: true
+        - label: I have provided specific information about the location and nature of the issue
+          required: true
+        - label: I have suggested concrete improvements rather than just pointing out problems
+          required: true

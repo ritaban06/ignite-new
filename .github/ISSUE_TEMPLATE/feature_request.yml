@@ -1,0 +1,174 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for the Ignite platform
+title: "[FEATURE] "
+labels: ["enhancement", "needs-review"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide detailed information to help us understand your request.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the Ignite platform would this feature affect?
+      options:
+        - Admin Dashboard
+        - Client App (Web)
+        - Backend API
+        - Android App
+        - Authentication/OAuth
+        - PDF Management
+        - User Management
+        - Analytics/Reporting
+        - Google Drive Integration
+        - UI/UX
+        - Performance
+        - Security
+        - Documentation
+        - Development/DevOps
+        - Cross-platform
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What's the motivation?
+      placeholder: |
+        Is your feature request related to a problem? Please describe.
+        A clear and concise description of what the problem is.
+        Ex. I'm always frustrated when [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: |
+        A clear and concise description of what you want to happen.
+        Include any specific functionality, UI changes, or behavior you envision.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative solutions or features?
+      placeholder: |
+        A clear and concise description of any alternative solutions or features you've considered.
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical - Essential for platform functionality
+        - High - Would significantly improve user experience
+        - Medium - Nice to have, would enhance the platform
+        - Low - Minor improvement or convenience feature
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user-impact
+    attributes:
+      label: User Impact
+      description: Who would benefit from this feature?
+      options:
+        - Students (primary users of client app)
+        - Administrators (admin dashboard users)
+        - Mobile users (Android app users)
+        - Developers (contributors to the project)
+        - All users
+        - Specific user groups (please specify in description)
+      default: 4
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Describe specific use cases or scenarios where this feature would be helpful
+      placeholder: |
+        1. When a student wants to...
+        2. When an administrator needs to...
+        3. When using the mobile app...
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups/Wireframes
+      description: If you have any visual ideas, mockups, or wireframes, please share them
+      placeholder: Drag and drop images here or paste URLs
+
+  - type: textarea
+    id: technical-considerations
+    attributes:
+      label: Technical Considerations
+      description: Any technical aspects to consider for implementation?
+      placeholder: |
+        - Database schema changes needed?
+        - API changes required?
+        - Impact on existing authentication?
+        - Mobile app considerations?
+        - Performance implications?
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Implementation Complexity (Your Assessment)
+      description: Based on your understanding, how complex might this feature be?
+      options:
+        - Simple - Minor changes, mostly UI
+        - Medium - Some backend/database changes
+        - Complex - Major architectural changes
+        - Very Complex - Requires significant refactoring
+        - Not sure
+      default: 4
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, links, or examples related to this feature request
+      placeholder: |
+        - Links to similar features in other platforms
+        - Research or articles supporting this feature
+        - Community discussions about this need
+        - Any other relevant information
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to contribute to implementing this feature
+        - label: I can help with testing this feature once implemented
+        - label: I can help with documentation for this feature
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested yet
+          required: true
+        - label: I have provided a clear problem statement and proposed solution
+          required: true
+        - label: I have considered the impact on different user types (students, admins, mobile users)
+          required: true
+        - label: This feature aligns with the educational platform's goals
+          required: true

@@ -200,7 +200,7 @@ export const AuthProvider = ({ children }) => {
         setUser(backendUser);
         setIsAuthenticated(true);
         
-        toast.success(`Welcome, ${backendUser.name}!`);
+        // toast.success(`Welcome, ${backendUser.name}!`);
         return { success: true, user: backendUser };
       } else {
         throw new Error('Invalid response format');

@@ -1,8 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 💬 Discussions
-    url: https://github.com/ritaban06/ignite-new/discussions
-    about: Ask questions, share ideas, or discuss the Ignite platform with the community
   - name: 📧 Security Contact
     url: mailto:ritaban06@gmail.com
     about: For critical security vulnerabilities, please contact us privately

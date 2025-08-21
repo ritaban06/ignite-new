@@ -3,8 +3,8 @@ import { folderAPI } from '../api';
 import api from '../api';
 
 // Supported file extensions
-const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
-const docExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+const imageExtensions = ['png', 'jpg', 'jpeg', 'webp'];
+const docExtensions = ['doc', 'docx', 'ppt', 'pptx'];
 const txtExtensions = ['txt'];
 
 function getExtension(filename) {

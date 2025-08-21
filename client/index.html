@@ -3,6 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="preconnect" href="https://www.google-analytics.com" />
+    <!-- Preconnect and preload for Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
     <link rel="icon" type="image/webp" href="/newlogo.webp" />
     <link rel="manifest" href="/client/public/manifest.json" />
     <meta name="theme-color" content="#000000" />
@@ -19,9 +24,9 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <!-- DOCX preview -->
-    <script src="https://unpkg.com/mammoth@latest/mammoth.browser.min.js"></script>
+    <script src="https://unpkg.com/mammoth@latest/mammoth.browser.min.js" defer></script>
     <!-- PPTX preview and dependency -->
-    <script src="https://cdn.jsdelivr.net/npm/jszip@latest/dist/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pptxjs@latest/dist/pptxjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@latest/dist/jszip.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxjs@latest/dist/pptxjs.min.js" defer></script>
   </body>
 </html>

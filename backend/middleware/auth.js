@@ -38,7 +38,10 @@ const ensureCORS = (req, res) => {
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.header('Authorization');
-    const token = authHeader?.replace('Bearer ', '');
+    let token = authHeader?.replace('Bearer ', '');
+    if (!token && (req.query.authToken || req.query.token)) {
+      token = req.query.authToken || req.query.token;
+    }
     
     console.log('Auth Debug - Path:', req.path);
     console.log('Auth Debug - Method:', req.method);

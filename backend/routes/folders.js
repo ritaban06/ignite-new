@@ -419,7 +419,9 @@ router.post('/file/:fileId/view', authenticate, async (req, res) => {
 router.get('/proxy/:fileId', authenticate, async (req, res) => {
   const token = req.query.token;
   if (!token) return res.status(401).json({ error: 'Token required' });
+  let credentials;
   try {
+    credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (decoded.fileId !== req.params.fileId) return res.status(403).json({ error: 'Invalid token for this file' });
     // Stream file from Google Drive
@@ -433,7 +435,7 @@ router.get('/proxy/:fileId', authenticate, async (req, res) => {
     const ext = req.query.ext || '';
     res.set({
       'Content-Type': getContentType(ext),
-      'Content-Disposition': 'inline; filename="secured.' + ext + '"',
+      'Content-Disposition': `inline; filename="${req.params.fileId}.${ext}"`,
       'Cache-Control': 'private, no-cache, no-store, must-revalidate',
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',

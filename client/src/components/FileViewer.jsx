@@ -92,9 +92,11 @@ const FileViewer = ({ fileUrl, fileName }) => {
 
   // Authenticated URL effect
   const token = localStorage.getItem('authToken');
-  const authenticatedUrl = token
-    ? `${secureUrl}${secureUrl.includes('?') ? '&' : '?'}authToken=${token}`
-    : secureUrl;
+  const authenticatedUrl = secureUrl
+    ? (token && !secureUrl.includes('token=')
+        ? `${secureUrl}${secureUrl.includes('?') ? '&' : '?'}token=${token}`
+        : secureUrl)
+    : null;
 
   React.useEffect(() => {
     if (authenticatedUrl) {
@@ -130,7 +132,7 @@ const FileViewer = ({ fileUrl, fileName }) => {
       </div>
     ) : (
       <img
-        src={secureUrl}
+        src={authenticatedUrl}
         alt={fileName}
         style={{ maxWidth: '100%', maxHeight: '80vh' }}
         onError={() => {
@@ -153,7 +155,7 @@ const FileViewer = ({ fileUrl, fileName }) => {
     return (
       <div>
         <iframe
-          src={secureUrl}
+          src={authenticatedUrl}
           title={fileName}
           style={{ width: '100%', height: '80vh', border: 'none' }}
           allow="autoplay"
@@ -173,7 +175,7 @@ const FileViewer = ({ fileUrl, fileName }) => {
   return (
     <div>
       <iframe
-        src={secureUrl}
+        src={authenticatedUrl}
         title={fileName}
         style={{ width: '100%', height: '80vh', border: 'none' }}
         allow="autoplay"

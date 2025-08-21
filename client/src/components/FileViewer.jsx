@@ -152,10 +152,11 @@ const FileViewer = ({ fileUrl, fileName }) => {
   }
 
   if (docExtensions.includes(ext)) {
+    const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(authenticatedUrl)}&embedded=true`;
     return (
       <div>
         <iframe
-          src={authenticatedUrl}
+          src={googleViewerUrl}
           title={fileName}
           style={{ width: '100%', height: '80vh', border: 'none' }}
           allow="autoplay"

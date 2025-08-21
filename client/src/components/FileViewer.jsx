@@ -1,6 +1,5 @@
 import React from 'react';
 import { folderAPI } from '../api';
-import api from '../api';
 
 // Supported file extensions
 const imageExtensions = ['png', 'jpg', 'jpeg', 'webp'];
@@ -12,6 +11,8 @@ function getExtension(filename) {
 }
 
 const FileViewer = ({ fileUrl, fileName }) => {
+  const [docxHtml, setDocxHtml] = React.useState(null);
+  const pptxContainerRef = React.useRef(null);
   const ext = getExtension(fileName);
 
   // Hooks
@@ -21,10 +22,49 @@ const FileViewer = ({ fileUrl, fileName }) => {
   const [loadError, setLoadError] = React.useState(false);
   const [debugMsg, setDebugMsg] = React.useState('');
 
+  // Authenticated URL (must be above all usages)
+  const token = localStorage.getItem('authToken');
+  const authenticatedUrl = secureUrl
+    ? (token && !secureUrl.includes('token=')
+        ? `${secureUrl}${secureUrl.includes('?') ? '&' : '?'}token=${token}`
+        : secureUrl)
+    : null;
+
   // Debug message when props change
   React.useEffect(() => {
     setDebugMsg(`[FileViewer] fileUrl: ${fileUrl}, fileName: ${fileName}, ext: ${ext}`);
   }, [fileUrl, fileName, ext]);
+
+  // DOCX preview using mammoth.js CDN
+  React.useEffect(() => {
+    if (secureUrl && ext === 'docx' && window.mammoth) {
+      fetch(authenticatedUrl)
+        .then(res => res.arrayBuffer())
+        .then(arrayBuffer => window.mammoth.convertToHtml({ arrayBuffer }))
+        .then(result => setDocxHtml(result.value))
+        .catch(() => setDocxHtml('<div style="color:red">Failed to preview DOCX file.</div>'));
+    }
+  }, [secureUrl, authenticatedUrl, ext]);
+
+  // PPTX preview using pptxjs CDN
+  React.useEffect(() => {
+    if (secureUrl && ext === 'pptx' && window.PPTX) {
+      fetch(authenticatedUrl)
+        .then(res => res.arrayBuffer())
+        .then(arrayBuffer => {
+          const container = pptxContainerRef.current;
+          if (container) {
+            container.innerHTML = '';
+            window.PPTX.render(arrayBuffer, { fileName, container });
+          }
+        })
+        .catch(() => {
+          if (pptxContainerRef.current) {
+            pptxContainerRef.current.innerHTML = '<div style="color:red">Failed to preview PPTX file.</div>';
+          }
+        });
+    }
+  }, [secureUrl, authenticatedUrl, ext, fileName]);
 
   // Fetch secure URL
   React.useEffect(() => {
@@ -90,13 +130,6 @@ const FileViewer = ({ fileUrl, fileName }) => {
     }
   }, [secureUrl, ext]);
 
-  // Authenticated URL effect
-  const token = localStorage.getItem('authToken');
-  const authenticatedUrl = secureUrl
-    ? (token && !secureUrl.includes('token=')
-        ? `${secureUrl}${secureUrl.includes('?') ? '&' : '?'}token=${token}`
-        : secureUrl)
-    : null;
 
   React.useEffect(() => {
     if (authenticatedUrl) {
@@ -152,22 +185,25 @@ const FileViewer = ({ fileUrl, fileName }) => {
   }
 
   if (docExtensions.includes(ext)) {
-    const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(authenticatedUrl)}&embedded=true`;
+    if (ext === 'docx') {
+      return (
+        <div style={{ maxHeight: '80vh', overflow: 'auto', background: '#fff', padding: '1em' }}>
+          {docxHtml ? <div dangerouslySetInnerHTML={{ __html: docxHtml }} /> : 'Loading DOCX preview...'}
+        </div>
+      );
+    }
+    if (ext === 'pptx') {
+      return (
+        <div style={{ maxHeight: '80vh', overflow: 'auto', background: '#fff', padding: '1em' }}>
+          <div ref={pptxContainerRef}>Loading PPTX preview...</div>
+        </div>
+      );
+    }
+    // For unsupported formats (doc, ppt)
     return (
-      <div>
-        <iframe
-          src={googleViewerUrl}
-          title={fileName}
-          style={{ width: '100%', height: '80vh', border: 'none' }}
-          allow="autoplay"
-          onError={() => setLoadError(true)}
-        ></iframe>
-        {loadError && (
-          <div style={{ color: 'red', marginTop: '1em' }}>
-            Failed to load file.<br />
-            Ensure you have the necessary permissions and the token is valid.<br />
-          </div>
-        )}
+      <div style={{ color: 'orange', padding: '2em', textAlign: 'center' }}>
+        Preview not available for restricted {ext.toUpperCase()} files.<br />
+        Please download to view.<br />
       </div>
     );
   }

@@ -101,7 +101,7 @@ jobs:
       - name: Configure Bubblewrap paths via config file
         run: |
           mkdir -p ~/.bubblewrap
-          echo '{ "jdkPath": "/usr/lib/jvm/java-11-openjdk-amd64", "androidSdkPath": "${{ env.ANDROID_HOME }}" }' > ~/.bubblewrap/config.json # Use the verified ANDROID_HOME path
+          echo '{ "jdkPath": "${{ env.JAVA_HOME }}", "androidSdkPath": "${{ env.ANDROID_HOME }}" }' > ~/.bubblewrap/config.json # Use the verified ANDROID_HOME path
           ls -la ~/.bubblewrap/config.json # Verify file creation
 
       # Build Release APK (non-interactive)

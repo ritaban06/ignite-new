@@ -114,3 +114,4 @@ google-services.json
 .secrets
 *.keystore
 .gradle/
+*.b64

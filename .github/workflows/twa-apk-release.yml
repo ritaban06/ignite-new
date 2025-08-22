@@ -1,4 +1,4 @@
-name: Build and Release TWA APK
+name: Build and Release TWA APK (Release)
 
 on:
   workflow_dispatch: # Manual trigger

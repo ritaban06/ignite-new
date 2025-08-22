@@ -69,16 +69,6 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
 
-      # Initialize Bubblewrap from website manifest (non-interactive)
-      - name: Initialize TWA
-        run: |
-          cd client
-          pnpm exec bubblewrap init \
-            --manifest=${{ secrets.WEBSITE_MANIFEST_URL }} \
-            --directory=. \
-            --force \
-            --jdkPath="$JAVA_HOME" # Specify that you're using the pre-installed JDK
-
       # Build Release APK (non-interactive)
       - name: Build Release APK
         run: |

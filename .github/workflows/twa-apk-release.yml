@@ -12,6 +12,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Set up JDK 17
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
       # Install pnpm first
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -28,6 +35,13 @@ jobs:
       # Install workspace dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # Install Android SDK with caching
+      - name: Install Android SDK packages
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'build-tools;34.0.0 platform-tools platforms;android-34'
+          cache-disabled: false
 
       # Add Bubblewrap CLI to client workspace (if not already in package.json)
       - name: Add Bubblewrap to client workspace
@@ -65,8 +79,12 @@ jobs:
             --keystore-alias ${{ secrets.KEY_ALIAS }} \
             --keystore-password ${{ secrets.KEYSTORE_PASS }} \
             --key-password ${{ secrets.KEY_PASS }}
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME }}
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
 
-       # Find the generated APK
+      # Find the generated APK
       - name: Find APK file
         run: |
           find client -name "*.apk" -type f

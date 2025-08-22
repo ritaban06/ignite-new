@@ -69,10 +69,27 @@ jobs:
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
 
       # Add this step BEFORE the 'Build Release APK' step
+      - name: Debug Android SDK path
+        run: |
+          echo "Checking ANDROID_HOME: ${{ env.ANDROID_HOME }}"
+          if [ -d "${{ env.ANDROID_HOME }}" ]; then
+            echo "ANDROID_HOME directory exists."
+            ls -la "${{ env.ANDROID_HOME }}"
+            ls -la "${{ env.ANDROID_HOME }}/build-tools" # Check for build-tools
+            ls -la "${{ env.ANDROID_HOME }}/platform-tools" # Check for platform-tools
+            ls -la "${{ env.ANDROID_HOME }}/platforms" # Check for platforms
+          else
+            echo "ANDROID_HOME directory does NOT exist!"
+            # You might want to fail the workflow here if the directory is missing
+            exit 1
+          fi
+
+      # Configure Bubblewrap paths via config file
       - name: Configure Bubblewrap paths via config file
         run: |
           mkdir -p ~/.bubblewrap
-          echo '{ "jdkPath": "/usr/lib/jvm/java-11-openjdk-amd64", "androidSdkPath": "/usr/local/lib/android/sdk" }' > ~/.bubblewrap/config.json
+          echo '{ "jdkPath": "/usr/lib/jvm/java-11-openjdk-amd64", "androidSdkPath": "${{ env.ANDROID_HOME }}" }' > ~/.bubblewrap/config.json # Use the verified ANDROID_HOME path
+          ls -la ~/.bubblewrap/config.json # Verify file creation
 
       # Build Release APK (non-interactive)
       - name: Build Release APK

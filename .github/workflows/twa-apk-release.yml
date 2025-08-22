@@ -36,15 +36,9 @@ jobs:
 
       # Install Android SDK
       - name: Install Android SDK packages
-        run: |
-          run: |
-          mkdir -p $HOME/Android/Sdk
-          curl -s https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -o cmdline-tools.zip
-          unzip cmdline-tools.zip -d $HOME/Android/Sdk
-          rm cmdline-tools.zip
-          mv $HOME/Android/Sdk/cmdline-tools $HOME/Android/Sdk/cmdline-tools-$(date +%Y%m%d)
-          echo "y" | $HOME/Android/Sdk/cmdline-tools-$(date +%Y%m%d)/bin/sdkmanager --sdk_root=$HOME/Android/Sdk --licenses
-          $HOME/Android/Sdk/cmdline-tools-$(date +%Y%m%d)/bin/sdkmanager --sdk_root=$HOME/Android/Sdk "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'build-tools;34.0.0 platform-tools'
 
       # Restore keystore from GitHub secrets
       - name: Restore keystore

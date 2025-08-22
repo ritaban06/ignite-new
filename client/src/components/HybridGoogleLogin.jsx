@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { AlertCircle, CheckCircle, Loader2, Smartphone, Globe } from 'lucide-react';
-// import PlatformAuthService from '../services/platformAuthService';
+import PlatformAuthService from '../services/platformAuthService';
 import { useAuth } from '../contexts/AuthContext';
 
 const HybridGoogleLogin = () => {
@@ -12,7 +12,7 @@ const HybridGoogleLogin = () => {
 
   useEffect(() => {
     // Get platform information
-    // const info = PlatformAuthService.getPlatformInfo();
+    const info = PlatformAuthService.getPlatformInfo();
     setPlatformInfo(info);
     console.log('🔍 Platform Info:', info);
   }, []);

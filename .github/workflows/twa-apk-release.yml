@@ -54,7 +54,7 @@ jobs:
         run: |
           cd client
           echo "Checking Bubblewrap installation..."
-          pnpm exec bubblewrap --help | head -5
+          ./node_modules/@bubblewrap/cli/bin/bubblewrap.js --help | head -5
 
       # Restore keystore from GitHub secrets
       - name: Restore keystore
@@ -76,7 +76,8 @@ jobs:
           pnpm exec bubblewrap init \
             --manifest=${{ secrets.WEBSITE_MANIFEST_URL }} \
             --directory=. \
-            --force
+            --force \
+            --jdkPath="$JAVA_HOME" # Specify that you're using the pre-installed JDK
 
       # Build Release APK (non-interactive)
       - name: Build Release APK

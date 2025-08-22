@@ -617,15 +617,21 @@ router.put('/:id', authenticate, async (req, res) => {
         folder.children = applyInheritanceToChildren(folder.children);
       }
       await folder.save();
-      // Log folder metadata update
-      await AccessLog.logAccess({
-        userId: req.user._id,
-        action: 'folder_update_metadata',
-        ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
-        folderId: folder._id,
-        metadata: { changes }
-      });
+      
+      // Log folder metadata update (with error handling)
+      try {
+        await AccessLog.logAccess({
+          userId: req.user._id,
+          action: 'folder_update_metadata',
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent'),
+          folderId: folder._id,
+          metadata: { changes }
+        });
+      } catch (logError) {
+        console.warn('Failed to log folder update:', logError.message);
+        // Don't fail the request if logging fails
+      }
     }
     if (!folder) return res.status(404).json({ error: 'Folder not found or could not be created' });
     res.json(folder);

@@ -1,0 +1,81 @@
+name: Build and Release TWA APK
+
+on:
+  workflow_dispatch: # Manual trigger
+  push:
+    branches:
+      - main
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repo
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Set up JDK 17
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Set up Node + pnpm
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      # Install Bubblewrap CLI
+      - name: Install Bubblewrap
+        run: pnpm add -g @bubblewrap/cli
+
+      # Install Android SDK
+      - name: Install Android SDK packages
+        uses: reactivecircus/android-sdk@v2
+        with:
+          api-level: 34
+          build-tools: 34.0.0
+          cmdline-tools: latest
+
+      # Restore keystore from GitHub secrets
+      - name: Restore keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android.keystore
+
+      # Initialize Bubblewrap from website manifest
+      - name: Initialize TWA
+        run: |
+          bubblewrap init --manifest=${{ secrets.WEBSITE_MANIFEST_URL }} --no-interactive
+
+      # Build Release APK
+      - name: Build Release APK
+        run: |
+          bubblewrap build --release \
+            --keystore-path ./android.keystore \
+            --keystore-alias ${{ secrets.KEY_ALIAS }} \
+            --keystore-pass ${{ secrets.KEYSTORE_PASS }} \
+            --key-pass ${{ secrets.KEY_PASS }}
+
+      # Create GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "release-${{ github.run_number }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload APK to the Release
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: v1.0.${{ github.run_number }}
+          files: ./app-release-signed.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

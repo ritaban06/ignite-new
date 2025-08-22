@@ -29,10 +29,8 @@ jobs:
         run: npm install -g pnpm
 
       # Setup pnpm Install Bubblewrap CLI
-      - name: Install Bubblewrap
-        run: |
-          pnpm setup
-          pnpm add -g @bubblewrap/cli
+      - name: Install Bubblewrap locally
+        run: pnpm add -D @bubblewrap/cli
 
       # Install Android SDK
       - name: Install Android SDK packages
@@ -54,12 +52,12 @@ jobs:
       # Initialize Bubblewrap from website manifest
       - name: Initialize TWA
         run: |
-          bubblewrap init --manifest=${{ secrets.WEBSITE_MANIFEST_URL }} --no-interactive
+          npx bubblewrap init --manifest=${{ secrets.WEBSITE_MANIFEST_URL }} --no-interactive
 
       # Build Release APK
       - name: Build Release APK
         run: |
-          bubblewrap build --release \
+          npx bubblewrap build --release \
             --keystore-path ./android.keystore \
             --keystore-alias ${{ secrets.KEY_ALIAS }} \
             --keystore-pass ${{ secrets.KEYSTORE_PASS }} \

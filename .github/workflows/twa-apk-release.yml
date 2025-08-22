@@ -19,18 +19,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Set up Node + pnpm
+      # Set up Node
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      # Setup pnpm Install Bubblewrap CLI
+      # Setup Bubblewrap CLI
       - name: Install Bubblewrap locally
-        run: pnpm add -D @bubblewrap/cli
+        run: npm install --save-dev @bubblewrap/cli
 
       # Install Android SDK
       - name: Install Android SDK packages

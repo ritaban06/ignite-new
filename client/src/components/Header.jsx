@@ -194,7 +194,7 @@ const Header = () => {
             <span>Dashboard</span>
           </Link>
 
-          <Link
+          {/* <Link
             to="/search"
             onClick={() => setIsMobileMenuOpen(false)}
             className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
@@ -205,9 +205,9 @@ const Header = () => {
           >
             <Search className="h-5 w-5" />
             <span>Search</span>
-          </Link>
+          </Link> */}
 
-          <Link
+          {/* <Link
             to="/r2-manager"
             onClick={() => setIsMobileMenuOpen(false)}
             className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
@@ -218,7 +218,7 @@ const Header = () => {
           >
             <Cloud className="h-5 w-5" />
             <span>R2 Manager</span>
-          </Link>
+          </Link> */}
 
           {/* Actions */}
           <div className="border-t border-white/10 pt-2 mt-2">

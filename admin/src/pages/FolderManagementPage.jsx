@@ -208,7 +208,7 @@ export default function FolderManagementPage() {
   };
 
   // Recursive folder renderer that supports hierarchy
-  const renderFolder = (folder, level = 0, isSubfolder = false) => {
+  const renderFolder = (folder, level = 0, isSubfolderParam = false) => {
     if (!folder) {
       console.error('Null or undefined folder in renderFolder');
       return null;
@@ -229,7 +229,7 @@ export default function FolderManagementPage() {
     // });
     
     return (
-      <li key={folder.gdriveId} className={`mb-2 ${isSubfolder ? 'ml-6' : 'p-4 bg-gray-700 rounded-lg mb-4'}`}>
+      <li key={folder.gdriveId} className={`mb-2 ${isSubfolderParam ? 'ml-6' : 'p-4 bg-gray-700 rounded-lg mb-4'}`}>
         <div className="flex items-center gap-2 mb-2">
           {hasSubfolders && (
             <button 
@@ -268,15 +268,15 @@ export default function FolderManagementPage() {
         <div className="ml-8 text-sm text-gray-300 space-y-1">
           {(() => {
             // Get effective metadata (inherited or direct)
-            const parentFolder = isSubfolder ? findParentFolder(folder.gdriveId, subjectFolders) : null;
-            const effectiveMetadata = isSubfolder ? getInheritedMetadata(folder, parentFolder) : folder;
+            const parentFolder = isSubfolderParam ? findParentFolder(folder.gdriveId, subjectFolders) : null;
+            const effectiveMetadata = isSubfolderParam ? getInheritedMetadata(folder, parentFolder) : folder;
             
             return (
               <>
                 {effectiveMetadata.departments?.length > 0 && (
                   <div>
                     <span className="font-semibold">Departments:</span> {effectiveMetadata.departments.join(', ')}
-                    {isSubfolder && (!folder.departments || folder.departments.length === 0) && (
+                    {isSubfolderParam && (!folder.departments || folder.departments.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}
                   </div>
@@ -284,7 +284,7 @@ export default function FolderManagementPage() {
                 {effectiveMetadata.years?.length > 0 && (
                   <div>
                     <span className="font-semibold">Years:</span> {effectiveMetadata.years.join(', ')}
-                    {isSubfolder && (!folder.years || folder.years.length === 0) && (
+                    {isSubfolderParam && (!folder.years || folder.years.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}
                   </div>
@@ -292,7 +292,7 @@ export default function FolderManagementPage() {
                 {effectiveMetadata.semesters?.length > 0 && (
                   <div>
                     <span className="font-semibold">Semesters:</span> {effectiveMetadata.semesters.join(', ')}
-                    {isSubfolder && (!folder.semesters || folder.semesters.length === 0) && (
+                    {isSubfolderParam && (!folder.semesters || folder.semesters.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}
                   </div>
@@ -300,7 +300,7 @@ export default function FolderManagementPage() {
                 {effectiveMetadata.description && (
                   <div>
                     <span className="font-semibold">Description:</span> {effectiveMetadata.description}
-                    {isSubfolder && !folder.description && (
+                    {isSubfolderParam && !folder.description && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}
                   </div>
@@ -308,7 +308,7 @@ export default function FolderManagementPage() {
                 {effectiveMetadata.tags?.length > 0 && (
                   <div>
                     <span className="font-semibold">Tags:</span> {effectiveMetadata.tags.join(', ')}
-                    {isSubfolder && (!folder.tags || folder.tags.length === 0) && (
+                    {isSubfolderParam && (!folder.tags || folder.tags.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}
                   </div>
@@ -316,14 +316,14 @@ export default function FolderManagementPage() {
                 {effectiveMetadata.accessControlTags?.length > 0 && (
                   <div>
                     <span className="font-semibold">Access Tags:</span> {effectiveMetadata.accessControlTags.join(', ')}
-                    {isSubfolder && (!folder.accessControlTags || folder.accessControlTags.length === 0) && (
+                    {isSubfolderParam && (!folder.accessControlTags || folder.accessControlTags.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}
                   </div>
                 )}
                 <div className="text-xs text-yellow-400 mt-2">
                   <em>
-                    {isSubfolder 
+                    {isSubfolderParam 
                       ? 'Note: This subfolder inherits metadata from its parent unless explicitly changed.'
                       : 'Note: This metadata will be inherited by all subfolders unless explicitly changed.'
                     }

@@ -78,7 +78,9 @@ jobs:
             --keystore-path ./android.keystore \
             --keystore-alias ${{ secrets.KEY_ALIAS }} \
             --keystore-password ${{ secrets.KEYSTORE_PASS }} \
-            --key-password ${{ secrets.KEY_PASS }}
+            --key-password ${{ secrets.KEY_PASS }} \
+            --jdkPath="/usr/lib/jvm/java-11-openjdk-amd64" \
+            --androidSdkPath="/home/runner/Android/sdk"
         env:
           JAVA_HOME: ${{ env.JAVA_HOME }}
           ANDROID_HOME: ${{ env.ANDROID_HOME }}

@@ -53,6 +53,7 @@ jobs:
           else
             echo "build-tools directory does NOT exist inside ANDROID_HOME!"
             exit 1 # Fail the workflow if build-tools are missing
+          fi
 
       # Add Bubblewrap CLI to client workspace (if not already in package.json)
       - name: Add Bubblewrap to client workspace

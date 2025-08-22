@@ -48,11 +48,13 @@ jobs:
       # Initialize Bubblewrap from website manifest
       - name: Initialize TWA
         run: |
+          cd client
           npx bubblewrap init --manifest=${{ secrets.WEBSITE_MANIFEST_URL }} --no-interactive
 
       # Build Release APK
       - name: Build Release APK
         run: |
+          cd client
           npx bubblewrap build --release \
             --keystore-path ./android.keystore \
             --keystore-alias ${{ secrets.KEY_ALIAS }} \

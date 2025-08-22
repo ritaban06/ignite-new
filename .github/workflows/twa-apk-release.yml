@@ -30,7 +30,7 @@ jobs:
 
       # Setup Bubblewrap CLI
       - name: Install Bubblewrap locally
-        run: pnpm add -D @bubblewrap/cli
+        run: pnpm add @bubblewrap/cli
 
       # Install Android SDK
       - name: Install Android SDK packages

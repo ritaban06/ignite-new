@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">Ignite</string>
     <string name="title_activity_main">Ignite</string>
-    <string name="package_name">com.samarth.ignite</string>
-    <string name="custom_url_scheme">com.samarth.ignite</string>
-    <string name="server_client_id">164410585415-lc2ofbhvaqd028453ff66tq2na9n4uov.apps.googleusercontent.com</string>
+    <string name="package_name">com.ignite.samarthtmsl</string>
+    <string name="custom_url_scheme">com.ignite.samarthtmsl</string>
 </resources>

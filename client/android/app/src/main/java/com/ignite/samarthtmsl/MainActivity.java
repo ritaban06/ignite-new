@@ -1,4 +1,4 @@
-package com.samarth.ignite;
+package com.ignite.samarthtmsl;
 
 import ee.forgr.capacitor.social.login.GoogleProvider;
 import ee.forgr.capacitor.social.login.SocialLoginPlugin;
@@ -6,7 +6,6 @@ import ee.forgr.capacitor.social.login.ModifiedMainActivityForSocialLoginPlugin;
 import com.getcapacitor.PluginHandle;
 import com.getcapacitor.Plugin;
 import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 import com.getcapacitor.BridgeActivity;
 

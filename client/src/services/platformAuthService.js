@@ -18,22 +18,22 @@ class PlatformAuthService {
     return import.meta.env.RELEASE !== 'true';
   }
 
-  getGoogleClientId() {
-    if (this.isAndroid) {
-      const debug = this.isDebugBuild();
-      return debug
-        ? import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG
-        : import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE;
-    }
-    return import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  }
+  // getGoogleClientId() {
+  //   if (this.isAndroid) {
+  //     const debug = this.isDebugBuild();
+  //     return debug
+  //       ? import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG
+  //       : import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE;
+  //   }
+  //   return import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  // }
 
   async initializeNativeSocialLogin() {
     try {
       console.log('🚀 Initializing native Social Login...');
       await SocialLogin.initialize({
         google: {
-          webClientId: this.getGoogleClientId(),
+          webClientId: '164410585415-lc2ofbhvaqd028453ff66tq2na9n4uov.apps.googleusercontent.com',
         },
       });
       console.log('✅ Native Social Login initialized');

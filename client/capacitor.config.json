@@ -1,17 +1,10 @@
 {
-  "appId": "com.samarth.ignite",
+  "appId": "com.ignite.samarthtmsl",
   "appName": "Ignite",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"
   },
-  "plugins": {
-    "SocialLogin": {
-      "providers": {
-        "google": {
-        }
-      }
-    },
     "SplashScreen": {
       "launchShowDuration": 2000,
       "backgroundColor": "#3b82f6",
@@ -19,5 +12,4 @@
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false
     }
-  }
 }

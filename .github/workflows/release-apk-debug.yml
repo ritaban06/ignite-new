@@ -1,0 +1,135 @@
+name: Build & Release Debug APK using Capacitor
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-debug:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Cache pnpm store
+      uses: actions/cache@v4
+      with:
+        path: ~/.pnpm-store
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('client/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      working-directory: client
+
+    - name: Validate Environment Variables
+      run: |
+        echo "🔍 Checking environment variables..."
+        if [ -z "${{ secrets.VITE_API_URL }}" ]; then
+          echo "❌ VITE_API_URL is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]; then
+          echo "❌ VITE_GOOGLE_CLIENT_ID is not set"
+          exit 1
+        fi
+        echo "✅ All required environment variables are set"
+        echo "📍 API URL: ${{ secrets.VITE_API_URL }}"
+
+    - name: Build React app
+      run: pnpm run build
+      working-directory: client
+      env:
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+        VITE_GOOGLE_ANDROID_CLIENT_ID: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID }}
+        NODE_ENV: production
+        VITE_SOCIAL_LOGIN_PROVIDER: google
+
+    - name: Sync Capacitor Android
+      run: pnpm exec cap sync android
+      working-directory: client
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Cache Android Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          client/android/.gradle
+        key: ${{ runner.os }}-gradle-${{ hashFiles('client/android/**/*.gradle*', 'client/android/**/*.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name : Make gradlew executable
+      run: chmod +x gradlew
+      working-directory: client/android
+
+    - name: Inject google-services.json
+      run: |
+        echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 -d > client/android/app/google-services.json
+        echo "✅ google-services.json injected"
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: 🔨 Build Debug APK
+      run: |
+        echo "🧱 Building Vite web assets for DEBUG..."
+        pnpm build
+        echo "📂 Copying web assets to Android for DEBUG..."
+        rm -rf app/src/main/assets/public || true
+        mkdir -p app/src/main/assets
+        cp -r ../dist app/src/main/assets/public
+
+        echo "📦 Building Debug APK..."
+        ./gradlew assembleDebug
+      working-directory: client/android
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        VITE_SOCIAL_LOGIN_PROVIDER: google
+        VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
+        RELEASE: false
+
+    - name: Rename Debug APK to include run number
+      run: |
+        if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/v1.0.${{ github.run_number }}-debug.apk
+        fi
+      working-directory: client/android
+
+    - name: List generated APK files
+      run: |
+        echo "📱 Generated APK files:"
+        find client/android/app/build/outputs/apk -name "*.apk" -type f
+        ls -la client/android/app/build/outputs/apk/debug/ || echo "Debug folder not found"
+
+    - name: Upload Debug APK to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        name: v1.0.${{ github.run_number }}
+        files: |
+          client/android/app/build/outputs/apk/debug/*.apk
+        fail_on_unmatched_files: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

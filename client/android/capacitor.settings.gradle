@@ -2,5 +2,5 @@
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../../node_modules/.pnpm/@capacitor+android@7.4.1_@capacitor+core@7.4.1/node_modules/@capacitor/android/capacitor')
 
-include ':codetrix-studio-capacitor-google-auth'
-project(':codetrix-studio-capacitor-google-auth').projectDir = new File('../../node_modules/.pnpm/@codetrix-studio+capacitor-_ad7b8239efb4e4d18203b262b00c3569/node_modules/@codetrix-studio/capacitor-google-auth/android')
+include ':capgo-capacitor-social-login'
+project(':capgo-capacitor-social-login').projectDir = new File('../../node_modules/.pnpm/@capgo+capacitor-social-login@7.8.3_@capacitor+core@7.4.1/node_modules/@capgo/capacitor-social-login/android')

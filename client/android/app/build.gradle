@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.samarth.ignite"
+    namespace "com.ignite.samarthtmsl"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.samarth.ignite"
+        applicationId "com.ignite.samarthtmsl"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -16,21 +16,21 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    signingConfigs {
-        release {
-            storeFile file('release.keystore')
-            storePassword System.getenv("KEYSTORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS")
-            keyPassword System.getenv("KEY_PASSWORD")
-        }
-    }
+    // signingConfigs {
+    //     release {
+    //         storeFile file('release.keystore')
+    //         storePassword System.getenv("KEYSTORE_PASSWORD")
+    //         keyAlias System.getenv("KEY_ALIAS")
+    //         keyPassword System.getenv("KEY_PASSWORD")
+    //     }
+    // }
 
     buildTypes {
         release {
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            // signingConfig signingConfigs.release
         }
     }
 }
@@ -58,5 +58,12 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
-// Apply Google Services plugin (for google-services.json)
-apply plugin: 'com.google.gms.google-services'
+// // Apply Google Services plugin (for google-services.json)
+// try {
+//     def servicesJSON = file('google-services.json')
+//     if (servicesJSON.text) {
+//         apply plugin: 'com.google.gms.google-services'
+//     }
+// } catch(Exception e) {
+//     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+// }

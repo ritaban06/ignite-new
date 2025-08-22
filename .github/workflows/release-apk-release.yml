@@ -1,0 +1,153 @@
+name: Build & Release Signed Release APK using Capacitor
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    name: Build Signed Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Cache pnpm store
+      uses: actions/cache@v4
+      with:
+        path: ~/.pnpm-store
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('client/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      working-directory: client
+
+    - name: Validate Environment Variables
+      run: |
+        echo "🔍 Checking environment variables..."
+        if [ -z "${{ secrets.VITE_API_URL }}" ]; then
+          echo "❌ VITE_API_URL is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]; then
+          echo "❌ VITE_GOOGLE_CLIENT_ID is not set"
+          exit 1
+        fi
+        echo "✅ All required environment variables are set"
+        echo "📍 API URL: ${{ secrets.VITE_API_URL }}"
+
+    - name: Validate Keystore Secrets
+      run: |
+        echo "🔐 Checking keystore secrets..."
+        if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+          echo "❌ KEYSTORE_BASE64 is not set - cannot build release APK"
+          exit 1
+        else
+          echo "✅ Keystore secrets are available"
+        fi
+
+    - name: Build React app
+      run: pnpm run build
+      working-directory: client
+      env:
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+        VITE_GOOGLE_ANDROID_CLIENT_ID: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID }}
+        NODE_ENV: production
+        VITE_SOCIAL_LOGIN_PROVIDER: google
+
+    - name: Sync Capacitor Android
+      run: pnpm exec cap sync android
+      working-directory: client
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Cache Android Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          client/android/.gradle
+        key: ${{ runner.os }}-gradle-${{ hashFiles('client/android/**/*.gradle*', 'client/android/**/*.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name : Make gradlew executable
+      run: chmod +x gradlew
+      working-directory: client/android
+
+    - name: Decode keystore for release signing
+      run: |
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > client/android/app/release.keystore
+        echo "✅ Keystore created for release signing"
+
+    - name: Inject google-services.json
+      run: |
+        echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 -d > client/android/app/google-services.json
+        echo "✅ google-services.json injected"
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: 🔨 Build Signed Release APK
+      run: |
+        echo "🧱 Building Vite web assets for RELEASE..."
+        RELEASE=true pnpm build
+        echo "📂 Copying web assets to Android for RELEASE..."
+        rm -rf app/src/main/assets/public || true
+        mkdir -p app/src/main/assets
+        cp -r ../dist app/src/main/assets/public
+
+        echo "🔐 Building signed Release APK..."
+        ./gradlew assembleRelease
+      working-directory: client/android
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        VITE_SOCIAL_LOGIN_PROVIDER: google
+        VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE }}
+        RELEASE: true
+
+    - name: Rename Release APK to include run number
+      run: |
+        if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+          mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/v1.0.${{ github.run_number }}-release.apk
+        fi
+      working-directory: client/android
+
+    - name: List generated APK files
+      run: |
+        echo "📱 Generated APK files:"
+        find client/android/app/build/outputs/apk -name "*.apk" -type f
+        ls -la client/android/app/build/outputs/apk/release/ || echo "Release folder not found"
+
+    - name: Upload Release APK to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        name: v1.0.${{ github.run_number }}
+        files: |
+          client/android/app/build/outputs/apk/release/*.apk
+        fail_on_unmatched_files: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

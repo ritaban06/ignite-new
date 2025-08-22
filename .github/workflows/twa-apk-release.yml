@@ -28,9 +28,11 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      # Install Bubblewrap CLI
+      # Setup pnpm Install Bubblewrap CLI
       - name: Install Bubblewrap
-        run: pnpm add -g @bubblewrap/cli
+        run: |
+          pnpm setup
+          pnpm add -g @bubblewrap/cli
 
       # Install Android SDK
       - name: Install Android SDK packages

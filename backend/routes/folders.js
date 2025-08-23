@@ -101,8 +101,8 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           gdriveId: folder.gdriveId,
           description: folder.description || parentMetadata?.description || folder.name.toLowerCase(),
           departments: folder.departments || parentMetadata?.departments || ['IT'],
-          years: folder.years || parentMetadata?.years || [0],
-          semesters: folder.semesters || parentMetadata?.semesters || [0],
+          years: folder.years || parentMetadata?.years || (isSubjectFolder ? [1, 2, 3, 4] : []),
+          semesters: folder.semesters || parentMetadata?.semesters || (isSubjectFolder ? [1, 2, 3, 4, 5, 6, 7, 8] : []),
           tags: folder.tags || (parentMetadata?.tags ? [...parentMetadata.tags, folder.name.toLowerCase()] : [folder.name.toLowerCase()]),
           accessControlTags: folder.accessControlTags || parentMetadata?.accessControlTags || [],
           createdByName: folder.ownerName || 'Ignite Admin'
@@ -117,11 +117,11 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
               ...child,
               // Only set these fields if not explicitly defined on the child
               description: child.description || folderMetadata.description,
-              departments: child.departments || folderMetadata.departments,
-              years: child.years || folderMetadata.years,
-              semesters: child.semesters || folderMetadata.semesters,
-              tags: child.tags || (folderMetadata.tags ? [...folderMetadata.tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
-              accessControlTags: child.accessControlTags || folderMetadata.accessControlTags
+              departments: (child.departments && child.departments.length > 0) ? child.departments : folderMetadata.departments,
+              years: (child.years && child.years.length > 0 && child.years[0] !== 0) ? child.years : folderMetadata.years,
+              semesters: (child.semesters && child.semesters.length > 0 && child.semesters[0] !== 0) ? child.semesters : folderMetadata.semesters,
+              tags: (child.tags && child.tags.length > 0) ? child.tags : (folderMetadata.tags ? [...folderMetadata.tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
+              accessControlTags: (child.accessControlTags && child.accessControlTags.length > 0) ? child.accessControlTags : folderMetadata.accessControlTags
             };
             
             // Process nested children recursively
@@ -602,11 +602,11 @@ router.put('/:id', authenticate, async (req, res) => {
             const updatedChild = {
               ...child,
               description: child.description || description,
-              departments: child.departments?.length > 0 ? child.departments : departments,
-              years: child.years?.length > 0 ? child.years : years,
-              semesters: child.semesters?.length > 0 ? child.semesters : semesters,
-              tags: child.tags?.length > 0 ? child.tags : (tags ? [...tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
-              accessControlTags: child.accessControlTags?.length > 0 ? child.accessControlTags : accessControlTags
+              departments: (child.departments && child.departments.length > 0) ? child.departments : departments,
+              years: (child.years && child.years.length > 0 && child.years[0] !== 0) ? child.years : years,
+              semesters: (child.semesters && child.semesters.length > 0 && child.semesters[0] !== 0) ? child.semesters : semesters,
+              tags: (child.tags && child.tags.length > 0) ? child.tags : (tags ? [...tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
+              accessControlTags: (child.accessControlTags && child.accessControlTags.length > 0) ? child.accessControlTags : accessControlTags
             };
             if (child.children && child.children.length > 0) {
               updatedChild.children = applyInheritanceToChildren(child.children);

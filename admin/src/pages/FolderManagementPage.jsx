@@ -315,14 +315,14 @@ export default function FolderManagementPage() {
                     )}
                   </div>
                 )}
-                <div className="text-xs text-yellow-400 mt-2">
+                {/* <div className="text-xs text-yellow-400 mt-2">
                   <em>
                     {isSubfolderParam 
                       ? 'Note: This subfolder inherits metadata from its parent unless explicitly changed.'
                       : 'Note: This metadata will be inherited by all subfolders unless explicitly changed.'
                     }
                   </em>
-                </div>
+                </div> */}
               </>
             );
           })()} 

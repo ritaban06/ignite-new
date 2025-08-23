@@ -20,6 +20,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -29,9 +30,17 @@ export default function UsersPage() {
   const [selectedTags, setSelectedTags] = useState([]);
   const [editForm, setEditForm] = useState({ accessTags: '' });
 
+  // Debounce searchTerm
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, searchTerm, roleFilter]);
+  }, [currentPage, debouncedSearch, roleFilter]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -39,13 +48,12 @@ export default function UsersPage() {
       const params = {
         page: currentPage,
         limit: 10,
-        search: searchTerm,
+        ...(debouncedSearch && { search: debouncedSearch }),
         ...(roleFilter !== 'all' && { role: roleFilter }),
       };
-      
       const response = await userAPI.getAllUsers(params);
       setUsers(response.data.users);
-      setTotalPages(response.data.totalPages);
+      setTotalPages(response.data.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Failed to fetch users:', error);
       toast.error('Failed to load users');

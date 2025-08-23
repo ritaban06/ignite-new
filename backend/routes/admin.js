@@ -356,7 +356,8 @@ router.get('/users', [
       year, 
       isActive = true,
       page = 1, 
-      limit = 50 
+      limit = 50,
+      search
     } = req.query;
 
     // Build query
@@ -365,6 +366,12 @@ router.get('/users', [
     if (department) query.department = department;
     if (year) query.year = parseInt(year);
     if (isActive !== undefined) query.isActive = isActive;
+    if (search && typeof search === 'string' && search.trim().length > 0) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
 
     const skip = (page - 1) * limit;
 

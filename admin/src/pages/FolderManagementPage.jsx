@@ -106,14 +106,8 @@ export default function FolderManagementPage() {
       setAllFolders(processedAllFolders);
       setFolderMetadata(metadataMap);
       
-      // Expand all top-level folders by default to show subfolders
-      const newExpandedFolders = new Set(expandedFolders);
-      processedSubjectFolders.forEach(folder => {
-        if (folder.children && folder.children.length > 0) {
-          newExpandedFolders.add(folder.gdriveId);
-        }
-      });
-      setExpandedFolders(newExpandedFolders);
+  // Do not expand any folders by default
+  setExpandedFolders(new Set());
       
     } catch (error) {
       toast.error('Failed to load folders');

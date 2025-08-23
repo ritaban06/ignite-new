@@ -222,15 +222,15 @@ export default function UsersPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Role
-                  </th>
+                  </th> */}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Department
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Access Tags
-                  </th>
+                  </th> */}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Joined
                   </th>
@@ -271,16 +271,16 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDarkRoleBadgeColor(user.role)}`}>
+                      {/* <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDarkRoleBadgeColor(user.role)}`}>
                         <Shield className="h-3 w-3 mr-1" />
                         {user.role}
-                      </span>
+                      </span> */}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                       {user.department || 'N/A'}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1">
+                      {/* <div className="flex flex-wrap gap-1">
                         {user.accessTags && user.accessTags.length > 0 ? (
                           user.accessTags.map((tag, index) => (
                             <span
@@ -293,7 +293,7 @@ export default function UsersPage() {
                         ) : (
                           <span className="text-gray-400 text-xs">No tags</span>
                         )}
-                      </div>
+                      </div> */}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-white">
@@ -303,13 +303,13 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button
+                        {/* <button
                           onClick={() => handleEditAccessTags(user)}
                           className="text-blue-400 hover:text-blue-300"
                           title="Edit Access Tags"
                         >
                           <Tags className="h-4 w-4" />
-                        </button>
+                        </button> */}
                         {/* <button
                           onClick={() => handleRoleToggle(user._id, user.role)}
                           className="text-primary-600 hover:text-primary-900"
@@ -317,13 +317,13 @@ export default function UsersPage() {
                         >
                           <Shield className="h-4 w-4" />
                         </button> */}
-                        <button
+                        {/* <button
                           onClick={() => handleDeleteUser(user._id)}
                           className="text-red-600 hover:text-red-900"
                           title="Delete User"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>

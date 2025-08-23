@@ -554,6 +554,78 @@ router.get('/:folderId/pdfs', authenticate, async (req, res) => {
 });
 
 
+// Helper function to find and update a folder in the nested structure
+const findAndUpdateFolderInHierarchy = (folders, targetGdriveId, updateData, parentMetadata = null) => {
+  for (let i = 0; i < folders.length; i++) {
+    const folder = folders[i];
+    
+    if (folder.gdriveId === targetGdriveId) {
+      // Found the target folder - apply inheritance from parent if needed
+      const inheritedUpdate = { ...updateData };
+      
+      // Apply inheritance logic for subfolders
+      if (parentMetadata) {
+        // Only inherit if the field is empty or has default values
+        if (!inheritedUpdate.description || inheritedUpdate.description.trim() === '') {
+          inheritedUpdate.description = parentMetadata.description;
+        }
+        if (!inheritedUpdate.departments || inheritedUpdate.departments.length === 0) {
+          inheritedUpdate.departments = parentMetadata.departments;
+        }
+        if (!inheritedUpdate.years || inheritedUpdate.years.length === 0 || (inheritedUpdate.years.length === 1 && inheritedUpdate.years[0] === 0)) {
+          inheritedUpdate.years = parentMetadata.years;
+        }
+        if (!inheritedUpdate.semesters || inheritedUpdate.semesters.length === 0 || (inheritedUpdate.semesters.length === 1 && inheritedUpdate.semesters[0] === 0)) {
+          inheritedUpdate.semesters = parentMetadata.semesters;
+        }
+        if (!inheritedUpdate.tags || inheritedUpdate.tags.length === 0) {
+          inheritedUpdate.tags = parentMetadata.tags;
+        }
+        if (!inheritedUpdate.accessControlTags || inheritedUpdate.accessControlTags.length === 0) {
+          inheritedUpdate.accessControlTags = parentMetadata.accessControlTags;
+        }
+      }
+      
+      // Update the folder with inherited values
+      Object.assign(folder, inheritedUpdate);
+      
+      // Apply inheritance to children if this folder has any
+      if (folder.children && folder.children.length > 0) {
+        const applyInheritanceToChildren = (children, parentMeta) => {
+          return children.map(child => {
+            const updatedChild = {
+              ...child,
+              description: child.description || parentMeta.description,
+              departments: (child.departments && child.departments.length > 0) ? child.departments : parentMeta.departments,
+              years: (child.years && child.years.length > 0 && child.years[0] !== 0) ? child.years : parentMeta.years,
+              semesters: (child.semesters && child.semesters.length > 0 && child.semesters[0] !== 0) ? child.semesters : parentMeta.semesters,
+              tags: (child.tags && child.tags.length > 0) ? child.tags : (parentMeta.tags ? [...parentMeta.tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
+              accessControlTags: (child.accessControlTags && child.accessControlTags.length > 0) ? child.accessControlTags : parentMeta.accessControlTags
+            };
+            if (child.children && child.children.length > 0) {
+              updatedChild.children = applyInheritanceToChildren(child.children, updatedChild);
+            }
+            return updatedChild;
+          });
+        };
+        folder.children = applyInheritanceToChildren(folder.children, folder);
+      }
+      
+      return { found: true, folder };
+    }
+    
+    // Search in children recursively
+    if (folder.children && folder.children.length > 0) {
+      const result = findAndUpdateFolderInHierarchy(folder.children, targetGdriveId, updateData, folder);
+      if (result.found) {
+        return result;
+      }
+    }
+  }
+  
+  return { found: false, folder: null };
+};
+
 // Update folder metadata in MongoDB with inheritance for subfolders
 router.put('/:id', authenticate, async (req, res) => {
   try {
@@ -577,6 +649,7 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 
     if (!folder) {
+      // Create new folder if it doesn't exist
       folder = new Folder({
         gdriveId: req.params.id,
         name: name || 'Google Drive Folder',
@@ -595,27 +668,63 @@ router.put('/:id', authenticate, async (req, res) => {
       if (tags !== undefined && JSON.stringify(tags) !== JSON.stringify(folder.tags)) changes.tags = { from: folder.tags, to: tags };
       if (accessControlTags !== undefined && JSON.stringify(accessControlTags) !== JSON.stringify(folder.accessControlTags)) changes.accessControlTags = { from: folder.accessControlTags, to: accessControlTags };
 
-      Object.assign(folder, update);
-      if (folder.children && folder.children.length > 0 && req.user.role === 'admin') {
-        const applyInheritanceToChildren = (children) => {
-          return children.map(child => {
-            const updatedChild = {
-              ...child,
-              description: child.description || description,
-              departments: (child.departments && child.departments.length > 0) ? child.departments : departments,
-              years: (child.years && child.years.length > 0 && child.years[0] !== 0) ? child.years : years,
-              semesters: (child.semesters && child.semesters.length > 0 && child.semesters[0] !== 0) ? child.semesters : semesters,
-              tags: (child.tags && child.tags.length > 0) ? child.tags : (tags ? [...tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
-              accessControlTags: (child.accessControlTags && child.accessControlTags.length > 0) ? child.accessControlTags : accessControlTags
-            };
-            if (child.children && child.children.length > 0) {
-              updatedChild.children = applyInheritanceToChildren(child.children);
+      // Check if this is a top-level folder or if we need to find it in the hierarchy
+      if (folder.children && folder.children.length > 0) {
+        // This is a top-level folder, update it directly
+        Object.assign(folder, update);
+        
+        // Apply inheritance to children if admin
+        if (req.user.role === 'admin') {
+          const applyInheritanceToChildren = (children) => {
+            return children.map(child => {
+              const updatedChild = {
+                ...child,
+                description: child.description || description,
+                departments: (child.departments && child.departments.length > 0) ? child.departments : departments,
+                years: (child.years && child.years.length > 0 && child.years[0] !== 0) ? child.years : years,
+                semesters: (child.semesters && child.semesters.length > 0 && child.semesters[0] !== 0) ? child.semesters : semesters,
+                tags: (child.tags && child.tags.length > 0) ? child.tags : (tags ? [...tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
+                accessControlTags: (child.accessControlTags && child.accessControlTags.length > 0) ? child.accessControlTags : accessControlTags
+              };
+              if (child.children && child.children.length > 0) {
+                updatedChild.children = applyInheritanceToChildren(child.children);
+              }
+              return updatedChild;
+            });
+          };
+          folder.children = applyInheritanceToChildren(folder.children);
+        }
+      } else {
+        // This might be a subfolder, we need to find all top-level folders and search for it
+        const allTopLevelFolders = await Folder.find({ parent: null });
+        let foundAndUpdated = false;
+        
+        for (const topFolder of allTopLevelFolders) {
+          if (topFolder.gdriveId === req.params.id) {
+            // It's actually a top-level folder without children
+            Object.assign(topFolder, update);
+            await topFolder.save();
+            folder = topFolder;
+            foundAndUpdated = true;
+            break;
+          } else if (topFolder.children && topFolder.children.length > 0) {
+            // Search in the hierarchy
+            const result = findAndUpdateFolderInHierarchy(topFolder.children, req.params.id, update, topFolder);
+            if (result.found) {
+              await topFolder.save(); // Save the top-level folder with updated children
+              folder = result.folder;
+              foundAndUpdated = true;
+              break;
             }
-            return updatedChild;
-          });
-        };
-        folder.children = applyInheritanceToChildren(folder.children);
+          }
+        }
+        
+        if (!foundAndUpdated) {
+          // Fallback: update the folder directly
+          Object.assign(folder, update);
+        }
       }
+      
       await folder.save();
       
       // Log folder metadata update (with error handling)
@@ -633,6 +742,7 @@ router.put('/:id', authenticate, async (req, res) => {
         // Don't fail the request if logging fails
       }
     }
+    
     if (!folder) return res.status(404).json({ error: 'Folder not found or could not be created' });
     res.json(folder);
   } catch (err) {

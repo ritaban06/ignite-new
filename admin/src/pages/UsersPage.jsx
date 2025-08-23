@@ -219,26 +219,26 @@ export default function UsersPage() {
             <table className="min-w-full divide-y divide-gray-600">
               <thead className="bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
                     User
                   </th>
                   <th className="px-16 py-4"></th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     {/* Role */}
                   </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Year
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Semester
                     </th>
                   {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Access Tags
                   </th> */}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Department
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Joined
                   </th>
                   {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
@@ -277,20 +277,20 @@ export default function UsersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4"></td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 text-center"></td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
                       {/* <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDarkRoleBadgeColor(user.role)}`}>
                         <Shield className="h-3 w-3 mr-1" />
                         {user.role}
                       </span> */}
                     </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        {user.year || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        {user.semester || 'N/A'}
-                      </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
+                      {user.year || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
+                      {user.semester || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
                       {user.department || 'N/A'}
                     </td>
                     {/* <td className="px-6 py-4">
@@ -309,8 +309,8 @@ export default function UsersPage() {
                         )}
                       </div>
                     </td> */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center text-sm text-white">
                         <Calendar className="h-4 w-4 mr-1" />
                         {formatDate(user.createdAt)}
                       </div>

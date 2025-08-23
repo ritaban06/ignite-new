@@ -398,32 +398,49 @@ export default function FolderManagementPage() {
   });
   useEffect(() => {
     if (showEditModal && selectedFolder) {
-      const isSub = isSubfolder(selectedFolder.gdriveId);
       let formValues;
+      const isSub = isSubfolder(selectedFolder.gdriveId);
       if (isSub) {
-        // Subfolder: use inherited metadata
         const parentFolder = findParentFolder(selectedFolder.gdriveId, subjectFolders);
-        const inheritedMetadata = getInheritedMetadata(selectedFolder, parentFolder);
         formValues = {
           name: selectedFolder.name || '',
-          description: inheritedMetadata.description || '',
-          years: Array.isArray(inheritedMetadata.years) ? inheritedMetadata.years.map(String) : [],
-          departments: Array.isArray(inheritedMetadata.departments) ? inheritedMetadata.departments : [],
-          semesters: Array.isArray(inheritedMetadata.semesters) ? inheritedMetadata.semesters.map(String) : [],
-          tags: Array.isArray(inheritedMetadata.tags) ? inheritedMetadata.tags.join(', ') : '',
-          accessControlTags: Array.isArray(inheritedMetadata.accessControlTags) ? inheritedMetadata.accessControlTags.join(', ') : '',
+          description: selectedFolder.description || parentFolder?.description || '',
+          years: Array.isArray(selectedFolder.years) && selectedFolder.years.length > 0
+            ? selectedFolder.years.map(String)
+            : (Array.isArray(parentFolder?.years) ? parentFolder.years.map(String) : []),
+          departments: Array.isArray(selectedFolder.departments) && selectedFolder.departments.length > 0
+            ? selectedFolder.departments
+            : (Array.isArray(parentFolder?.departments) ? parentFolder.departments : []),
+          semesters: Array.isArray(selectedFolder.semesters) && selectedFolder.semesters.length > 0
+            ? selectedFolder.semesters.map(String)
+            : (Array.isArray(parentFolder?.semesters) ? parentFolder.semesters.map(String) : []),
+          tags: Array.isArray(selectedFolder.tags) && selectedFolder.tags.length > 0
+            ? selectedFolder.tags.join(', ')
+            : (Array.isArray(parentFolder?.tags) ? parentFolder.tags.join(', ') : ''),
+          accessControlTags: Array.isArray(selectedFolder.accessControlTags) && selectedFolder.accessControlTags.length > 0
+            ? selectedFolder.accessControlTags.join(', ')
+            : (Array.isArray(parentFolder?.accessControlTags) ? parentFolder.accessControlTags.join(', ') : ''),
         };
-        setSelectedAccessTags(Array.isArray(inheritedMetadata.accessControlTags) ? inheritedMetadata.accessControlTags : []);
+        setSelectedAccessTags(Array.isArray(formValues.accessControlTags) ? formValues.accessControlTags : []);
       } else {
-        // Parent folder: use its own metadata
         formValues = {
           name: selectedFolder.name || '',
           description: selectedFolder.description || '',
-          years: Array.isArray(selectedFolder.years) ? selectedFolder.years.map(String) : [],
-          departments: Array.isArray(selectedFolder.departments) ? selectedFolder.departments : [],
-          semesters: Array.isArray(selectedFolder.semesters) ? selectedFolder.semesters.map(String) : [],
-          tags: Array.isArray(selectedFolder.tags) ? selectedFolder.tags.join(', ') : '',
-          accessControlTags: Array.isArray(selectedFolder.accessControlTags) ? selectedFolder.accessControlTags.join(', ') : '',
+          years: Array.isArray(selectedFolder.years) && selectedFolder.years.length > 0
+            ? selectedFolder.years.map(String)
+            : [],
+          departments: Array.isArray(selectedFolder.departments) && selectedFolder.departments.length > 0
+            ? selectedFolder.departments
+            : [],
+          semesters: Array.isArray(selectedFolder.semesters) && selectedFolder.semesters.length > 0
+            ? selectedFolder.semesters.map(String)
+            : [],
+          tags: Array.isArray(selectedFolder.tags) && selectedFolder.tags.length > 0
+            ? selectedFolder.tags.join(', ')
+            : '',
+          accessControlTags: Array.isArray(selectedFolder.accessControlTags) && selectedFolder.accessControlTags.length > 0
+            ? selectedFolder.accessControlTags.join(', ')
+            : '',
         };
         setSelectedAccessTags(Array.isArray(selectedFolder.accessControlTags) ? selectedFolder.accessControlTags : []);
       }
@@ -522,7 +539,8 @@ export default function FolderManagementPage() {
       setShowEditModal(false);
       setSelectedFolder(null);
       setSelectedAccessTags([]);
-      fetchGDriveFolders();
+      // Always re-fetch folders after update to get latest parent metadata
+      await fetchGDriveFolders();
     } catch (error) {
       // If error is AxiosError and status is 500, but update seems successful, show warning
       if (error?.response?.status === 500) {
@@ -530,7 +548,7 @@ export default function FolderManagementPage() {
         setShowEditModal(false);
         setSelectedFolder(null);
         setSelectedAccessTags([]);
-        fetchGDriveFolders();
+        await fetchGDriveFolders();
       } else {
         console.error('Error updating folder:', error);
         toast.error('Failed to update folder');
@@ -652,11 +670,14 @@ export default function FolderManagementPage() {
                         id={`dept-${dept}`}
                         name="departments"
                         value={dept}
-                        checked={editForm.departments.includes(dept)}
+                        checked={editForm.departments.includes(dept) || (isSubfolder(selectedFolder.gdriveId) && (!editForm.departments.length && findParentFolder(selectedFolder.gdriveId, subjectFolders)?.departments?.includes(dept)))}
                         onChange={handleEditFolderChange}
                         className="mr-2 h-4 w-4 rounded border-gray-500 text-primary-600 focus:ring-primary-500"
                       />
                       <label htmlFor={`dept-${dept}`} className="text-white">{dept}</label>
+                      {isSubfolder(selectedFolder.gdriveId) && !editForm.departments.length && findParentFolder(selectedFolder.gdriveId, subjectFolders)?.departments?.includes(dept) && (
+                        <span className="text-blue-400 text-xs ml-1">(inherited)</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -671,11 +692,14 @@ export default function FolderManagementPage() {
                         id={`year-${year}`}
                         name="years"
                         value={year}
-                        checked={editForm.years.includes(year)}
+                        checked={editForm.years.map(String).includes(String(year)) || (isSubfolder(selectedFolder.gdriveId) && (!editForm.years.length && findParentFolder(selectedFolder.gdriveId, subjectFolders)?.years?.map(String).includes(String(year))))}
                         onChange={handleEditFolderChange}
                         className="mr-2 h-4 w-4 rounded border-gray-500 text-primary-600 focus:ring-primary-500"
                       />
                       <label htmlFor={`year-${year}`} className="text-white">Year {year}</label>
+                      {isSubfolder(selectedFolder.gdriveId) && !editForm.years.length && findParentFolder(selectedFolder.gdriveId, subjectFolders)?.years?.map(String).includes(String(year)) && (
+                        <span className="text-blue-400 text-xs ml-1">(inherited)</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -690,11 +714,14 @@ export default function FolderManagementPage() {
                         id={`semester-${semester}`}
                         name="semesters"
                         value={semester}
-                        checked={editForm.semesters.includes(semester)}
+                        checked={editForm.semesters.map(String).includes(String(semester)) || (isSubfolder(selectedFolder.gdriveId) && (!editForm.semesters.length && findParentFolder(selectedFolder.gdriveId, subjectFolders)?.semesters?.map(String).includes(String(semester))))}
                         onChange={handleEditFolderChange}
                         className="mr-2 h-4 w-4 rounded border-gray-500 text-primary-600 focus:ring-primary-500"
                       />
                       <label htmlFor={`semester-${semester}`} className="text-white">Sem {semester}</label>
+                      {isSubfolder(selectedFolder.gdriveId) && !editForm.semesters.length && findParentFolder(selectedFolder.gdriveId, subjectFolders)?.semesters?.map(String).includes(String(semester)) && (
+                        <span className="text-blue-400 text-xs ml-1">(inherited)</span>
+                      )}
                     </div>
                   ))}
                 </div>

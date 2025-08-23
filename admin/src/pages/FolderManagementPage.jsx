@@ -168,6 +168,40 @@ export default function FolderManagementPage() {
     return null;
   };
 
+  // Helper function to find parent folder of a given folder
+  const findParentFolder = (targetFolderId, folders, parent = null) => {
+    for (const folder of folders) {
+      if (folder.gdriveId === targetFolderId) {
+        return parent;
+      }
+      if (folder.children && folder.children.length > 0) {
+        const found = findParentFolder(targetFolderId, folder.children, folder);
+        if (found !== null) return found;
+      }
+    }
+    return null;
+  };
+
+  // Helper function to get inherited metadata from parent
+  const getInheritedMetadata = (folder, parentFolder) => {
+    if (!parentFolder) return {};
+    
+    return {
+      description: folder.description || parentFolder.description || '',
+      departments: (folder.departments && folder.departments.length > 0) ? folder.departments : (parentFolder.departments || []),
+      years: (folder.years && folder.years.length > 0) ? folder.years : (parentFolder.years || []),
+      semesters: (folder.semesters && folder.semesters.length > 0) ? folder.semesters : (parentFolder.semesters || []),
+      tags: (folder.tags && folder.tags.length > 0) ? folder.tags : (parentFolder.tags || []),
+      accessControlTags: (folder.accessControlTags && folder.accessControlTags.length > 0) ? folder.accessControlTags : (parentFolder.accessControlTags || [])
+    };
+  };
+
+  // Helper function to check if a folder is a subfolder
+  const isSubfolder = (folderId) => {
+    const parentFolder = findParentFolder(folderId, subjectFolders);
+    return parentFolder !== null;
+  };
+
   // Toggle between showing all folders or just subject folders
   const toggleFolderView = () => {
     setShowAllFolders(prev => !prev);
@@ -231,31 +265,74 @@ export default function FolderManagementPage() {
         </div>
         
         {/* Display metadata */}
-        {!isSubfolder && (
-          <div className="ml-8 text-sm text-gray-300 space-y-1">
-            {folder.departments?.length > 0 && (
-              <div><span className="font-semibold">Departments:</span> {folder.departments.join(', ')}</div>
-            )}
-            {folder.years?.length > 0 && (
-              <div><span className="font-semibold">Years:</span> {folder.years.join(', ')}</div>
-            )}
-            {folder.semesters?.length > 0 && (
-              <div><span className="font-semibold">Semesters:</span> {folder.semesters.join(', ')}</div>
-            )}
-            {folder.description && (
-              <div><span className="font-semibold">Description:</span> {folder.description}</div>
-            )}
-            {folder.tags?.length > 0 && (
-              <div><span className="font-semibold">Tags:</span> {folder.tags.join(', ')}</div>
-            )}
-            {folder.accessControlTags?.length > 0 && (
-              <div><span className="font-semibold">Access Tags:</span> {folder.accessControlTags.join(', ')}</div>
-            )}
-            <div className="text-xs text-yellow-400 mt-2">
-              <em>Note: This metadata will be inherited by all subfolders unless explicitly changed.</em>
-            </div>
-          </div>
-        )}
+        <div className="ml-8 text-sm text-gray-300 space-y-1">
+          {(() => {
+            // Get effective metadata (inherited or direct)
+            const parentFolder = isSubfolderParam ? findParentFolder(folder.gdriveId, subjectFolders) : null;
+            const effectiveMetadata = isSubfolderParam ? getInheritedMetadata(folder, parentFolder) : folder;
+            
+            return (
+              <>
+                {effectiveMetadata.departments?.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Departments:</span> {effectiveMetadata.departments.join(', ')}
+                    {isSubfolderParam && (!folder.departments || folder.departments.length === 0) && (
+                      <span className="text-blue-400 text-xs ml-2">(inherited)</span>
+                    )}
+                  </div>
+                )}
+                {effectiveMetadata.years?.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Years:</span> {effectiveMetadata.years.join(', ')}
+                    {isSubfolderParam && (!folder.years || folder.years.length === 0) && (
+                      <span className="text-blue-400 text-xs ml-2">(inherited)</span>
+                    )}
+                  </div>
+                )}
+                {effectiveMetadata.semesters?.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Semesters:</span> {effectiveMetadata.semesters.join(', ')}
+                    {isSubfolderParam && (!folder.semesters || folder.semesters.length === 0) && (
+                      <span className="text-blue-400 text-xs ml-2">(inherited)</span>
+                    )}
+                  </div>
+                )}
+                {effectiveMetadata.description && (
+                  <div>
+                    <span className="font-semibold">Description:</span> {effectiveMetadata.description}
+                    {isSubfolderParam && !folder.description && (
+                      <span className="text-blue-400 text-xs ml-2">(inherited)</span>
+                    )}
+                  </div>
+                )}
+                {effectiveMetadata.tags?.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Tags:</span> {effectiveMetadata.tags.join(', ')}
+                    {isSubfolderParam && (!folder.tags || folder.tags.length === 0) && (
+                      <span className="text-blue-400 text-xs ml-2">(inherited)</span>
+                    )}
+                  </div>
+                )}
+                {effectiveMetadata.accessControlTags?.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Access Tags:</span> {effectiveMetadata.accessControlTags.join(', ')}
+                    {isSubfolderParam && (!folder.accessControlTags || folder.accessControlTags.length === 0) && (
+                      <span className="text-blue-400 text-xs ml-2">(inherited)</span>
+                    )}
+                  </div>
+                )}
+                <div className="text-xs text-yellow-400 mt-2">
+                  <em>
+                    {isSubfolderParam 
+                      ? 'Note: This subfolder inherits metadata from its parent unless explicitly changed.'
+                      : 'Note: This metadata will be inherited by all subfolders unless explicitly changed.'
+                    }
+                  </em>
+                </div>
+              </>
+            );
+          })()} 
+        </div>
         
         {/* Render subfolders if expanded */}
         {hasSubfolders && isExpanded && (
@@ -321,18 +398,21 @@ export default function FolderManagementPage() {
   });
   useEffect(() => {
     if (showEditModal && selectedFolder) {
-      // Initialize the edit form with the selected folder's metadata
-      // For nested folders, we need to handle both direct properties and inherited ones
+      // Check if this is a subfolder and get inherited metadata
+      const parentFolder = findParentFolder(selectedFolder.gdriveId, subjectFolders);
+      const inheritedMetadata = getInheritedMetadata(selectedFolder, parentFolder);
+      
+      // Initialize the edit form with the selected folder's metadata or inherited values
       setEditForm({
         name: selectedFolder.name || '',
-        description: selectedFolder.description || '',
-        years: Array.isArray(selectedFolder.years) ? selectedFolder.years.map(String) : [],
-        departments: Array.isArray(selectedFolder.departments) ? selectedFolder.departments : [],
-        semesters: Array.isArray(selectedFolder.semesters) ? selectedFolder.semesters.map(String) : [],
-        tags: Array.isArray(selectedFolder.tags) ? selectedFolder.tags.join(', ') : '',
-        accessControlTags: Array.isArray(selectedFolder.accessControlTags) ? selectedFolder.accessControlTags.join(', ') : '',
+        description: inheritedMetadata.description || '',
+        years: Array.isArray(inheritedMetadata.years) ? inheritedMetadata.years.map(String) : [],
+        departments: Array.isArray(inheritedMetadata.departments) ? inheritedMetadata.departments : [],
+        semesters: Array.isArray(inheritedMetadata.semesters) ? inheritedMetadata.semesters.map(String) : [],
+        tags: Array.isArray(inheritedMetadata.tags) ? inheritedMetadata.tags.join(', ') : '',
+        accessControlTags: Array.isArray(inheritedMetadata.accessControlTags) ? inheritedMetadata.accessControlTags.join(', ') : '',
       });
-      setSelectedAccessTags(Array.isArray(selectedFolder.accessControlTags) ? selectedFolder.accessControlTags : []);
+      setSelectedAccessTags(Array.isArray(inheritedMetadata.accessControlTags) ? inheritedMetadata.accessControlTags : []);
       
       // Fetch available tags
       const fetchAvailableTags = async () => {
@@ -509,8 +589,22 @@ export default function FolderManagementPage() {
       {showEditModal && selectedFolder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-gray-700">
-            <h2 className="text-xl font-bold text-white mb-4">Edit Subject Folder Metadata</h2>
-            <p className="text-gray-400 text-sm mb-4">Changes to this metadata will be inherited by all subfolders unless they have explicit metadata set.</p>
+            <h2 className="text-xl font-bold text-white mb-4">
+              {isSubfolder(selectedFolder.gdriveId) ? 'Edit Subfolder Metadata' : 'Edit Subject Folder Metadata'}
+            </h2>
+            <p className="text-gray-400 text-sm mb-4">
+              {isSubfolder(selectedFolder.gdriveId) 
+                ? 'This subfolder inherits metadata from its parent unless explicitly changed. Values shown below include inherited data.'
+                : 'Changes to this metadata will be inherited by all subfolders unless they have explicit metadata set.'
+              }
+            </p>
+            {isSubfolder(selectedFolder.gdriveId) && (
+              <div className="bg-blue-900 bg-opacity-30 border border-blue-600 rounded-lg p-3 mb-4">
+                <p className="text-blue-300 text-sm">
+                  <strong>Note:</strong> Values displayed are inherited from the parent folder. Modify any field to override inheritance for this subfolder.
+                </p>
+              </div>
+            )}
             <form onSubmit={handleUpdateFolder} className="space-y-4">
               <div>
                 <label className="block text-gray-300 mb-1">Name</label>

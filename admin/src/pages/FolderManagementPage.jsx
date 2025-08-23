@@ -351,12 +351,12 @@ export default function FolderManagementPage() {
     return (
       <div>
         <div className="mb-4 flex justify-between items-center">
-          <button 
+          {/* <button 
             onClick={toggleFolderView}
             className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
           >
             {showAllFolders ? 'Show Subject Folders Only' : 'Show All Folders with Hierarchy'}
-          </button>
+          </button> */}
         </div>
         
         <ul className="ml-2">
@@ -568,12 +568,12 @@ export default function FolderManagementPage() {
             <p className="text-yellow-400 text-sm">Subject folders and their subfolders. Subfolders inherit metadata from their parent unless explicitly changed.</p>
           </div>
           <div>
-            <button 
+            {/* <button 
               onClick={toggleFolderView}
               className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded-md text-sm transition-colors"
             >
               {showAllFolders ? "Show Subject Folders Only" : "Show All Folders"}
-            </button>
+            </button> */}
           </div>
         </div>
         {loading ? (

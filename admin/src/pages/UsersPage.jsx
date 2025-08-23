@@ -188,7 +188,7 @@ export default function UsersPage() {
             </div>
           </div>
           
-          <div>
+          {/* <div>
             <select
               className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               value={roleFilter}
@@ -198,7 +198,7 @@ export default function UsersPage() {
               <option value="user" className="bg-gray-700 text-white">Users</option>
               <option value="admin" className="bg-gray-700 text-white">Admins</option>
             </select>
-          </div>
+          </div> */}
         </div>
       </div>
 

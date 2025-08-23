@@ -563,28 +563,31 @@ const findAndUpdateFolderInHierarchy = (folders, targetGdriveId, updateData, par
       // Found the target folder - apply inheritance from parent if needed
       const inheritedUpdate = { ...updateData };
       
-      // Apply inheritance logic for subfolders
-      if (parentMetadata) {
-        // Only inherit if the field is empty or has default values
-        if (!inheritedUpdate.description || inheritedUpdate.description.trim() === '') {
-          inheritedUpdate.description = parentMetadata.description;
-        }
-        if (!inheritedUpdate.departments || inheritedUpdate.departments.length === 0) {
-          inheritedUpdate.departments = parentMetadata.departments;
-        }
-        if (!inheritedUpdate.years || inheritedUpdate.years.length === 0 || (inheritedUpdate.years.length === 1 && inheritedUpdate.years[0] === 0)) {
-          inheritedUpdate.years = parentMetadata.years;
-        }
-        if (!inheritedUpdate.semesters || inheritedUpdate.semesters.length === 0 || (inheritedUpdate.semesters.length === 1 && inheritedUpdate.semesters[0] === 0)) {
-          inheritedUpdate.semesters = parentMetadata.semesters;
-        }
-        if (!inheritedUpdate.tags || inheritedUpdate.tags.length === 0) {
-          inheritedUpdate.tags = parentMetadata.tags;
-        }
-        if (!inheritedUpdate.accessControlTags || inheritedUpdate.accessControlTags.length === 0) {
-          inheritedUpdate.accessControlTags = parentMetadata.accessControlTags;
-        }
-      }
+      // Apply inheritance logic for subfolders only for fields that weren't explicitly provided in the update
+       if (parentMetadata) {
+         // Check what fields were actually provided in the original update request
+         const originalUpdate = updateData;
+         
+         // Only inherit if the field was not provided in the update request
+         if (originalUpdate.description === undefined && (!folder.description || folder.description.trim() === '')) {
+           inheritedUpdate.description = parentMetadata.description;
+         }
+         if (originalUpdate.departments === undefined && (!folder.departments || folder.departments.length === 0)) {
+           inheritedUpdate.departments = parentMetadata.departments;
+         }
+         if (originalUpdate.years === undefined && (!folder.years || folder.years.length === 0 || (folder.years.length === 1 && folder.years[0] === 0))) {
+           inheritedUpdate.years = parentMetadata.years;
+         }
+         if (originalUpdate.semesters === undefined && (!folder.semesters || folder.semesters.length === 0 || (folder.semesters.length === 1 && folder.semesters[0] === 0))) {
+           inheritedUpdate.semesters = parentMetadata.semesters;
+         }
+         if (originalUpdate.tags === undefined && (!folder.tags || folder.tags.length === 0)) {
+           inheritedUpdate.tags = parentMetadata.tags;
+         }
+         if (originalUpdate.accessControlTags === undefined && (!folder.accessControlTags || folder.accessControlTags.length === 0)) {
+           inheritedUpdate.accessControlTags = parentMetadata.accessControlTags;
+         }
+       }
       
       // Update the folder with inherited values
       Object.assign(folder, inheritedUpdate);

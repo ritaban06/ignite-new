@@ -726,10 +726,9 @@ router.put('/:id', authenticate, async (req, res) => {
         if (!foundAndUpdated) {
           // Fallback: update the folder directly
           Object.assign(folder, update);
+          await folder.save();
         }
       }
-      
-      await folder.save();
       
       // Log folder metadata update (with error handling)
       try {

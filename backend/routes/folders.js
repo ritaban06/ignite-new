@@ -643,110 +643,95 @@ router.put('/:id', authenticate, async (req, res) => {
     if (tags !== undefined) update.tags = tags;
     if (accessControlTags !== undefined) update.accessControlTags = accessControlTags;
 
-    // Try to update by MongoDB _id first (if valid ObjectId)
     let folder = null;
-    if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
-      folder = await Folder.findById(req.params.id);
-    } else {
-      // If not found by _id, try to find by Google Drive folder id (gdriveId)
-      folder = await Folder.findOne({ gdriveId: req.params.id });
+    let changes = {};
+    let isSubfolderUpdate = false;
+    let parentFolder = null;
+
+    // First, check if this is a subfolder in any hierarchy
+    const allTopLevelFolders = await Folder.find({ parent: null });
+    for (const topFolder of allTopLevelFolders) {
+      if (topFolder.children && topFolder.children.length > 0) {
+        const result = findAndUpdateFolderInHierarchy(topFolder.children, req.params.id, update, topFolder);
+        if (result.found) {
+          folder = result.folder;
+          parentFolder = topFolder;
+          isSubfolderUpdate = true;
+          break;
+        }
+      }
     }
 
+    // If not found in hierarchy, try to find as a top-level folder
     if (!folder) {
-      // Create new folder if it doesn't exist
-      folder = new Folder({
-        gdriveId: req.params.id,
-        name: name || 'Google Drive Folder',
-        createdBy: req.user._id,
-        ...update
-      });
-      await folder.save();
-    } else {
-      // Track changes
-      let changes = {};
-      if (name !== undefined && name !== folder.name) changes.name = { from: folder.name, to: name };
-      if (description !== undefined && description !== folder.description) changes.description = { from: folder.description, to: description };
-      if (years !== undefined && JSON.stringify(years) !== JSON.stringify(folder.years)) changes.years = { from: folder.years, to: years };
-      if (departments !== undefined && JSON.stringify(departments) !== JSON.stringify(folder.departments)) changes.departments = { from: folder.departments, to: departments };
-      if (semesters !== undefined && JSON.stringify(semesters) !== JSON.stringify(folder.semesters)) changes.semesters = { from: folder.semesters, to: semesters };
-      if (tags !== undefined && JSON.stringify(tags) !== JSON.stringify(folder.tags)) changes.tags = { from: folder.tags, to: tags };
-      if (accessControlTags !== undefined && JSON.stringify(accessControlTags) !== JSON.stringify(folder.accessControlTags)) changes.accessControlTags = { from: folder.accessControlTags, to: accessControlTags };
-
-      // Check if this is a top-level folder or if we need to find it in the hierarchy
-      if (folder.children && folder.children.length > 0) {
-        // This is a top-level folder, update it directly
-        Object.assign(folder, update);
-        
-        // Apply inheritance to children if admin
-        if (req.user.role === 'admin') {
-          const applyInheritanceToChildren = (children) => {
-            return children.map(child => {
-              const updatedChild = {
-                ...child,
-                description: child.description || description,
-                departments: (child.departments && child.departments.length > 0) ? child.departments : departments,
-                years: (child.years && child.years.length > 0 && child.years[0] !== 0) ? child.years : years,
-                semesters: (child.semesters && child.semesters.length > 0 && child.semesters[0] !== 0) ? child.semesters : semesters,
-                tags: (child.tags && child.tags.length > 0) ? child.tags : (tags ? [...tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
-                accessControlTags: (child.accessControlTags && child.accessControlTags.length > 0) ? child.accessControlTags : accessControlTags
-              };
-              if (child.children && child.children.length > 0) {
-                updatedChild.children = applyInheritanceToChildren(child.children);
-              }
-              return updatedChild;
-            });
-          };
-          folder.children = applyInheritanceToChildren(folder.children);
-        }
+      if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
+        folder = await Folder.findById(req.params.id);
       } else {
-        // This might be a subfolder, we need to find all top-level folders and search for it
-        const allTopLevelFolders = await Folder.find({ parent: null });
-        let foundAndUpdated = false;
-        
-        for (const topFolder of allTopLevelFolders) {
-          if (topFolder.gdriveId === req.params.id) {
-            // It's actually a top-level folder without children
-            Object.assign(topFolder, update);
-            await topFolder.save();
-            folder = topFolder;
-            foundAndUpdated = true;
-            break;
-          } else if (topFolder.children && topFolder.children.length > 0) {
-            // Search in the hierarchy
-            const result = findAndUpdateFolderInHierarchy(topFolder.children, req.params.id, update, topFolder);
-            if (result.found) {
-              await topFolder.save(); // Save the top-level folder with updated children
-              folder = result.folder;
-              foundAndUpdated = true;
-              break;
+        folder = await Folder.findOne({ gdriveId: req.params.id });
+      }
+    }
+
+    // If still not found, return error (don't create new folders)
+    if (!folder) {
+      return res.status(404).json({ error: 'Folder not found' });
+    }
+
+    // Track changes for logging
+    if (name !== undefined && name !== folder.name) changes.name = { from: folder.name, to: name };
+    if (description !== undefined && description !== folder.description) changes.description = { from: folder.description, to: description };
+    if (years !== undefined && JSON.stringify(years) !== JSON.stringify(folder.years)) changes.years = { from: folder.years, to: years };
+    if (departments !== undefined && JSON.stringify(departments) !== JSON.stringify(folder.departments)) changes.departments = { from: folder.departments, to: departments };
+    if (semesters !== undefined && JSON.stringify(semesters) !== JSON.stringify(folder.semesters)) changes.semesters = { from: folder.semesters, to: semesters };
+    if (tags !== undefined && JSON.stringify(tags) !== JSON.stringify(folder.tags)) changes.tags = { from: folder.tags, to: tags };
+    if (accessControlTags !== undefined && JSON.stringify(accessControlTags) !== JSON.stringify(folder.accessControlTags)) changes.accessControlTags = { from: folder.accessControlTags, to: accessControlTags };
+
+    if (isSubfolderUpdate) {
+      // Subfolder was already updated in findAndUpdateFolderInHierarchy, just save the parent
+      await parentFolder.save();
+    } else {
+      // This is a top-level folder, update it directly
+      Object.assign(folder, update);
+      
+      // Apply inheritance to children if admin and folder has children
+      if (req.user.role === 'admin' && folder.children && folder.children.length > 0) {
+        const applyInheritanceToChildren = (children) => {
+          return children.map(child => {
+            const updatedChild = {
+              ...child,
+              description: child.description || description,
+              departments: (child.departments && child.departments.length > 0) ? child.departments : departments,
+              years: (child.years && child.years.length > 0 && child.years[0] !== 0) ? child.years : years,
+              semesters: (child.semesters && child.semesters.length > 0 && child.semesters[0] !== 0) ? child.semesters : semesters,
+              tags: (child.tags && child.tags.length > 0) ? child.tags : (tags ? [...tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
+              accessControlTags: (child.accessControlTags && child.accessControlTags.length > 0) ? child.accessControlTags : accessControlTags
+            };
+            if (child.children && child.children.length > 0) {
+              updatedChild.children = applyInheritanceToChildren(child.children);
             }
-          }
-        }
-        
-        if (!foundAndUpdated) {
-          // Fallback: update the folder directly
-          Object.assign(folder, update);
-          await folder.save();
-        }
+            return updatedChild;
+          });
+        };
+        folder.children = applyInheritanceToChildren(folder.children);
       }
       
-      // Log folder metadata update (with error handling)
-      try {
-        await AccessLog.logAccess({
-          userId: req.user._id,
-          action: 'folder_update_metadata',
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent'),
-          folderId: folder._id,
-          metadata: { changes }
-        });
-      } catch (logError) {
-        console.warn('Failed to log folder update:', logError.message);
-        // Don't fail the request if logging fails
-      }
+      await folder.save();
+    }
+
+    // Log folder metadata update (with error handling)
+    try {
+      await AccessLog.logAccess({
+        userId: req.user._id,
+        action: 'folder_update_metadata',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        folderId: folder._id || folder.gdriveId,
+        metadata: { changes }
+      });
+    } catch (logError) {
+      console.warn('Failed to log folder update:', logError.message);
+      // Don't fail the request if logging fails
     }
     
-    if (!folder) return res.status(404).json({ error: 'Folder not found or could not be created' });
     res.json(folder);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update folder', details: err.message });

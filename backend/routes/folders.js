@@ -380,8 +380,41 @@ router.get('/subject-folders', authenticate, async (req, res) => {
 // Get folders with metadata (for client access control)
 router.get('/with-metadata', authenticate, async (req, res) => {
   try {
-    const folders = await Folder.find().populate('parent').lean();
-    res.json(folders);
+    const topLevelFolders = await Folder.find({ parent: null }).lean();
+    
+    // Flatten the hierarchy to include all folders (top-level and subfolders)
+    const flattenFoldersWithMetadata = (folders, parentMetadata = null) => {
+      const result = [];
+      
+      for (const folder of folders) {
+        // Add the current folder with its metadata
+        const folderWithMetadata = {
+          _id: folder._id,
+          gdriveId: folder.gdriveId,
+          name: folder.name,
+          description: folder.description,
+          departments: folder.departments || [],
+          years: folder.years || [],
+          semesters: folder.semesters || [],
+          tags: folder.tags || [],
+          accessControlTags: folder.accessControlTags || [],
+          parent: folder.parent
+        };
+        
+        result.push(folderWithMetadata);
+        
+        // Recursively process children if they exist
+        if (folder.children && folder.children.length > 0) {
+          const childrenWithMetadata = flattenFoldersWithMetadata(folder.children, folderWithMetadata);
+          result.push(...childrenWithMetadata);
+        }
+      }
+      
+      return result;
+    };
+    
+    const allFoldersFlat = flattenFoldersWithMetadata(topLevelFolders);
+    res.json(allFoldersFlat);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch folders with metadata', details: err.message });
   }

@@ -189,4 +189,5 @@ pdfSchema.methods.toJSON = function() {
   return pdf;
 };
 
-module.exports = mongoose.model('PDF', pdfSchema);
+// module.exports = mongoose.model('PDF', pdfSchema); // right now not needed
+module.exports = mongoose.model(pdfSchema); // just keeping the schema not initializing it in mongodb

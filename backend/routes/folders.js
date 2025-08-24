@@ -101,8 +101,8 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           gdriveId: folder.gdriveId,
           description: folder.description || parentMetadata?.description || folder.name.toLowerCase(),
           departments: folder.departments || parentMetadata?.departments || ['IT'],
-          years: folder.years || parentMetadata?.years || (isSubjectFolder ? [1, 2, 3, 4] : []),
-          semesters: folder.semesters || parentMetadata?.semesters || (isSubjectFolder ? [1, 2, 3, 4, 5, 6, 7, 8] : []),
+          years: folder.years || parentMetadata?.years || [0],
+          semesters: folder.semesters || parentMetadata?.semesters || [0],
           tags: folder.tags || (parentMetadata?.tags ? [...parentMetadata.tags, folder.name.toLowerCase()] : [folder.name.toLowerCase()]),
           accessControlTags: folder.accessControlTags || parentMetadata?.accessControlTags || [],
           createdByName: folder.ownerName || 'Ignite Admin'
@@ -149,6 +149,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           // Only update these fields if they don't already exist or are empty
           existingFolder.description = existingFolder.description || folderMetadata.description;
           existingFolder.departments = existingFolder.departments?.length > 0 ? existingFolder.departments : folderMetadata.departments;
+          // Preserve existing years and semesters even if they are [0] (which is now the default)
           existingFolder.years = existingFolder.years?.length > 0 ? existingFolder.years : folderMetadata.years;
           existingFolder.semesters = existingFolder.semesters?.length > 0 ? existingFolder.semesters : folderMetadata.semesters;
           existingFolder.tags = existingFolder.tags?.length > 0 ? existingFolder.tags : folderMetadata.tags;

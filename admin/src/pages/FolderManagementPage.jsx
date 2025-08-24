@@ -347,7 +347,7 @@ export default function FolderManagementPage() {
     // With the new nested structure, we always render from the top-level folders
     // showAllFolders just controls whether we show the full hierarchy or just subject folders
     const foldersToRender = subjectFolders;
-    
+
     return (
       <div>
         <div className="mb-4 flex justify-between items-center">
@@ -358,10 +358,16 @@ export default function FolderManagementPage() {
             {showAllFolders ? 'Show Subject Folders Only' : 'Show All Folders with Hierarchy'}
           </button> */}
         </div>
-        
-        <ul className="ml-2">
-          {foldersToRender.map(folder => renderFolder(folder))}
-        </ul>
+        {foldersToRender.length === 0 ? (
+          <div className="p-8 text-center text-gray-300">
+            <p className="text-lg font-semibold mb-2">No folders to show</p>
+            <p className="text-sm">Either manually sync the folders or check MongoDB.</p>
+          </div>
+        ) : (
+          <ul className="ml-2">
+            {foldersToRender.map(folder => renderFolder(folder))}
+          </ul>
+        )}
       </div>
     );
   };

@@ -271,11 +271,18 @@ export default function FolderManagementPage() {
             const sortedSemesters = effectiveMetadata.semesters?.length > 0
               ? [...effectiveMetadata.semesters].map(Number).sort((a, b) => a - b).map(String)
               : [];
+            // Sort departments and tags alphabetically ascending
+            const sortedDepartments = effectiveMetadata.departments?.length > 0
+              ? [...effectiveMetadata.departments].sort((a, b) => a.localeCompare(b))
+              : [];
+            const sortedTags = effectiveMetadata.tags?.length > 0
+              ? [...effectiveMetadata.tags].sort((a, b) => a.localeCompare(b))
+              : [];
             return (
               <>
-                {effectiveMetadata.departments?.length > 0 && (
+                {sortedDepartments.length > 0 && (
                   <div>
-                    <span className="font-semibold">Departments:</span> {effectiveMetadata.departments.join(', ')}
+                    <span className="font-semibold">Departments:</span> {sortedDepartments.join(', ')}
                     {isSubfolderParam && (!folder.departments || folder.departments.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}
@@ -305,9 +312,9 @@ export default function FolderManagementPage() {
                     )}
                   </div>
                 )}
-                {effectiveMetadata.tags?.length > 0 && (
+                {sortedTags.length > 0 && (
                   <div>
-                    <span className="font-semibold">Tags:</span> {effectiveMetadata.tags.join(', ')}
+                    <span className="font-semibold">Tags:</span> {sortedTags.join(', ')}
                     {isSubfolderParam && (!folder.tags || folder.tags.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}

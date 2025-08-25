@@ -42,18 +42,25 @@ class GoogleDriveService {
     }
   }
 
-  // Download a PDF file from Google Drive with support for byte ranges
-  async downloadPdf(fileId, range) {
+  // Download a PDF file from Google Drive
+  async downloadPdf(fileId) {
     try {
-      const headers = range ? { Range: range } : {};
+      // console.log('[GoogleDriveService] downloadPdf called with fileId:', fileId);
       const response = await this.drive.files.get({
         fileId,
         alt: 'media',
-      }, { responseType: 'stream', headers });
-
+      }, { responseType: 'stream' });
+      // console.log('[GoogleDriveService] downloadPdf success for fileId:', fileId);
       return { success: true, stream: response.data };
     } catch (error) {
-      console.error('[GoogleDriveService] Error downloading PDF:', error);
+      // Log full error details for debugging
+      // console.error('[GoogleDriveService] downloadPdf ERROR for fileId:', fileId);
+      console.error('Google Drive download error:', error);
+      if (error.response) {
+        console.error('Google Drive API response data:', error.response.data);
+        console.error('Google Drive API response status:', error.response.status);
+        console.error('Google Drive API response headers:', error.response.headers);
+      }
       return { success: false, error: error.message };
     }
   }

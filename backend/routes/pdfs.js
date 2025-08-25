@@ -492,21 +492,12 @@ router.get('/proxy/:fileId', [
     // Stream PDF from Google Drive
     const fileId = req.params.fileId;
     console.log('[PDF Proxy] Incoming fileId:', fileId);
-    const range = req.headers['range'];
-    console.log('[PDF Proxy] Incoming Range header:', range);
-
-    const driveResult = await googleDriveService.downloadPdf(fileId, range);
+    const driveResult = await googleDriveService.downloadPdf(fileId);
     console.log('[PDF Proxy] googleDriveService.downloadPdf result:', driveResult);
-
     if (!driveResult.success) {
       console.error('[PDF Proxy] Failed to fetch PDF from Google Drive:', driveResult.error);
       return res.status(500).json({ error: 'Failed to fetch PDF from Google Drive', message: driveResult.error });
     }
-
-    if (range) {
-      res.status(206); // Partial Content
-    }
-
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'inline; filename="secured.pdf"',
@@ -516,7 +507,6 @@ router.get('/proxy/:fileId', [
       'X-Download-Options': 'noopen',
       'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
     });
-
     driveResult.stream.pipe(res);
     driveResult.stream.on('error', (err) => {
       console.error('[PDF Proxy] Error streaming PDF:', err);

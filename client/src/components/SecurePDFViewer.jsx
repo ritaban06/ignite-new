@@ -44,14 +44,18 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
     }),
   });
 
-  // Create default layout plugin instance with disabled features
+  // Create default layout plugin instance with lazy loading enabled
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
     sidebarTabs: (defaultTabs) => [
-      // Only keep thumbnail tab, remove others to prevent file access
-      defaultTabs[0], // thumbnail tab
+      defaultTabs[0], // Keep only the thumbnail tab
     ],
-    // Use our secure toolbar
-    toolbarPlugin: secureToolbarPluginInstance,
+    renderPage: (props) => {
+      // Render only the visible pages lazily
+      if (props.pageIndex === 0 || props.isVisible) {
+        return props.canvasLayer;
+      }
+      return null;
+    },
   });
 
   // Reset state when modal closes
@@ -445,12 +449,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden" ref={viewerRef}
-          // onMouseDown={handleMouseDown}
-          // onMouseMove={handleMouseMove}
-          // onMouseUp={handleMouseUp}
-          style={{ position: 'relative' }}
-        >
+        <div className="flex-1 overflow-hidden" ref={viewerRef} style={{ position: 'relative' }}>
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center h-full">

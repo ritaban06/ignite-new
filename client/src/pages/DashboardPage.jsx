@@ -287,8 +287,8 @@ const DashboardPage = () => {
       const metadataResponse = await folderAPI.getFoldersWithMetadata();
       const folderMetadata = metadataResponse.data;
       
-      console.log('Folder metadata from MongoDB:', folderMetadata);
-      console.log('Number of folder metadata records:', folderMetadata.length);
+      // console.log('Folder metadata from MongoDB:', folderMetadata);
+      // console.log('Number of folder metadata records:', folderMetadata.length);
       
       // Create a map of folder metadata by gdriveId
       const metadataMap = new Map();
@@ -298,8 +298,8 @@ const DashboardPage = () => {
         }
       });
       
-      console.log('Metadata map size:', metadataMap.size);
-      console.log('User info:', user);
+      // console.log('Metadata map size:', metadataMap.size);
+      // console.log('User info:', user);
       
       // Recursively filter folders and subfolders based on user access control
       const filterFoldersRecursively = (folders) => {
@@ -366,24 +366,17 @@ const DashboardPage = () => {
     const hasSemesterRestrictions = folderMetadata.semesters && folderMetadata.semesters.length > 0;
     const hasAccessTagRestrictions = folderMetadata.accessControlTags && folderMetadata.accessControlTags.length > 0;
     
-    console.log('Access control check details:');
-    console.log('- hasDepartmentRestrictions:', hasDepartmentRestrictions, folderMetadata.departments);
-    console.log('- hasYearRestrictions:', hasYearRestrictions, folderMetadata.years);
-    console.log('- hasSemesterRestrictions:', hasSemesterRestrictions, folderMetadata.semesters);
-    console.log('- hasAccessTagRestrictions:', hasAccessTagRestrictions, folderMetadata.accessControlTags);
+
     
     // If no restrictions are set, allow access
     if (!hasDepartmentRestrictions && !hasYearRestrictions && !hasSemesterRestrictions && !hasAccessTagRestrictions) {
-      console.log('No restrictions set, allowing access');
       return true;
     }
     
     // Check departments (only if restrictions are set)
     if (hasDepartmentRestrictions) {
       const departmentCheck = user.department && folderMetadata.departments.includes(user.department);
-      console.log('Department check:', user.department, 'in', folderMetadata.departments, '=', departmentCheck);
       if (!departmentCheck) {
-        console.log('Department access denied');
         return false;
       }
     }
@@ -391,9 +384,7 @@ const DashboardPage = () => {
     // Check years (only if restrictions are set)
     if (hasYearRestrictions) {
       const yearCheck = user.year && folderMetadata.years.includes(user.year);
-      console.log('Year check:', user.year, 'in', folderMetadata.years, '=', yearCheck);
       if (!yearCheck) {
-        console.log('Year access denied');
         return false;
       }
     }
@@ -401,9 +392,7 @@ const DashboardPage = () => {
     // Check semesters (only if restrictions are set)
     if (hasSemesterRestrictions) {
       const semesterCheck = user.semester && folderMetadata.semesters.includes(user.semester);
-      console.log('Semester check:', user.semester, 'in', folderMetadata.semesters, '=', semesterCheck);
       if (!semesterCheck) {
-        console.log('Semester access denied');
         return false;
       }
     }
@@ -413,14 +402,11 @@ const DashboardPage = () => {
       const hasRequiredTag = folderMetadata.accessControlTags.some(tag => 
         user.accessTags.includes(tag)
       );
-      console.log('Access tag check:', user.accessTags, 'has any of', folderMetadata.accessControlTags, '=', hasRequiredTag);
       if (!hasRequiredTag) {
-        console.log('Access tag denied');
         return false;
       }
     }
     
-    console.log('All access checks passed');
     return true;
   };
   
@@ -564,11 +550,11 @@ const DashboardPage = () => {
         // It's not a direct child, we need to find the complete path
         const newPath = findFolderPath(folderHierarchy, folderId);
         if (newPath) {
-          console.log('Setting new path (found in hierarchy):', newPath);
+          // console.log('Setting new path (found in hierarchy):', newPath);
           setCurrentPath(newPath);
         } else {
           // Fallback if path not found
-          console.log('Path not found in hierarchy, using fallback path');
+          // console.log('Path not found in hierarchy, using fallback path');
           setCurrentPath([{ id: folderId, name: folderName }]);
         }
       }

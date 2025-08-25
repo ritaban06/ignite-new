@@ -505,18 +505,21 @@ const DashboardPage = () => {
 
   const fetchFilesInFolder = async (folderId) => {
     try {
+      setIsLoading(true);
       const response = await folderAPI.getFilesInFolder(folderId);
       setFiles(response.data);
     } catch (error) {
       console.error('Failed to load files:', error);
       toast.error("Failed to load files");
+    } finally {
+      setIsLoading(false);
     }
   };
   
   // Navigate to a folder (handles both root and nested folders)
   const navigateToFolder = (folderId, folderName) => {
     // console.log(`Navigating to folder: ${folderName} (ID: ${folderId})`);
-    setIsLoading(true);
+    // Don't set isLoading true here; it's done in fetchFilesInFolder
     
     // Find the complete path to this folder
     const findFolderPath = (folders, targetId, currentPath = []) => {
@@ -564,10 +567,10 @@ const DashboardPage = () => {
       setCurrentPath([{ id: folderId, name: folderName }]);
     }
     
-  // console.log(`Fetching files for folder: ${folderName}`);
-  fetchFilesInFolder(folderId);
+    // console.log(`Fetching files for folder: ${folderName}`);
     setSelectedFolder(folderId);
-    setIsLoading(false);
+    fetchFilesInFolder(folderId);
+    // Don't set isLoading false here; it's done in fetchFilesInFolder after data is loaded
   };
   
   // Navigate back in folder hierarchy
@@ -580,9 +583,11 @@ const DashboardPage = () => {
       fetchFilesInFolder(parentFolder.id);
     } else {
       // Go back to root (show all folders)
+      setIsLoading(true);
       setSelectedFolder(null);
       setFiles([]);
       setCurrentPath([]);
+      setIsLoading(false);
     }
   };
   
@@ -893,16 +898,15 @@ const DashboardPage = () => {
                 Files in {currentPath.length > 0 ? currentPath[currentPath.length - 1].name : 'Selected Folder'}
               </h2>
               <div className="text-sm text-white/60">
-                {files.length} file{files.length !== 1 ? 's' : ''} found
+                {isLoading ? 'Loading...' : `${files.length} file${files.length !== 1 ? 's' : ''} found`}
               </div>
             </div>
             {/* Show loading spinner inside the Files in section */}
-            {isLoading && (
+            {isLoading ? (
               <div className="py-8">
                 <LoadingSpinner />
               </div>
-            )}
-            {!isLoading && files && files.length > 0 ? (
+            ) : files && files.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {files
                   .filter(file => !file.mimeType?.startsWith('application/vnd.google-apps.folder'))
@@ -926,13 +930,14 @@ const DashboardPage = () => {
                     );
                   })}
               </div>
-            ) : null}
-            {!isLoading && (!files || files.length === 0) && (
-              <div className="text-center text-white/70 py-8">
-                <BookOpen className="h-12 w-12 text-white/40 mx-auto mb-4" />
-                <p>No files found in this folder.</p>
-                <p className="text-sm mt-2">Files may be located in subfolders or this folder may be empty.</p>
-              </div>
+            ) : (
+              !isLoading && (
+                <div className="text-center text-white/70 py-8">
+                  <BookOpen className="h-12 w-12 text-white/40 mx-auto mb-4" />
+                  <p>No files found in this folder.</p>
+                  <p className="text-sm mt-2">Files may be located in subfolders or this folder may be empty.</p>
+                </div>
+              )
             )}
           </div>
         </div>

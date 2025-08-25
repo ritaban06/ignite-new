@@ -40,7 +40,20 @@ const FileViewer = ({ fileUrl, fileName }) => {
     if (secureUrl && ext === 'docx' && window.mammoth) {
       fetch(authenticatedUrl)
         .then(res => res.arrayBuffer())
-        .then(arrayBuffer => window.mammoth.convertToHtml({ arrayBuffer }))
+        .then(arrayBuffer => window.mammoth.convertToHtml({ 
+          arrayBuffer,
+          styleMap: [
+            "p[style-name='Normal'] => p.normal",
+            "p[style-name='Heading 1'] => h1",
+            "p[style-name='Heading 2'] => h2",
+            "p[style-name='Heading 3'] => h3",
+            "p[style-name='Heading 4'] => h4",
+            "p[style-name='Title'] => h1.title",
+            "p[style-name='Subtitle'] => h2.subtitle",
+            "p[style-name='List Paragraph'] => li",
+            "r[style-name='Strong'] => strong"
+          ]
+        }))
         .then(result => setDocxHtml(result.value))
         .catch(() => setDocxHtml('<div style="color:red">Failed to preview DOCX file.</div>'));
     }
@@ -188,7 +201,34 @@ const FileViewer = ({ fileUrl, fileName }) => {
     if (ext === 'docx') {
       return (
         <div style={{ maxHeight: '80vh', overflow: 'auto', background: '#fff', padding: '1em' }}>
-          {docxHtml ? <div dangerouslySetInnerHTML={{ __html: docxHtml }} /> : 'Loading DOCX preview...'}
+          {docxHtml ? (
+            <div 
+              dangerouslySetInnerHTML={{ __html: docxHtml }}
+              className="docx-content"
+              style={{
+                fontFamily: "'Inter', Arial, sans-serif",
+                lineHeight: "1.5",
+                color: "#333",
+                maxWidth: "800px",
+                margin: "0 auto"
+              }}
+            />
+          ) : 'Loading DOCX preview...'}
+          <style>
+            {`
+              .docx-content h1 { font-size: 24px; font-weight: bold; margin: 20px 0 10px; color: #222; }
+              .docx-content h2 { font-size: 20px; font-weight: bold; margin: 18px 0 9px; color: #333; }
+              .docx-content h3 { font-size: 16px; font-weight: bold; margin: 16px 0 8px; color: #444; }
+              .docx-content h4 { font-size: 14px; font-weight: bold; margin: 14px 0 7px; color: #555; }
+              .docx-content p { margin: 0 0 10px; }
+              .docx-content ol, .docx-content ul { margin: 10px 0; padding-left: 20px; }
+              .docx-content li { margin-bottom: 5px; }
+              .docx-content table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+              .docx-content table td, .docx-content table th { border: 1px solid #ddd; padding: 8px; }
+              .docx-content img { max-width: 100%; height: auto; }
+              .docx-content a { color: #0066cc; text-decoration: underline; }
+            `}
+          </style>
         </div>
       );
     }

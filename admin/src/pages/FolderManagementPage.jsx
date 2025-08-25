@@ -264,7 +264,13 @@ export default function FolderManagementPage() {
             // Get effective metadata (inherited or direct)
             const parentFolder = isSubfolderParam ? findParentFolder(folder.gdriveId, subjectFolders) : null;
             const effectiveMetadata = isSubfolderParam ? getInheritedMetadata(folder, parentFolder) : folder;
-            
+            // Sort years and semesters numerically ascending
+            const sortedYears = effectiveMetadata.years?.length > 0
+              ? [...effectiveMetadata.years].map(Number).sort((a, b) => a - b).map(String)
+              : [];
+            const sortedSemesters = effectiveMetadata.semesters?.length > 0
+              ? [...effectiveMetadata.semesters].map(Number).sort((a, b) => a - b).map(String)
+              : [];
             return (
               <>
                 {effectiveMetadata.departments?.length > 0 && (
@@ -275,17 +281,17 @@ export default function FolderManagementPage() {
                     )}
                   </div>
                 )}
-                {effectiveMetadata.years?.length > 0 && (
+                {sortedYears.length > 0 && (
                   <div>
-                    <span className="font-semibold">Years:</span> {effectiveMetadata.years.join(', ')}
+                    <span className="font-semibold">Years:</span> {sortedYears.join(', ')}
                     {isSubfolderParam && (!folder.years || folder.years.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}
                   </div>
                 )}
-                {effectiveMetadata.semesters?.length > 0 && (
+                {sortedSemesters.length > 0 && (
                   <div>
-                    <span className="font-semibold">Semesters:</span> {effectiveMetadata.semesters.join(', ')}
+                    <span className="font-semibold">Semesters:</span> {sortedSemesters.join(', ')}
                     {isSubfolderParam && (!folder.semesters || folder.semesters.length === 0) && (
                       <span className="text-blue-400 text-xs ml-2">(inherited)</span>
                     )}

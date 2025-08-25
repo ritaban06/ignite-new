@@ -314,7 +314,7 @@ const authRateLimit = createRateLimit(
 
 const pdfViewRateLimit = createRateLimit(
   1800 * 1000, // 30 minutes
-  10, // 10 views
+  100, // 100 views
   'Too many PDF view requests, please slow down.'
 );
 

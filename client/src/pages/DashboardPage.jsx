@@ -955,9 +955,9 @@ const DashboardPage = () => {
               <h2 className="text-lg font-semibold text-white">
                 Files in {currentPath.length > 0 ? currentPath[currentPath.length - 1].name : 'Selected Folder'}
               </h2>
-              <div className="text-sm text-white/60">
+              {/* <div className="text-sm text-white/60">
                 {isLoading ? 'Loading...' : `${files.length} file${files.length !== 1 ? 's' : ''} found`}
-              </div>
+              </div> */}
             </div>
             {/* Show loading spinner inside the Files in section */}
             {isLoading ? (

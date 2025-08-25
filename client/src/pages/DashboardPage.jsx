@@ -294,30 +294,67 @@ const DashboardPage = () => {
       const metadataMap = new Map();
       folderMetadata.forEach(folder => {
         if (folder.gdriveId) {
+          // Store the complete metadata object
           metadataMap.set(folder.gdriveId, folder);
+          
+          // If this folder has children in the metadata, create entries for them too
+          if (folder.children && Array.isArray(folder.children)) {
+            folder.children.forEach(childFolder => {
+              if (childFolder.gdriveId) {
+                metadataMap.set(childFolder.gdriveId, childFolder);
+              }
+            });
+          }
         }
       });
       
-      // console.log('Metadata map size:', metadataMap.size);
-      // console.log('User info:', user);
+      console.log('Metadata map size:', metadataMap.size);
+      console.log('User info:', {
+        department: user.department,
+        year: user.year, 
+        semester: user.semester
+      });
       
       // Recursively filter folders and subfolders based on user access control
       const filterFoldersRecursively = (folders) => {
         return folders
           .map(folder => {
+            // Get folder metadata using its ID
             const metadata = metadataMap.get(folder.id);
+            
+            console.log(`Checking folder: ${folder.name} (ID: ${folder.id})`, 
+              metadata ? {
+                departments: metadata.departments,
+                years: metadata.years,
+                semesters: metadata.semesters,
+                hasMetadata: true
+              } : { hasMetadata: false }
+            );
+            
             // Check access for this folder
             const hasAccess = !metadata ? true : checkFolderAccess(metadata, user);
+            
+            console.log(`Access to folder "${folder.name}": ${hasAccess ? 'GRANTED' : 'DENIED'}`);
+            
+            // If access denied, exclude this folder completely
             if (!hasAccess) return null;
-            // Recursively filter children
-            let children = Array.isArray(folder.children) ? filterFoldersRecursively(folder.children) : [];
+            
+            // For folders with access granted, recursively filter their children
+            let children = [];
+            if (Array.isArray(folder.children) && folder.children.length > 0) {
+              console.log(`Processing ${folder.children.length} children of "${folder.name}"`);
+              children = filterFoldersRecursively(folder.children);
+              console.log(`After filtering, "${folder.name}" has ${children.length} accessible children`);
+            }
+            
+            // Return folder with filtered children
             return {
               ...folder,
               metadata: metadata || null,
               children,
             };
           })
-          .filter(Boolean);
+          .filter(Boolean); // Remove null entries (denied folders)
       };
 
       // Filter all folders recursively
@@ -360,39 +397,60 @@ const DashboardPage = () => {
     // If no metadata exists, allow access (default behavior for unconfigured folders)
     if (!folderMetadata) return true;
     
+    console.log(`Access check for folder: ${folderMetadata.name || 'Unknown'}`);
+    
+    // Convert user attributes to appropriate types for consistent comparison
+    const userDepartment = String(user.department || '').trim();
+    const userYear = parseInt(user.year);
+    const userSemester = parseInt(user.semester);
+    
+    console.log(`User attributes: Department="${userDepartment}", Year=${userYear}, Semester=${userSemester}`);
+    
     // If metadata exists but all access control arrays are empty, allow access
     const hasDepartmentRestrictions = folderMetadata.departments && folderMetadata.departments.length > 0;
     const hasYearRestrictions = folderMetadata.years && folderMetadata.years.length > 0;
     const hasSemesterRestrictions = folderMetadata.semesters && folderMetadata.semesters.length > 0;
     const hasAccessTagRestrictions = folderMetadata.accessControlTags && folderMetadata.accessControlTags.length > 0;
     
-
+    console.log(`Restrictions: Departments=${hasDepartmentRestrictions}, Years=${hasYearRestrictions}, Semesters=${hasSemesterRestrictions}, Tags=${hasAccessTagRestrictions}`);
     
     // If no restrictions are set, allow access
     if (!hasDepartmentRestrictions && !hasYearRestrictions && !hasSemesterRestrictions && !hasAccessTagRestrictions) {
+      console.log(`No restrictions set for folder "${folderMetadata.name}", allowing access`);
       return true;
     }
     
     // Check departments (only if restrictions are set)
     if (hasDepartmentRestrictions) {
-      const departmentCheck = user.department && folderMetadata.departments.includes(user.department);
+      // Convert each department to string for reliable comparison
+      const departmentCheck = userDepartment && folderMetadata.departments.some(dept => 
+        String(dept).trim().toLowerCase() === userDepartment.toLowerCase()
+      );
+      console.log(`Department check: ${departmentCheck} (User: ${userDepartment}, Folder: ${folderMetadata.departments.join(', ')})`);
       if (!departmentCheck) {
+        console.log(`Access DENIED to "${folderMetadata.name}": Department restriction failed`);
         return false;
       }
     }
     
     // Check years (only if restrictions are set)
     if (hasYearRestrictions) {
-      const yearCheck = user.year && folderMetadata.years.includes(user.year);
+      // Check if user's year (as number) is included in the allowed years
+      const yearCheck = !isNaN(userYear) && folderMetadata.years.includes(userYear);
+      console.log(`Year check: ${yearCheck} (User: ${userYear}, Folder years: ${folderMetadata.years.join(', ')})`);
       if (!yearCheck) {
+        console.log(`Access DENIED to "${folderMetadata.name}": Year restriction failed`);
         return false;
       }
     }
     
     // Check semesters (only if restrictions are set)
     if (hasSemesterRestrictions) {
-      const semesterCheck = user.semester && folderMetadata.semesters.includes(user.semester);
+      // Check if user's semester (as number) is included in the allowed semesters
+      const semesterCheck = !isNaN(userSemester) && folderMetadata.semesters.includes(userSemester);
+      console.log(`Semester check: ${semesterCheck} (User: ${userSemester}, Folder semesters: ${folderMetadata.semesters.join(', ')})`);
       if (!semesterCheck) {
+        console.log(`Access DENIED to "${folderMetadata.name}": Semester restriction failed`);
         return false;
       }
     }

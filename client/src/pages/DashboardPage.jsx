@@ -71,6 +71,43 @@ const DashboardPage = () => {
   const [folderHierarchy, setFolderHierarchy] = useState([]);
   const [currentPath, setCurrentPath] = useState([]);
   const [accessibleFolders, setAccessibleFolders] = useState([]);
+  
+  let isLoadingDashboardData = false;
+
+  const loadDashboardData = async () => {
+    if (isLoadingDashboardData) return; // Prevent duplicate requests
+
+    isLoadingDashboardData = true;
+    try {
+      setIsLoading(true);
+
+      // Load recent PDFs and initial PDF list
+      const [recentResponse, filesResponse] = await Promise.all([
+        pdfAPI.getRecentPDFs(5),
+        pdfAPI.getPDFs({ page: 1, limit: 12 }),
+      ]);
+
+      if (recentResponse.data.recentPdfs) {
+        setRecentFiles(recentResponse.data.recentPdfs);
+      }
+
+      if (filesResponse.data.pdfs) {
+        setFiles(filesResponse.data.pdfs);
+        setPagination(filesResponse.data.pagination);
+      }
+
+      // Fetch folder structure
+      await fetchFolders();
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setIsLoading(false);
+      isLoadingDashboardData = false;
+    }
+  };
+
+  const debouncedLoadDashboardData = debounce(loadDashboardData, 300);
 
   // Load files (all types) when filters change - defined before it's used
   const loadFiles = useCallback(async () => {
@@ -91,6 +128,7 @@ const DashboardPage = () => {
       console.error("Error loading files:", error);
       toast.error("Failed to load files");
     }
+  }, [pagination.currentPage]);
 
   // Load initial data
   useEffect(() => {
@@ -99,15 +137,13 @@ const DashboardPage = () => {
   
   // Set up socket.io listeners for real-time updates
   useEffect(() => {
-    // Listen for folder updates
-    socketService.on('folder:updated', (folderData) => {
+    const handleFolderUpdate = (folderData) => {
       console.log('Folder updated in dashboard:', folderData);
       // Refresh folder hierarchy and current files if the updated folder is related
       loadDashboardData();
-    });
+    };
     
-    // Listen for PDF updates
-    socketService.on('pdf:updated', (pdfData) => {
+    const handlePdfUpdate = (pdfData) => {
       console.log('PDF updated in dashboard:', pdfData);
       // Refresh file list
       loadFiles();
@@ -116,7 +152,11 @@ const DashboardPage = () => {
       if (isInRecentFiles) {
         loadDashboardData();
       }
-    });
+    };
+    
+    // Register socket event listeners
+    socketService.on('folder:updated', handleFolderUpdate);
+    socketService.on('pdf:updated', handlePdfUpdate);
     
     // Clean up listeners when component unmounts
     return () => {
@@ -124,26 +164,6 @@ const DashboardPage = () => {
       socketService.off('pdf:updated');
     };
   }, [loadFiles, recentFiles]);
-    try {
-      const params = {
-        page: pagination.currentPage,
-        limit: 12
-        // No subject/folder filter
-      };
-
-      // console.log("Loading files with params:", params);
-
-      const response = await pdfAPI.getPDFs(params); // This API should return all file types
-
-      if (response.data.pdfs) {
-        setFiles(response.data.pdfs);
-        setPagination(response.data.pagination);
-      }
-    } catch (error) {
-      console.error("Error loading files:", error);
-      toast.error("Failed to load files");
-    }
-  }, [pagination.currentPage]);
 
   useEffect(() => {
     loadFiles();
@@ -168,40 +188,6 @@ const DashboardPage = () => {
             window.removeEventListener('dashboard-home', homeHandler);
           };
         }, []);
-
-  let isLoadingDashboardData = false;
-
-  const loadDashboardData = async () => {
-    if (isLoadingDashboardData) return; // Prevent duplicate requests
-
-    isLoadingDashboardData = true;
-    try {
-      setIsLoading(true);
-
-      // Load recent PDFs and initial PDF list
-      const [recentResponse, filesResponse] = await Promise.all([
-        pdfAPI.getRecentPDFs(5),
-        pdfAPI.getPDFs({ page: 1, limit: 12 }),
-      ]);
-
-      if (recentResponse.data.recentPdfs) {
-        setRecentFiles(recentResponse.data.recentPdfs);
-      }
-
-      if (filesResponse.data.pdfs) {
-        setFiles(filesResponse.data.pdfs);
-        setPagination(filesResponse.data.pagination);
-      }
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
-      toast.error("Failed to load dashboard data");
-    } finally {
-      setIsLoading(false);
-      isLoadingDashboardData = false;
-    }
-  };
-
-  const debouncedLoadDashboardData = debounce(loadDashboardData, 300);
 
   const handleSearch = async (e) => {
     e.preventDefault();

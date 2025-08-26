@@ -253,7 +253,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           keyDescription = `${e.ctrlKey ? 'Ctrl+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.key}`;
         }
         
-        toast.error(`${keyDescription} is disabled for security reasons`);
+        // toast.error(`${keyDescription} is disabled for security reasons`);
         return false;
       }
     };

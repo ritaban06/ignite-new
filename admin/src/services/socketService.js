@@ -2,7 +2,6 @@
 
 import { io } from 'socket.io-client';
 import { toast } from 'react-hot-toast';
-import { API_URL } from '../api';
 
 class SocketService {
   constructor() {
@@ -16,14 +15,24 @@ class SocketService {
       return;
     }
 
+    // Get base URL without API path for Socket.io connection
+    // Socket.io should connect to the server root, not an API path
+    const baseUrl = import.meta.env.VITE_BASE_URL || 
+                   (import.meta.env.VITE_API_URL ? 
+                     import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 
+                     window.location.origin);
+    
+    console.log('Connecting admin socket to:', baseUrl);
+    
     // Create socket connection
-    this.socket = io(API_URL, {
+    this.socket = io(baseUrl, {
       withCredentials: true,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       autoConnect: true,
+      path: '/socket.io' // Explicit socket.io path
     });
 
     // Setup event listeners

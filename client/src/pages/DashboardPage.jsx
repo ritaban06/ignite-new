@@ -72,6 +72,26 @@ const DashboardPage = () => {
   const [currentPath, setCurrentPath] = useState([]);
   const [accessibleFolders, setAccessibleFolders] = useState([]);
 
+  // Load files (all types) when filters change - defined before it's used
+  const loadFiles = useCallback(async () => {
+    try {
+      const params = {
+        page: pagination.currentPage,
+        limit: 12
+        // No subject/folder filter
+      };
+
+      const response = await pdfAPI.getPDFs(params); // This API should return all file types
+
+      if (response.data.pdfs) {
+        setFiles(response.data.pdfs);
+        setPagination(response.data.pagination);
+      }
+    } catch (error) {
+      console.error("Error loading files:", error);
+      toast.error("Failed to load files");
+    }
+
   // Load initial data
   useEffect(() => {
     loadDashboardData();
@@ -104,9 +124,6 @@ const DashboardPage = () => {
       socketService.off('pdf:updated');
     };
   }, [loadFiles, recentFiles]);
-
-  // Load files (all types) when filters change
-  const loadFiles = useCallback(async () => {
     try {
       const params = {
         page: pagination.currentPage,

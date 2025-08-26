@@ -22,7 +22,7 @@ class SocketService {
                      import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 
                      window.location.origin);
     
-    console.log('Connecting socket to:', baseUrl);
+    // console.log('Connecting socket to:', baseUrl);
     
     // Create socket connection
     this.socket = io(baseUrl, {
@@ -38,7 +38,7 @@ class SocketService {
     // Setup event listeners
     this.socket.on('connect', () => {
       this.connected = true;
-      console.log('Socket connected:', this.socket.id);
+      // console.log('Socket connected:', this.socket.id);
       toast.success('Real-time updates connected');
     });
 

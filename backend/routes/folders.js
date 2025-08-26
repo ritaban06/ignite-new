@@ -4,6 +4,7 @@ const GoogleDriveService = require('../services/googleDriveService');
 const Folder = require('../models/Folder');
 const AccessLog = require('../models/AccessLog');
 const { authenticate } = require('../middleware/auth');
+const { emitFolderUpdate } = require('../utils/socketEvents');
 
 const router = express.Router();
 const PDF = require('../models/PDF');
@@ -763,6 +764,14 @@ router.put('/:id', authenticate, async (req, res) => {
     } catch (logError) {
       console.warn('Failed to log folder update:', logError.message);
       // Don't fail the request if logging fails
+    }
+    
+    // Emit socket.io event for real-time updates
+    try {
+      emitFolderUpdate(req, folder);
+    } catch (socketError) {
+      console.warn('Failed to emit folder update event:', socketError.message);
+      // Don't fail the request if socket event fails
     }
     
     res.json(folder);

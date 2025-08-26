@@ -4,6 +4,8 @@ const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
+const { Server } = require('socket.io');
+const http = require('http');
 require('dotenv').config();
 
 const connectDB = require('./utils/database');
@@ -248,10 +250,53 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
+// Create HTTP server and attach Socket.io
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Socket.io events
+io.on('connection', (socket) => {
+  console.log('🔌 New client connected:', socket.id);
+  
+  // Listen for admin changes
+  socket.on('admin:folder:update', (folderData) => {
+    console.log('📁 Admin updated folder:', folderData.folderId);
+    // Broadcast to all clients except sender
+    socket.broadcast.emit('folder:updated', folderData);
+  });
+
+  // Listen for admin access tag changes
+  socket.on('admin:accessTag:update', (tagData) => {
+    console.log('🏷️ Admin updated access tag:', tagData.tagId);
+    socket.broadcast.emit('accessTag:updated', tagData);
+  });
+
+  // Listen for admin PDF changes
+  socket.on('admin:pdf:update', (pdfData) => {
+    console.log('📄 Admin updated PDF:', pdfData.pdfId);
+    socket.broadcast.emit('pdf:updated', pdfData);
+  });
+
+  // Listen for disconnection
+  socket.on('disconnect', () => {
+    console.log('🔌 Client disconnected:', socket.id);
+  });
+});
+
+// Make io accessible throughout the application
+app.set('socketio', io);
+
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🔌 Socket.IO initialized`);
   
   // Check admin environment variables
   if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
@@ -262,7 +307,6 @@ const server = app.listen(PORT, () => {
     console.log('✅ Admin authentication configured');
     console.log(`👤 Admin login endpoint: http://localhost:${PORT}/api/auth/admin-login`);
   }
-  
 });
 
 // Graceful shutdown

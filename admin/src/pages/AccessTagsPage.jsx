@@ -17,6 +17,7 @@ import {
   Palette
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import socketService from '../services/socketService';
 
 const AccessTagsPage = () => {
   // Temporary: show construction message only

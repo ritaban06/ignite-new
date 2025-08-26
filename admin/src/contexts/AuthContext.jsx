@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { authAPI } from '../api';
+import socketService from '../services/socketService';
 
 const AuthContext = createContext();
 
@@ -55,6 +56,9 @@ export function AuthProvider({ children }) {
           const response = await authAPI.getCurrentUser();
           if (response.data.user.role === 'admin') {
             dispatch({ type: 'LOGIN_SUCCESS', payload: response.data.user });
+            
+            // Initialize socket connection for real-time updates
+            socketService.connect();
           } else {
             localStorage.removeItem('adminToken');
             dispatch({ type: 'LOGIN_FAILURE', payload: 'Access denied' });
@@ -83,6 +87,10 @@ export function AuthProvider({ children }) {
       
       localStorage.setItem('adminToken', token);
       dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+      
+      // Initialize socket connection for real-time updates
+      socketService.connect();
+      
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.error || error.message || 'Login failed';
@@ -99,6 +107,9 @@ export function AuthProvider({ children }) {
     } finally {
       localStorage.removeItem('adminToken');
       dispatch({ type: 'LOGOUT' });
+      
+      // Disconnect socket
+      socketService.disconnect();
     }
   };
 

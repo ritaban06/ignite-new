@@ -4,6 +4,7 @@ const AccessTag = require('../models/AccessTag');
 const User = require('../models/User');
 const Folder = require('../models/Folder');
 const { authenticate, requireAdmin } = require('../middleware/auth');
+const { emitAccessTagUpdate } = require('../utils/socketEvents');
 
 const router = express.Router();
 
@@ -264,6 +265,14 @@ router.put('/:id', [
     
     await tag.save();
     await tag.populate('createdBy', 'name email');
+    
+    // Emit socket.io event for real-time updates
+    try {
+      emitAccessTagUpdate(req, tag);
+    } catch (socketError) {
+      console.warn('Failed to emit access tag update event:', socketError.message);
+      // Don't fail the request if socket event fails
+    }
     
     res.json({
       message: 'Access tag updated successfully',

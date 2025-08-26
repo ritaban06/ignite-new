@@ -7,6 +7,7 @@ import { Folder, FileText, Edit, Trash2, Plus, User, ChevronRight, ChevronDown, 
 import { folderAPI, pdfAPI, accessTagAPI } from '../api';
 import { gdriveAPI } from '../api';
 import toast from 'react-hot-toast';
+import socketService from '../services/socketService';
 
 // Use GDRIVE_BASE_FOLDER_ID from admin env
 const GDRIVE_BASE_FOLDER_ID = import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID;
@@ -28,6 +29,20 @@ export default function FolderManagementPage() {
 
   useEffect(() => {
     fetchGDriveFolders();
+    
+    // Listen for real-time updates from other admins
+    socketService.on('folder:updated', (folderData) => {
+      console.log('Folder updated event received in admin:', folderData);
+      // Refresh folder data
+      fetchGDriveFolders();
+      
+      toast.success(`Folder "${folderData.name}" was updated by another admin`);
+    });
+    
+    // Clean up event listener
+    return () => {
+      socketService.off('folder:updated');
+    };
   }, []);
 
   const fetchGDriveFolders = async () => {
@@ -547,7 +562,16 @@ export default function FolderManagementPage() {
     };
     try {
       // Use gdriveId instead of id for folder identification
-      await folderAPI.updateFolder(selectedFolder.gdriveId, updateData);
+      const response = await folderAPI.updateFolder(selectedFolder.gdriveId, updateData);
+      
+      // Emit socket.io event for real-time updates to other admins and clients
+      socketService.emitFolderUpdate({
+        folderId: selectedFolder.gdriveId,
+        name: updateData.name,
+        updatedAt: new Date().toISOString(),
+        action: 'updated'
+      });
+      
       toast.success('Folder updated successfully! Metadata will be inherited by subfolders.');
       setShowEditModal(false);
       setSelectedFolder(null);

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../api';
 import toast from 'react-hot-toast';
+import socketService from '../services/socketService';
 
 const AuthContext = createContext();
 
@@ -42,6 +43,9 @@ export const AuthProvider = ({ children }) => {
         if (token && savedUser) {
           setUser(JSON.parse(savedUser));
           setIsAuthenticated(true);
+          
+          // Initialize socket connection for real-time updates
+          socketService.connect();
 
           // Verify token is still valid
           try {
@@ -108,6 +112,9 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         setIsAuthenticated(true);
         
+        // Initialize socket connection for real-time updates
+        socketService.connect();
+        
         // toast.success(`Welcome back, ${userData.name}!`);
         return { success: true, user: userData };
       } else {
@@ -167,6 +174,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       setUser(null);
       setIsAuthenticated(false);
+      
+      // Disconnect socket connection
+      socketService.disconnect();
       
       // Only show success message for manual logouts
       if (!isAutomatic) {

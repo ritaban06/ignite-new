@@ -15,6 +15,7 @@ import PDFCard from "../components/PDFCard";
 import SecurePDFViewer from "../components/SecurePDFViewer";
 import FileViewer from "../components/FileViewer";
 import toast from "react-hot-toast";
+import socketService from "../services/socketService";
 
 // Custom debounce function
 const debounce = (func, delay) => {
@@ -75,6 +76,34 @@ const DashboardPage = () => {
   useEffect(() => {
     loadDashboardData();
   }, []);
+  
+  // Set up socket.io listeners for real-time updates
+  useEffect(() => {
+    // Listen for folder updates
+    socketService.on('folder:updated', (folderData) => {
+      console.log('Folder updated in dashboard:', folderData);
+      // Refresh folder hierarchy and current files if the updated folder is related
+      loadDashboardData();
+    });
+    
+    // Listen for PDF updates
+    socketService.on('pdf:updated', (pdfData) => {
+      console.log('PDF updated in dashboard:', pdfData);
+      // Refresh file list
+      loadFiles();
+      // If this PDF is in the recent files list, refresh that too
+      const isInRecentFiles = recentFiles.some(file => file._id === pdfData.pdfId);
+      if (isInRecentFiles) {
+        loadDashboardData();
+      }
+    });
+    
+    // Clean up listeners when component unmounts
+    return () => {
+      socketService.off('folder:updated');
+      socketService.off('pdf:updated');
+    };
+  }, [loadFiles, recentFiles]);
 
   // Load files (all types) when filters change
   const loadFiles = useCallback(async () => {

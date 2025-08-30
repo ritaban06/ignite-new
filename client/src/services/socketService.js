@@ -39,7 +39,7 @@ class SocketService {
     this.socket.on('connect', () => {
       this.connected = true;
       // console.log('Socket connected:', this.socket.id);
-      toast.success('Real-time updates connected');
+      // toast.success('Real-time updates connected');
     });
 
     this.socket.on('disconnect', (reason) => {

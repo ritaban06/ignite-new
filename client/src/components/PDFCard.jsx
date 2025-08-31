@@ -84,6 +84,13 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
             <span className="truncate">{formatDate(pdf.uploadedAt || pdf.createdAt)}</span>
           </div>
         )}
+
+        {/* File Size */}
+        {pdf.fileSize && (
+          <div className="flex items-center space-x-2 text-white/70">
+            <span>Size: {formatSize(pdf.fileSize)}</span>
+          </div>
+        )}
       </div>
 
         {/* Tags */}
@@ -109,7 +116,7 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
 
         {/* File info - responsive layout */}
         {showDetails && (
-          <div className="mt-4 pt-3 border-t border-white/10">
+          // <div className="mt-4 pt-3 border-t border-white/10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-white/60">
               <div className="flex items-center space-x-4">
                 {/* <span>Size: {formatSize(pdf.fileSize || 0)}</span> */}
@@ -124,7 +131,7 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
                   <span>Last viewed {formatDate(pdf.lastAccessed)}</span>
                 </span>
               )}
-            </div>
+            {/* </div> */}
           </div>
         )}
       </div>

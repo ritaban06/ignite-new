@@ -10,6 +10,8 @@ import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
 // import SearchPage from './pages/SearchPage';
 import AuthDebug from './components/AuthDebug';
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 // Get the appropriate Google OAuth Client ID based on platform
 const getGoogleClientId = () => {
@@ -97,6 +99,8 @@ function App() {
               },
             }}
           />
+          <Analytics />
+          <SpeedInsights />
         </Router>
       </AuthProvider>
     </GoogleOAuthProvider>

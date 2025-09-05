@@ -55,7 +55,14 @@ export default defineConfig({
   build: {
     rollupOptions: {
       // Remove external configuration for PDF worker
-    }
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'pdf-libs': ['pdfjs-dist', '@react-pdf-viewer/core', '@react-pdf-viewer/default-layout'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 600
   },
   // Ensure proper MIME types for PDF worker files
   define: {

@@ -53,9 +53,21 @@ export default defineConfig({
     include: ['pdfjs-dist', '@react-pdf-viewer/core', '@react-pdf-viewer/default-layout']
   },
   build: {
-    rollupOptions: {
-      // Remove external configuration for PDF worker
-    }
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/pdfjs-dist')) {
+              return 'pdfjs';
+            }
+            if (id.includes('node_modules/react')) {
+              return 'react-vendor';
+            }
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+          }
+        }
+      }
   },
   // Ensure proper MIME types for PDF worker files
   define: {

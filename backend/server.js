@@ -193,9 +193,9 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     status: 'running',
     endpoints: {
-      health: '/api/health',
       auth: '/api/auth',
       pdfs: '/api/pdfs',
+      folders: '/api/folders',
       users: '/api/users',
       admin: '/api/admin',
       accessTags: '/api/access-tags',
@@ -211,9 +211,9 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     status: 'running',
     endpoints: {
-      health: '/api/health',
       auth: '/api/auth',
       pdfs: '/api/pdfs',
+      folders: '/api/folders',
       users: '/api/users',
       admin: '/api/admin',
       accessTags: '/api/access-tags',

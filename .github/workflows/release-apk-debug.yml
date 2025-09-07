@@ -61,18 +61,18 @@ jobs:
         NODE_ENV: production
         VITE_SOCIAL_LOGIN_PROVIDER: google
 
-    - name: 🔄 Sync Capacitor Android
-      run: |
-        pnpm exec cap sync android
-        # Force Java 17 instead of 21 in capacitor.build.gradle
-        sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/app/capacitor.build.gradle
-      working-directory: client
-
-    - name: ☕ Set up Java
+    - name: ☕ Set up Java 17
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
+
+    - name: 🔄 Sync Capacitor Android & patch Java version
+      run: |
+        pnpm exec cap sync android
+        # Force Java 17 instead of 21 in capacitor.build.gradle
+        sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' app/capacitor.build.gradle
+      working-directory: client/android
 
     - name: ⚡ Cache Android Gradle dependencies
       uses: actions/cache@v4

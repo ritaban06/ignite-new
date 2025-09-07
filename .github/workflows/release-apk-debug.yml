@@ -75,13 +75,15 @@ jobs:
         echo "👉 JAVA_HOME: $JAVA_HOME"
         echo "👉 ORG_GRADLE_JAVA_HOME: $ORG_GRADLE_JAVA_HOME"
 
-    - name: 🔄 Sync Capacitor Android & patch Java version
+    - name: 🔄 Sync Capacitor Android
+      run: pnpm exec cap sync android
+      working-directory: client
+
+    - name: 📝 Patch build.gradle for Java 17
       run: |
-        pnpm exec cap sync android
-        # Force Java 17 instead of 21 in capacitor.build.gradle
-        sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' app/capacitor.build.gradle
-        echo "✅ Patched capacitor.build.gradle:"
-        cat app/capacitor.build.gradle
+        # Explicitly set Java version in app/build.gradle
+        sed -i '/^android {/a \ \ \ \ compileOptions {\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }' app/build.gradle
+        echo "✅ Patched app/build.gradle to use Java 17."
       working-directory: client/android
 
     - name: ⚡ Cache Android Gradle dependencies
@@ -104,16 +106,10 @@ jobs:
 
     - name: 🏗 Build Debug APK
       run: |
-        echo "🧱 Building Vite web assets..."
-        pnpm build
-
         echo "📂 Copying web assets into Android project..."
         rm -rf app/src/main/assets/public || true
         mkdir -p app/src/main/assets
         cp -r ../dist app/src/main/assets/public
-
-        echo "☕ Checking Gradle Java version..."
-        ./gradlew -version
 
         echo "📦 Running Gradle build for Debug APK..."
         ./gradlew assembleDebug

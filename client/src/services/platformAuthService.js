@@ -1,4 +1,4 @@
-// import { Capacitor } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 // import { SocialLogin } from '@capgo/capacitor-social-login';
 
 

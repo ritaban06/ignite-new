@@ -60,6 +60,7 @@ jobs:
         VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
         NODE_ENV: production
         VITE_SOCIAL_LOGIN_PROVIDER: google
+        ORG_GRADLE_JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     - name: ☕ Set up Java 17
       uses: actions/setup-java@v3
@@ -67,11 +68,21 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: 🔎 Verify Java setup
+      run: |
+        echo "👉 Checking Java installation..."
+        java -version
+        javac -version
+        echo "👉 JAVA_HOME: $JAVA_HOME"
+        echo "👉 ORG_GRADLE_JAVA_HOME: $ORG_GRADLE_JAVA_HOME"
+
     - name: 🔄 Sync Capacitor Android & patch Java version
       run: |
         pnpm exec cap sync android
         # Force Java 17 instead of 21 in capacitor.build.gradle
         sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' app/capacitor.build.gradle
+        echo "✅ Patched capacitor.build.gradle:"
+        cat app/capacitor.build.gradle
       working-directory: client/android
 
     - name: ⚡ Cache Android Gradle dependencies
@@ -102,6 +113,9 @@ jobs:
         mkdir -p app/src/main/assets
         cp -r ../dist app/src/main/assets/public
 
+        echo "☕ Checking Gradle Java version..."
+        ./gradlew -version
+
         echo "📦 Running Gradle build for Debug APK..."
         ./gradlew assembleDebug
       working-directory: client/android
@@ -111,6 +125,7 @@ jobs:
         VITE_SOCIAL_LOGIN_PROVIDER: google
         VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
         RELEASE: false
+        ORG_GRADLE_JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     - name: 🏷 Rename Debug APK
       run: |

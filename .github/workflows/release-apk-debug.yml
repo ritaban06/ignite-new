@@ -60,7 +60,6 @@ jobs:
         VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
         NODE_ENV: production
         VITE_SOCIAL_LOGIN_PROVIDER: google
-        ORG_GRADLE_JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     - name: ☕ Set up Java 17
       uses: actions/setup-java@v3
@@ -125,7 +124,6 @@ jobs:
         VITE_SOCIAL_LOGIN_PROVIDER: google
         VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
         RELEASE: false
-        ORG_GRADLE_JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     - name: 🏷 Rename Debug APK
       run: |

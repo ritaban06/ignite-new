@@ -9,59 +9,137 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
 
-      - name: 🟢 Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+    - name: ⚡ Cache pnpm store
+      uses: actions/cache@v4
+      with:
+        path: ~/.pnpm-store
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('client/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
 
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
+    - name: 🟢 Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
 
-      - name: 📥 Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: client
+    - name: 📦 Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
 
-      - name: 🛠 Build React app
-        run: pnpm run build
-        working-directory: client
-        env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-          VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
-          NODE_ENV: production
-          VITE_SOCIAL_LOGIN_PROVIDER: google
+    - name: 📥 Install dependencies
+      run: pnpm install --frozen-lockfile
+      working-directory: client
 
-      - name: 🏗 Build and Release Debug APK with Capacitor Action
-        uses: Narottam04/action-capacitor-android@v1.0.0 # Use the marketplace action
-        with:
-          # Your app's directory. This is optional if your app is at the root.
-          android-subfolder: 'client/android'
-          # Your web app's build output directory. In your case, it is client/dist
-          build-folder: 'client/dist'
-          # You want a debug build.
-          type: debug
-          # Define the path where the apk should be uploaded
-          path-to-apk: 'client/android/app/build/outputs/apk/debug/'
-          # Additional gradle arguments. You can pass the Java version here.
-          gradle-args: '-Dorg.gradle.java.home=/usr/lib/jvm/java-17-temurin'
-        env:
-          # The action will automatically use the build output, but your web build still needs env vars.
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_SOCIAL_LOGIN_PROVIDER: google
-          VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
+    - name: 🔍 Validate Environment Variables
+      run: |
+        echo "Checking required environment variables..."
+        if [ -z "${{ secrets.VITE_API_URL }}" ]; then
+          echo "❌ VITE_API_URL is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]; then
+          echo "❌ VITE_GOOGLE_CLIENT_ID is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}" ]; then
+          echo "❌ VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG is not set"
+          exit 1
+        fi
+        echo "✅ All required environment variables are set"
 
-      - name: 🚀 Upload Debug APK to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: v1.0.${{ github.run_number }}
-          files: |
-            client/android/app/build/outputs/apk/debug/*.apk
-          fail_on_unmatched_files: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: 🛠 Build React app
+      run: pnpm run build
+      working-directory: client
+      env:
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+        VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
+        NODE_ENV: production
+        VITE_SOCIAL_LOGIN_PROVIDER: google
+
+    - name: ☕ Set up Java 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: 🔎 Verify Java setup
+      run: |
+        echo "👉 Checking Java installation..."
+        java -version
+        javac -version
+        echo "👉 JAVA_HOME: $JAVA_HOME"
+        echo "👉 ORG_GRADLE_JAVA_HOME: $ORG_GRADLE_JAVA_HOME"
+
+    - name: 🔄 Sync Capacitor Android
+      run: pnpm exec cap sync android
+      working-directory: client
+
+    - name: 📝 Patch build.gradle for Java 17
+      run: |
+        # Explicitly set Java version in app/build.gradle
+        sed -i '/^android {/a \ \ \ \ compileOptions {\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }' app/build.gradle
+        echo "✅ Patched app/build.gradle to use Java 17."
+      working-directory: client/android
+
+    - name: ⚡ Cache Android Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          client/android/.gradle
+        key: ${{ runner.os }}-gradle-${{ hashFiles('client/android/**/*.gradle*', 'client/android/**/*.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: 🔧 Make gradlew executable
+      run: chmod +x gradlew
+      working-directory: client/android
+
+    - name: 📱 Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: 🏗 Build Debug APK
+      run: |
+        echo "📂 Copying web assets into Android project..."
+        rm -rf app/src/main/assets/public || true
+        mkdir -p app/src/main/assets
+        cp -r ../dist app/src/main/assets/public
+
+        echo "📦 Running Gradle build for Debug APK..."
+        ./gradlew assembleDebug
+      working-directory: client/android
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        VITE_SOCIAL_LOGIN_PROVIDER: google
+        VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
+        RELEASE: false
+
+    - name: 🏷 Rename Debug APK
+      run: |
+        if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/v1.0.${{ github.run_number }}-debug.apk
+        fi
+      working-directory: client/android
+
+    - name: 📂 List generated APK files
+      run: |
+        echo "Generated APK files:"
+        find client/android/app/build/outputs/apk -name "*.apk" -type f
+
+    - name: 🚀 Upload Debug APK to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        name: v1.0.${{ github.run_number }}
+        files: |
+          client/android/app/build/outputs/apk/debug/*.apk
+        fail_on_unmatched_files: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

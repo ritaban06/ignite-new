@@ -7,10 +7,11 @@ import { Capacitor } from '@capacitor/core';
 class PlatformAuthService {
   constructor() {
     // Detect platform using Capacitor
-    this.isNative = Capacitor.isNativePlatform();
-    this.isAndroid = Capacitor.getPlatform() === 'android';
-    this.isIOS = Capacitor.getPlatform() === 'ios';
-    this.isWeb = Capacitor.getPlatform() === 'web';
+  // Robust platform detection for Capacitor
+  this.isNative = typeof Capacitor.isNativePlatform === 'function' ? Capacitor.isNativePlatform() : (Capacitor.getPlatform && Capacitor.getPlatform() !== 'web');
+  this.isAndroid = Capacitor.getPlatform && Capacitor.getPlatform() === 'android';
+  this.isIOS = Capacitor.getPlatform && Capacitor.getPlatform() === 'ios';
+  this.isWeb = Capacitor.getPlatform && Capacitor.getPlatform() === 'web';
     // No native initialization
   }
 

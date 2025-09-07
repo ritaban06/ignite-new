@@ -1,0 +1,14 @@
+{
+  "appId": "com.samarth.ignite",
+  "appName": "Ignite",
+  "webDir": "dist",
+  "server": {
+    "url": "https://ignite-client.ritaban.me",
+    "cleartext": true,
+    "allowNavigation": [
+      "ignite-client.ritaban.me",
+      "accounts.google.com",
+      "www.googleapis.com"
+    ]
+  }
+}

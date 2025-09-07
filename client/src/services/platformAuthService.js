@@ -1,47 +1,51 @@
 import { SocialLogin } from '@capgo/capacitor-social-login';
 import { Capacitor } from '@capacitor/core';
+import { isPlatform } from '@ionic/vue';
 
 class PlatformAuthService {
   constructor() {
-    // Robust platform detection for Capacitor
-    this.isNative = typeof Capacitor.isNativePlatform === 'function' ? Capacitor.isNativePlatform() : (Capacitor.getPlatform && Capacitor.getPlatform() !== 'web');
-    this.isAndroid = Capacitor.getPlatform && Capacitor.getPlatform() === 'android';
-    this.isIOS = Capacitor.getPlatform && Capacitor.getPlatform() === 'ios';
-    this.isWeb = Capacitor.getPlatform && Capacitor.getPlatform() === 'web';
+    this.isNative = isPlatform('capacitor');
+    this.isAndroid = isPlatform('android');
+    this.isIOS = isPlatform('ios');
+    this.isWeb = isPlatform('web');
 
-    // Debug log for platform detection
-    console.log('[PlatformAuthService] Capacitor.getPlatform():', Capacitor.getPlatform && Capacitor.getPlatform());
-    console.log('[PlatformAuthService] Capacitor.isNativePlatform():', typeof Capacitor.isNativePlatform === 'function' ? Capacitor.isNativePlatform() : 'not available');
     console.log('[PlatformAuthService] isNative:', this.isNative, 'isAndroid:', this.isAndroid, 'isIOS:', this.isIOS, 'isWeb:', this.isWeb);
 
-    // Initialize SocialLogin for native platforms
     if (this.isNative) {
       this.initializeNativeSocialLogin();
     }
   }
 
-  // Detect whether this is a debug or release build
   isDebugBuild() {
-    return import.meta.env.RELEASE !== 'true';
+    return import.meta.env.PROD !== true;
   }
 
-  // getGoogleClientId() {
-  //   if (this.isAndroid) {
-  //     const debug = this.isDebugBuild();
-  //     return debug
-  //       ? import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG
-  //       : import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE;
-  //   }
-  //   return import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  // }
+  getGoogleClientId() {
+    if (this.isAndroid) {
+      const debug = this.isDebugBuild();
+      const clientId = debug
+        ? import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG
+        : import.meta.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE;
+
+      if (!clientId) {
+        console.error('❌ Missing Android client ID for build type:', debug ? 'debug' : 'release');
+      }
+      return clientId;
+    }
+    
+    return import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  }
 
   async initializeNativeSocialLogin() {
     try {
       console.log('🚀 Initializing native Social Login...');
+      const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!webClientId) {
+        throw new Error('Web client ID is missing. Check your .env file.');
+      }
+
       await SocialLogin.initialize({
-        google: {
-          webClientId: '164410585415-lc2ofbhvaqd028453ff66tq2na9n4uov.apps.googleusercontent.com',
-        },
+        google: { webClientId },
       });
       console.log('✅ Native Social Login initialized');
     } catch (error) {
@@ -51,11 +55,18 @@ class PlatformAuthService {
 
   async signInWithGoogle() {
     try {
-      if (this.isNative) {
-        return await this.nativeGoogleSignIn();
-      } else {
+      if (!this.isNative) {
         throw new Error('Native sign-in only available on mobile platforms. Use web OAuth instead.');
       }
+      
+      const { idToken } = await this.nativeGoogleSignIn();
+      
+      // Perform server-side validation to check if the user is active
+      const serverAuthResponse = await this.validateUserOnServer(idToken);
+      
+      // The server response should indicate successful login and be returned
+      return serverAuthResponse;
+
     } catch (error) {
       console.error('Google Sign-In Error:', error);
       throw error;
@@ -66,6 +77,7 @@ class PlatformAuthService {
     try {
       console.log('🔐 Starting native Google sign-in...');
       const clientId = this.getGoogleClientId();
+
       const result = await SocialLogin.login({
         provider: 'google',
         clientId,
@@ -74,10 +86,7 @@ class PlatformAuthService {
         },
       });
       console.log('✅ Native Google sign-in successful:', result);
-      return {
-        credential: result.idToken,
-        clientId
-      };
+      return result;
     } catch (error) {
       console.error('❌ Native Google sign-in failed:', error);
       const msg = error.message || '';
@@ -90,6 +99,44 @@ class PlatformAuthService {
       } else {
         throw new Error(`OAUTH_ERROR: ${msg || 'Something went wrong with Google authentication.'}`);
       }
+    }
+  }
+  
+  /**
+   * Sends the ID token to the backend for verification and checks the user's status.
+   * Throws an error if the user is not found or is not active.
+   * @param {string} idToken The Google ID token.
+   * @returns {Promise<object>} The server's authentication response.
+   */
+  async validateUserOnServer(idToken) {
+    try {
+      const response = await fetch('YOUR_BACKEND_API/auth/validate-google-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        // Assume the backend sends an error message for inactive accounts.
+        // For example: { "message": "Account is deactivated" }
+        const errorMessage = errorData.message || 'Server validation failed.';
+
+        if (errorMessage.includes('deactivated')) {
+            throw new Error(`ACCOUNT_INACTIVE_ERROR: ${errorMessage}`);
+        } else {
+            throw new Error(`SERVER_VALIDATION_ERROR: ${errorMessage}`);
+        }
+      }
+
+      const serverAuthResponse = await response.json();
+      console.log('✅ Server validation successful:', serverAuthResponse);
+      return serverAuthResponse;
+    } catch (error) {
+      console.error('❌ Server validation error:', error);
+      throw error;
     }
   }
 
@@ -122,14 +169,19 @@ class PlatformAuthService {
     if (this.isAndroid) platform = 'android';
     else if (this.isIOS) platform = 'ios';
     else if (this.isNative) platform = 'native';
+    
+    if (this.isNative && !this.isAndroid && !this.isIOS && !this.isWeb) {
+       platform = 'native';
+    }
+
     return {
       isNative: this.isNative,
       isAndroid: this.isAndroid,
       isIOS: this.isIOS,
       isWeb: this.isWeb,
       platform,
-      currentClientId: this.getGoogleClientId ? (this.getGoogleClientId()?.slice(0, 12) + '...') : '',
-      buildType: this.isDebugBuild() ? 'debug' : 'release'
+      currentClientId: this.getGoogleClientId ? (this.getGoogleClientId()?.slice(0, 12) + '...') : 'N/A',
+      buildType: this.isDebugBuild() ? 'debug' : 'release',
     };
   }
 }

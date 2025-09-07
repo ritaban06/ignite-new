@@ -16,6 +16,7 @@
     "@capacitor/core": "^7.4.3",
     "@capgo/capacitor-social-login": "^7.11.2",
     "@headlessui/react": "^2.2.7",
+    "@ionic/vue": "^8.7.3",
     "@react-oauth/google": "^0.12.2",
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",

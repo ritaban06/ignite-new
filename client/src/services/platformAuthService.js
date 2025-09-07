@@ -2,13 +2,15 @@
 // import { SocialLogin } from '@capgo/capacitor-social-login';
 
 
+import { Capacitor } from '@capacitor/core';
+
 class PlatformAuthService {
   constructor() {
-    // Only web platform supported
-    this.isNative = false;
-    this.isAndroid = false;
-    this.isIOS = false;
-    this.isWeb = true;
+    // Detect platform using Capacitor
+    this.isNative = Capacitor.isNativePlatform();
+    this.isAndroid = Capacitor.getPlatform() === 'android';
+    this.isIOS = Capacitor.getPlatform() === 'ios';
+    this.isWeb = Capacitor.getPlatform() === 'web';
     // No native initialization
   }
 
@@ -110,12 +112,16 @@ class PlatformAuthService {
   }
 
   getPlatformInfo() {
+    let platform = 'web';
+    if (this.isAndroid) platform = 'android';
+    else if (this.isIOS) platform = 'ios';
+    else if (this.isNative) platform = 'native';
     return {
-      isNative: false,
-      isAndroid: false,
-      isIOS: false,
-      isWeb: true,
-      platform: 'web',
+      isNative: this.isNative,
+      isAndroid: this.isAndroid,
+      isIOS: this.isIOS,
+      isWeb: this.isWeb,
+      platform,
       currentClientId: this.getGoogleClientId ? (this.getGoogleClientId()?.slice(0, 12) + '...') : '',
       buildType: this.isDebugBuild() ? 'debug' : 'release'
     };

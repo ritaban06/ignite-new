@@ -37,7 +37,7 @@ const HybridGoogleLogin = () => {
 
     try {
       // Use native Google Auth service
-      // const credentials = await PlatformAuthService.signInWithGoogle();
+      const credentials = await PlatformAuthService.signInWithGoogle();
       
       // Send to backend using the same flow as web
       await googleSignIn(credentials);
@@ -130,34 +130,19 @@ const HybridGoogleLogin = () => {
           )}
         </div>
 
-        {/* Debug info for development - commented out since platformInfo is disabled */}
-        {/* {import.meta.env.DEV && (
+        {/* Debug info for development */}
+        {import.meta.env.DEV && (
           <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
             <p className="font-semibold">Debug Info:</p>
             <p>Platform: {platformInfo.platform}</p>
             <p>Native: {platformInfo.isNative ? 'Yes' : 'No'}</p>
-            <p>Web Client ID: {platformInfo.hasGoogleClientId ? 'Set' : 'Not Set'}</p>
-            <p>Android Client ID: {platformInfo.hasAndroidClientId ? 'Set' : 'Not Set'}</p>
-            <p>Using: {platformInfo.clientIdSource} Client ID</p>
-            <p>Current ID: {platformInfo.currentClientId}</p>
-            {platformInfo.warnings && platformInfo.warnings.length > 0 && (
-              <div className="text-orange-600">
-                <p className="font-semibold">Warnings:</p>
-                {platformInfo.warnings.map((warning, i) => (
-                  <p key={i}>• {warning}</p>
-                ))}
-              </div>
-            )}
-            {platformInfo.issues && platformInfo.issues.length > 0 && (
-              <div className="text-red-600">
-                <p className="font-semibold">Issues:</p>
-                {platformInfo.issues.map((issue, i) => (
-                  <p key={i}>• {issue}</p>
-                ))}
-              </div>
-            )}
+            <p>Android: {platformInfo.isAndroid ? 'Yes' : 'No'}</p>
+            <p>iOS: {platformInfo.isIOS ? 'Yes' : 'No'}</p>
+            <p>Web: {platformInfo.isWeb ? 'Yes' : 'No'}</p>
+            <p>Build Type: {platformInfo.buildType}</p>
+            <p>Current Client ID: {platformInfo.currentClientId}</p>
           </div>
-        )} */}
+        )}
       </div>
 
       {/* Information Box */}

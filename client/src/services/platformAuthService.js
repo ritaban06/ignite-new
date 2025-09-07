@@ -1,13 +1,12 @@
 import { SocialLogin } from '@capgo/capacitor-social-login';
 import { Capacitor } from '@capacitor/core';
-import { isPlatform } from '@ionic/vue';
 
 class PlatformAuthService {
   constructor() {
-    this.isNative = isPlatform('capacitor');
-    this.isAndroid = isPlatform('android');
-    this.isIOS = isPlatform('ios');
-    this.isWeb = isPlatform('web');
+    this.isNative = Capacitor.isNativePlatform();
+    this.isAndroid = this.isNative && Capacitor.getPlatform() === 'android';
+    this.isIOS = this.isNative && Capacitor.getPlatform() === 'ios';
+    this.isWeb = !this.isNative;
 
     console.log('[PlatformAuthService] isNative:', this.isNative, 'isAndroid:', this.isAndroid, 'isIOS:', this.isIOS, 'isWeb:', this.isWeb);
 

@@ -37,7 +37,7 @@ jobs:
           VITE_SOCIAL_LOGIN_PROVIDER: google
 
       - name: 🏗 Build and Release Debug APK with Capacitor Action
-        uses: Narottam04/action-capacitor-android@v2 # Use the marketplace action
+        uses: Narottam04/action-capacitor-android@v1.0.0 # Use the marketplace action
         with:
           # Your app's directory. This is optional if your app is at the root.
           android-subfolder: 'client/android'

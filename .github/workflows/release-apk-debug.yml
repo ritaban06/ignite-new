@@ -65,7 +65,7 @@ jobs:
       run: |
         pnpm exec cap sync android
         # Force Java 17 instead of 21 in capacitor.build.gradle
-        sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/capacitor.build.gradle
+        sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/app/capacitor.build.gradle
       working-directory: client
 
     - name: ☕ Set up Java

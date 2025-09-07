@@ -25,7 +25,7 @@ class PlatformAuthService {
       const debug = this.isDebugBuild();
       const clientId = debug
         ? import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG
-        : import.meta.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE;
+        : import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_RELEASE;
 
       if (!clientId) {
         console.error('❌ Missing Android client ID for build type:', debug ? 'debug' : 'release');

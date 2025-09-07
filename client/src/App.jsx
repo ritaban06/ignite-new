@@ -13,16 +13,25 @@ import AuthDebug from './components/AuthDebug';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-// Get the appropriate Google OAuth Client ID based on platform
+// Import PlatformAuthService for platform detection
+import PlatformAuthService from './services/platformAuthService';
+
+// Get Google Client ID based on platform
 const getGoogleClientId = () => {
-  // const isAndroid = Capacitor.getPlatform() === 'android';
+  const platformInfo = PlatformAuthService.getPlatformInfo();
   
-  // if (isAndroid) {
-  //   // For Android, use Android-specific client ID if available, fallback to web client ID
-  //   return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  // }
+  // Use the improved platform detection
+  if (platformInfo.isAndroid) {
+    // Check if we're in debug mode
+    if (platformInfo.buildType === 'debug') {
+      console.log('Using Android Debug Google Client ID');
+      return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    }
+    console.log('Using Android Release Google Client ID');
+    return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  }
   
-  // For web, use web client ID
+  console.log('Using default Google Client ID');
   return import.meta.env.VITE_GOOGLE_CLIENT_ID;
 };
 

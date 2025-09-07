@@ -11,10 +11,29 @@ const HybridGoogleLogin = () => {
   const [platformInfo, setPlatformInfo] = useState(null);
 
   useEffect(() => {
-    // Get platform information
+    // Initial platform information
     const info = PlatformAuthService.getPlatformInfo();
     setPlatformInfo(info);
-    console.log('🔍 Platform Info:', info);
+    console.log('🔍 Initial Platform Info:', info);
+    
+    // Log user agent for debugging
+    const userAgent = navigator.userAgent;
+    console.log('🔍 User Agent:', userAgent);
+    
+    // Force update platform info after a short delay to ensure Capacitor is fully initialized
+    // This helps with cases where Capacitor might not be fully initialized on first render
+    const timer = setTimeout(() => {
+      const updatedInfo = PlatformAuthService.getPlatformInfo();
+      console.log('🔍 Updated Platform Info after delay:', updatedInfo);
+      
+      // Only update state if platform info has changed
+      if (JSON.stringify(updatedInfo) !== JSON.stringify(info)) {
+        console.log('🔄 Platform info changed, updating state');
+        setPlatformInfo(updatedInfo);
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const handleWebGoogleSuccess = async (credentialResponse) => {
@@ -77,7 +96,9 @@ const HybridGoogleLogin = () => {
             {platformInfo.isNative ? (
               <>
                 <Smartphone className="h-3 w-3" />
-                <span>Mobile App ({platformInfo.platform})</span>
+                <span className="text-white">
+                  Mobile App ({platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1)})
+                </span>
               </>
             ) : (
               <>
@@ -141,6 +162,10 @@ const HybridGoogleLogin = () => {
             <p>Web: {platformInfo.isWeb ? 'Yes' : 'No'}</p>
             <p>Build Type: {platformInfo.buildType}</p>
             <p>Current Client ID: {platformInfo.currentClientId}</p>
+            <div className="mt-1 border-t border-gray-700 pt-1">
+              <p>User Agent:</p>
+              <p className="break-all text-[10px] text-gray-500">{navigator.userAgent}</p>
+            </div>
           </div>
         )}
       </div>

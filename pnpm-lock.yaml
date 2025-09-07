@@ -167,7 +167,7 @@ importers:
         version: 2.2.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@ionic/vue':
         specifier: ^8.7.3
-        version: 8.7.3(@stencil/core@4.36.3)(vue@3.5.21(typescript@5.8.3))
+        version: 8.7.3(@stencil/core@4.36.3)(vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)))(vue@3.5.21(typescript@5.8.3))
       '@react-oauth/google':
         specifier: ^0.12.2
         version: 0.12.2(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -182,10 +182,10 @@ importers:
         version: 3.12.0(pdfjs-dist@3.11.174)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@vercel/analytics':
         specifier: ^1.5.0
-        version: 1.5.0(react@19.1.1)(vue@3.5.21(typescript@5.8.3))
+        version: 1.5.0(react@19.1.1)(vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)))(vue@3.5.21(typescript@5.8.3))
       '@vercel/speed-insights':
         specifier: ^1.2.0
-        version: 1.2.0(react@19.1.1)(vue@3.5.21(typescript@5.8.3))
+        version: 1.2.0(react@19.1.1)(vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)))(vue@3.5.21(typescript@5.8.3))
       axios:
         specifier: ^1.11.0
         version: 1.11.0
@@ -219,6 +219,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@types/node@24.0.10)(typescript@5.8.3))
+      vue-router:
+        specifier: ^4.5.1
+        version: 4.5.1(vue@3.5.21(typescript@5.8.3))
     devDependencies:
       '@capacitor/assets':
         specifier: ^3.0.5
@@ -2172,6 +2175,9 @@ packages:
 
   '@vue/compiler-ssr@3.5.21':
     resolution: {integrity: sha512-vKQ5olH5edFZdf5ZrlEgSO1j1DMA4u23TVK5XR1uMhvwnYvVdDF0nHXJUblL/GvzlShQbjhZZ2uvYmDlAbgo9w==}
+
+  '@vue/devtools-api@6.6.4':
+    resolution: {integrity: sha512-sGhTPMuXqZ1rVOk32RylztWkfXTRhuS7vgAKv0zjqk8gbsHkJ7xfFf+jbySxt7tWObEJwyKaHMikV/WGDiQm8g==}
 
   '@vue/reactivity@3.5.21':
     resolution: {integrity: sha512-3ah7sa+Cwr9iiYEERt9JfZKPw4A2UlbY8RbbnH2mGCE8NwHkhmlZt2VsH0oDA3P08X3jJd29ohBDtX+TbD9AsA==}
@@ -6366,6 +6372,11 @@ packages:
     engines: {node: '>=0.8'}
     hasBin: true
 
+  vue-router@4.5.1:
+    resolution: {integrity: sha512-ogAF3P97NPm8fJsE4by9dwSYtDwXIY1nFY9T6DyQnGHd1E2Da94w9JIolpe42LJGIl0DwOHBi8TcRPlPGwbTtw==}
+    peerDependencies:
+      vue: ^3.2.0
+
   vue@3.5.21:
     resolution: {integrity: sha512-xxf9rum9KtOdwdRkiApWL+9hZEMWE90FHh8yS1+KJAiWYh+iGWV1FquPjoO9VUHQ+VIhsCXNNyZ5Sf4++RVZBA==}
     peerDependencies:
@@ -7899,10 +7910,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ionic/vue@8.7.3(@stencil/core@4.36.3)(vue@3.5.21(typescript@5.8.3))':
+  '@ionic/vue@8.7.3(@stencil/core@4.36.3)(vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)))(vue@3.5.21(typescript@5.8.3))':
     dependencies:
       '@ionic/core': 8.7.3
-      '@stencil/vue-output-target': 0.10.7(@stencil/core@4.36.3)(vue@3.5.21(typescript@5.8.3))
+      '@stencil/vue-output-target': 0.10.7(@stencil/core@4.36.3)(vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)))(vue@3.5.21(typescript@5.8.3))
       ionicons: 8.0.13
     transitivePeerDependencies:
       - '@stencil/core'
@@ -8953,11 +8964,12 @@ snapshots:
       '@rollup/rollup-win32-arm64-msvc': 4.34.9
       '@rollup/rollup-win32-x64-msvc': 4.34.9
 
-  '@stencil/vue-output-target@0.10.7(@stencil/core@4.36.3)(vue@3.5.21(typescript@5.8.3))':
+  '@stencil/vue-output-target@0.10.7(@stencil/core@4.36.3)(vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)))(vue@3.5.21(typescript@5.8.3))':
     dependencies:
       vue: 3.5.21(typescript@5.8.3)
     optionalDependencies:
       '@stencil/core': 4.36.3
+      vue-router: 4.5.1(vue@3.5.21(typescript@5.8.3))
 
   '@swc/helpers@0.5.17':
     dependencies:
@@ -9112,15 +9124,17 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vercel/analytics@1.5.0(react@19.1.1)(vue@3.5.21(typescript@5.8.3))':
+  '@vercel/analytics@1.5.0(react@19.1.1)(vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)))(vue@3.5.21(typescript@5.8.3))':
     optionalDependencies:
       react: 19.1.1
       vue: 3.5.21(typescript@5.8.3)
+      vue-router: 4.5.1(vue@3.5.21(typescript@5.8.3))
 
-  '@vercel/speed-insights@1.2.0(react@19.1.1)(vue@3.5.21(typescript@5.8.3))':
+  '@vercel/speed-insights@1.2.0(react@19.1.1)(vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)))(vue@3.5.21(typescript@5.8.3))':
     optionalDependencies:
       react: 19.1.1
       vue: 3.5.21(typescript@5.8.3)
+      vue-router: 4.5.1(vue@3.5.21(typescript@5.8.3))
 
   '@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.10)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1))':
     dependencies:
@@ -9175,6 +9189,8 @@ snapshots:
     dependencies:
       '@vue/compiler-dom': 3.5.21
       '@vue/shared': 3.5.21
+
+  '@vue/devtools-api@6.6.4': {}
 
   '@vue/reactivity@3.5.21':
     dependencies:
@@ -14127,6 +14143,11 @@ snapshots:
   vm-browserify@1.1.2: {}
 
   voc@1.0.0: {}
+
+  vue-router@4.5.1(vue@3.5.21(typescript@5.8.3)):
+    dependencies:
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.21(typescript@5.8.3)
 
   vue@3.5.21(typescript@5.8.3):
     dependencies:

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { AlertCircle, CheckCircle, Loader2, Smartphone, Globe } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import PlatformAuthService from '../services/platformAuthService';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -20,6 +21,12 @@ const HybridGoogleLogin = () => {
     const userAgent = navigator.userAgent;
     console.log('🔍 User Agent:', userAgent);
     
+    // Check if user agent contains Android but platform info doesn't reflect it
+    const isAndroidUA = userAgent.toLowerCase().indexOf('android') > -1;
+    if (isAndroidUA && !info.isAndroid) {
+      console.log('⚠️ Detected Android in user agent but platform info doesn\'t match');
+    }
+    
     // Force update platform info after a short delay to ensure Capacitor is fully initialized
     // This helps with cases where Capacitor might not be fully initialized on first render
     const timer = setTimeout(() => {
@@ -33,7 +40,21 @@ const HybridGoogleLogin = () => {
       }
     }, 1000);
     
-    return () => clearTimeout(timer);
+    // Add a second check with a longer delay for more stubborn cases
+    const secondTimer = setTimeout(() => {
+      const finalInfo = PlatformAuthService.getPlatformInfo();
+      console.log('🔍 Final Platform Info check:', finalInfo);
+      
+      if (JSON.stringify(finalInfo) !== JSON.stringify(platformInfo)) {
+        console.log('🔄 Platform info changed in final check, updating state');
+        setPlatformInfo(finalInfo);
+      }
+    }, 3000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(secondTimer);
+    };
   }, []);
 
   const handleWebGoogleSuccess = async (credentialResponse) => {
@@ -93,11 +114,13 @@ const HybridGoogleLogin = () => {
           
           {/* Platform indicator */}
           <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
-            {platformInfo.isNative ? (
+            {/* Check user agent directly for Android as a fallback */}
+            {platformInfo.isNative || navigator.userAgent.toLowerCase().indexOf('android') > -1 ? (
               <>
                 <Smartphone className="h-3 w-3" />
                 <span className="text-white">
-                  Mobile App ({platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1)})
+                  Mobile App ({platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1) || 
+                  (navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Android' : 'Native')})
                 </span>
               </>
             ) : (
@@ -165,6 +188,13 @@ const HybridGoogleLogin = () => {
             <div className="mt-1 border-t border-gray-700 pt-1">
               <p>User Agent:</p>
               <p className="break-all text-[10px] text-gray-500">{navigator.userAgent}</p>
+            </div>
+            <div className="mt-1 border-t border-gray-700 pt-1">
+              <p>Direct UA Check:</p>
+              <p>Contains 'android': {navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Yes' : 'No'}</p>
+              <p>Contains 'iphone/ipad': {/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) ? 'Yes' : 'No'}</p>
+              <p>Capacitor.isNativePlatform(): {Capacitor.isNativePlatform() ? 'Yes' : 'No'}</p>
+              <p>Capacitor.getPlatform(): {Capacitor.getPlatform()}</p>
             </div>
           </div>
         )}

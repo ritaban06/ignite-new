@@ -25,9 +25,8 @@ class PlatformAuthService {
     console.log('[PlatformAuthService] User Agent:', userAgent);
     
     // PRIMARY DETECTION: Check if we're running in a native environment (Capacitor container)
-    this.isNative = Capacitor.isNativePlatform();
-    
-    // SECONDARY VERIFICATION: User agent based detection (more reliable in some cases)
+    // For Android, we need to be more aggressive with detection since Capacitor.isNativePlatform()
+    // might not always be reliable on some Android devices
     const isAndroidUA = userAgent.indexOf('android') > -1;
     const isIOSUA = /iphone|ipad|ipod/.test(userAgent);
     
@@ -36,6 +35,10 @@ class PlatformAuthService {
     const isAndroidCapacitor = capacitorPlatform === 'android';
     const isIOSCapacitor = capacitorPlatform === 'ios';
     
+    // Set isNative based on both Capacitor and user agent
+    // This ensures we don't miss native environments even if Capacitor detection fails
+    this.isNative = Capacitor.isNativePlatform() || isAndroidUA || isIOSUA;
+    
     // Prioritize user agent detection for native apps, but use both methods
     // This provides the most reliable platform detection across different scenarios
     if (this.isNative) {
@@ -43,13 +46,16 @@ class PlatformAuthService {
       if (isAndroidUA) {
         this.isAndroid = true;
         this.isIOS = false;
+        console.log('[PlatformAuthService] Detected Android via user agent');
       } else if (isIOSUA) {
         this.isAndroid = false;
         this.isIOS = true;
+        console.log('[PlatformAuthService] Detected iOS via user agent');
       } else {
         // FALLBACK MECHANISM: Use Capacitor detection if user agent doesn't clearly indicate platform
         this.isAndroid = isAndroidCapacitor;
         this.isIOS = isIOSCapacitor;
+        console.log('[PlatformAuthService] Using Capacitor platform detection as fallback');
       }
     } else {
       // For web, we're not on a native platform
@@ -241,8 +247,22 @@ class PlatformAuthService {
    */
   getPlatformInfo() {
     // Get user agent for debugging
-    const userAgent = navigator.userAgent;
+    const userAgent = navigator.userAgent.toLowerCase();
     console.log('[PlatformAuthService] User Agent:', userAgent);
+    
+    // Always check user agent again to ensure we don't miss Android devices
+    // This is especially important for devices where Capacitor detection might be unreliable
+    const isAndroidUA = userAgent.indexOf('android') > -1;
+    
+    // If user agent indicates Android but our initial detection didn't catch it,
+    // update our internal state
+    if (isAndroidUA && !this.isAndroid) {
+      console.log('[PlatformAuthService] Late detection of Android via user agent');
+      this.isNative = true;
+      this.isAndroid = true;
+      this.isIOS = false;
+      this.isWeb = false;
+    }
     
     // Determine platform based on our detection logic
     let platform = 'web';
@@ -252,7 +272,7 @@ class PlatformAuthService {
     
     // Double-check Android detection using user agent as a final verification
     // This ensures we don't miss Android devices even if other detection methods fail
-    if (this.isNative && userAgent.toLowerCase().indexOf('android') > -1 && platform !== 'android') {
+    if (this.isNative && isAndroidUA && platform !== 'android') {
       console.log('[PlatformAuthService] Correcting platform to Android based on user agent');
       platform = 'android';
       this.isAndroid = true;

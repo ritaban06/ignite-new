@@ -159,6 +159,9 @@ importers:
       '@capacitor/core':
         specifier: ^7.4.3
         version: 7.4.3
+      '@capgo/capacitor-social-login':
+        specifier: ^7.11.2
+        version: 7.11.2(@capacitor/core@7.4.3)
       '@headlessui/react':
         specifier: ^2.2.7
         version: 2.2.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -650,6 +653,11 @@ packages:
 
   '@capacitor/core@7.4.3':
     resolution: {integrity: sha512-wCWr8fQ9Wxn0466vPg7nMn0tivbNVjNy1yL4GvDSIZuZx7UpU2HeVGNe9QjN/quEd+YLRFeKEBLBw619VqUiNg==}
+
+  '@capgo/capacitor-social-login@7.11.2':
+    resolution: {integrity: sha512-uv4A4o/97UvWMQusoocLTY//QGc+QNsMgt0WT8E3XmBh6fdHXRCX/FvdOgXKBXzjei20IcOd/e5Yo6uDtgM1CA==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -7314,6 +7322,10 @@ snapshots:
   '@capacitor/core@7.4.3':
     dependencies:
       tslib: 2.8.1
+
+  '@capgo/capacitor-social-login@7.11.2(@capacitor/core@7.4.3)':
+    dependencies:
+      '@capacitor/core': 7.4.3
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:

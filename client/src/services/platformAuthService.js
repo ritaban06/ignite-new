@@ -1,18 +1,23 @@
-import { Capacitor } from '@capacitor/core';
-// import { SocialLogin } from '@capgo/capacitor-social-login';
-
-
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import { Capacitor } from '@capacitor/core';
 
 class PlatformAuthService {
   constructor() {
-    // Detect platform using Capacitor
-  // Robust platform detection for Capacitor
-  this.isNative = typeof Capacitor.isNativePlatform === 'function' ? Capacitor.isNativePlatform() : (Capacitor.getPlatform && Capacitor.getPlatform() !== 'web');
-  this.isAndroid = Capacitor.getPlatform && Capacitor.getPlatform() === 'android';
-  this.isIOS = Capacitor.getPlatform && Capacitor.getPlatform() === 'ios';
-  this.isWeb = Capacitor.getPlatform && Capacitor.getPlatform() === 'web';
-    // No native initialization
+    // Robust platform detection for Capacitor
+    this.isNative = typeof Capacitor.isNativePlatform === 'function' ? Capacitor.isNativePlatform() : (Capacitor.getPlatform && Capacitor.getPlatform() !== 'web');
+    this.isAndroid = Capacitor.getPlatform && Capacitor.getPlatform() === 'android';
+    this.isIOS = Capacitor.getPlatform && Capacitor.getPlatform() === 'ios';
+    this.isWeb = Capacitor.getPlatform && Capacitor.getPlatform() === 'web';
+
+    // Debug log for platform detection
+    console.log('[PlatformAuthService] Capacitor.getPlatform():', Capacitor.getPlatform && Capacitor.getPlatform());
+    console.log('[PlatformAuthService] Capacitor.isNativePlatform():', typeof Capacitor.isNativePlatform === 'function' ? Capacitor.isNativePlatform() : 'not available');
+    console.log('[PlatformAuthService] isNative:', this.isNative, 'isAndroid:', this.isAndroid, 'isIOS:', this.isIOS, 'isWeb:', this.isWeb);
+
+    // Initialize SocialLogin for native platforms
+    if (this.isNative) {
+      this.initializeNativeSocialLogin();
+    }
   }
 
   // Detect whether this is a debug or release build

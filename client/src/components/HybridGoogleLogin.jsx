@@ -93,71 +93,47 @@ const HybridGoogleLogin = () => {
     setError('Google sign-in was cancelled or failed. Please try again.');
   };
 
-  if (!platformInfo) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="space-y-3 sm:space-y-4">
-        <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-            Sign in to Ignite
-          </h2>
-          <p className="text-sm sm:text-base text-white">
-            Only approved users can access this platform
-          </p>
-          
-          {/* Platform indicator */}
-          <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
-            {/* Check user agent directly for Android as a fallback */}
-            {platformInfo.isNative || navigator.userAgent.toLowerCase().indexOf('android') > -1 ? (
-              <>
-                <Smartphone className="h-3 w-3" />
-                <span className="text-white">
-                  Mobile App ({platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1) || 
-                  (navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Android' : 'Native')})
-                </span>
-              </>
-            ) : (
-              <>
-                <Globe className="h-3 w-3" />
-                <span className="text-white">Web Browser</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-200">
-            <div className="flex items-start space-x-2">
-              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 mt-0.5 flex-shrink-0" />
-              <p className="text-xs sm:text-sm text-red-700">{error}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-center">
-          {isLoading ? (
-            <div className="flex items-center space-x-2 bg-gray-100 px-6 py-3 rounded-lg">
-              <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
-              <span className="text-gray-600">Verifying approval status...</span>
-            </div>
-          // ) : import.meta.env.DEV ? (
-          //   <div className="text-gray-500 text-center text-sm">Google login is disabled in development mode.</div>
-          ) : platformInfo.isNative ? (
+    <div>
+      {/* Improved fallback: Always show Mobile if platformInfo is ambiguous or Android UA detected */}
+      {(platformInfo?.isNative || platformInfo?.isAndroid || !platformInfo || navigator.userAgent.toLowerCase().indexOf('android') > -1) ? (
+        <React.Fragment>
+          <Smartphone className="h-3 w-3" />
+          <span className="text-white">
+            Mobile App ({platformInfo?.platform ? (platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1)) : 'Android/Native'})
+          </span>
+        </React.Fragment>
+      ) : (
+        <React.Fragment>
+          <Globe className="h-3 w-3" />
+          <span className="text-white">Web Browser</span>
+        </React.Fragment>
+      )}
+      <p className="text-sm sm:text-base text-white">
+        Only approved users can access this platform
+      </p>
+      
+      {/* Platform indicator */}
+      <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
+        {platformInfo?.isNative || navigator.userAgent.toLowerCase().indexOf('android') > -1 ? (
+          <React.Fragment>
+            <Smartphone className="h-3 w-3" />
+            <span className="text-white">
+              Mobile App ({platformInfo?.platform ? (platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1)) : 
+              (navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Android' : 'Native')})
+            </span>
             <button
               onClick={handleNativeGoogleSignIn}
-              className="flex items-center space-x-2 bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow"
+              className="flex items-center space-x-2 bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow mt-2"
             >
               <Smartphone className="h-5 w-5 text-white" />
               <span className="text-white">Sign in with Google (Mobile)</span>
             </button>
-          ) : (
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <Globe className="h-3 w-3" />
+            <span className="text-white">Web Browser</span>
             <GoogleLogin
               onSuccess={handleWebGoogleSuccess}
               onError={handleGoogleError}
@@ -169,36 +145,36 @@ const HybridGoogleLogin = () => {
               // Custom style for purple background and white text
               ux_mode="popup"
               width="100%"
-              style={{ backgroundColor: '#7c3aed', color: '#fff', borderRadius: '0.5rem', fontWeight: '600' }}
+              style={{ backgroundColor: '#7c3aed', color: '#fff', borderRadius: '0.5rem', fontWeight: '600', marginTop: '0.5rem' }}
             />
-          )}
-        </div>
-
-        {/* Debug info for development */}
-        {import.meta.env.DEV && (
-          <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
-            <p className="font-semibold">Debug Info:</p>
-            <p>Platform: {platformInfo.platform}</p>
-            <p>Native: {platformInfo.isNative ? 'Yes' : 'No'}</p>
-            <p>Android: {platformInfo.isAndroid ? 'Yes' : 'No'}</p>
-            <p>iOS: {platformInfo.isIOS ? 'Yes' : 'No'}</p>
-            <p>Web: {platformInfo.isWeb ? 'Yes' : 'No'}</p>
-            <p>Build Type: {platformInfo.buildType}</p>
-            <p>Current Client ID: {platformInfo.currentClientId}</p>
-            <div className="mt-1 border-t border-gray-700 pt-1">
-              <p>User Agent:</p>
-              <p className="break-all text-[10px] text-gray-500">{navigator.userAgent}</p>
-            </div>
-            <div className="mt-1 border-t border-gray-700 pt-1">
-              <p>Direct UA Check:</p>
-              <p>Contains 'android': {navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Yes' : 'No'}</p>
-              <p>Contains 'iphone/ipad': {/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) ? 'Yes' : 'No'}</p>
-              <p>Capacitor.isNativePlatform(): {Capacitor.isNativePlatform() ? 'Yes' : 'No'}</p>
-              <p>Capacitor.getPlatform(): {Capacitor.getPlatform()}</p>
-            </div>
-          </div>
+          </React.Fragment>
         )}
       </div>
+
+      {/* Debug info for development */}
+      {import.meta.env.DEV && (
+        <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
+          <p className="font-semibold">Debug Info:</p>
+          <p>Platform: {platformInfo?.platform}</p>
+          <p>Native: {platformInfo?.isNative ? 'Yes' : 'No'}</p>
+          <p>Android: {platformInfo?.isAndroid ? 'Yes' : 'No'}</p>
+          <p>iOS: {platformInfo?.isIOS ? 'Yes' : 'No'}</p>
+          <p>Web: {platformInfo?.isWeb ? 'Yes' : 'No'}</p>
+          <p>Build Type: {platformInfo?.buildType}</p>
+          <p>Current Client ID: {platformInfo?.currentClientId}</p>
+          <div className="mt-1 border-t border-gray-700 pt-1">
+            <p>User Agent:</p>
+            <p className="break-all text-[10px] text-gray-500">{navigator.userAgent}</p>
+          </div>
+          <div className="mt-1 border-t border-gray-700 pt-1">
+            <p>Direct UA Check:</p>
+            <p>Contains 'android': {navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Yes' : 'No'}</p>
+            <p>Contains 'iphone/ipad': {/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) ? 'Yes' : 'No'}</p>
+            <p>Capacitor.isNativePlatform(): {Capacitor.isNativePlatform() ? 'Yes' : 'No'}</p>
+            <p>Capacitor.getPlatform(): {Capacitor.getPlatform()}</p>
+          </div>
+        </div>
+      )}
 
       {/* Information Box */}
       <div className="bg-purple-700 p-4 rounded-lg border border-purple-800">

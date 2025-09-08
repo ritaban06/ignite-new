@@ -95,59 +95,72 @@ const HybridGoogleLogin = () => {
 
   return (
     <div>
-      {/* Improved fallback: Always show Mobile if platformInfo is ambiguous or Android UA detected */}
-      {(platformInfo?.isNative || platformInfo?.isAndroid || !platformInfo || navigator.userAgent.toLowerCase().indexOf('android') > -1) ? (
-        <React.Fragment>
-          <Smartphone className="h-3 w-3" />
-          <span className="text-white">
-            Mobile App ({platformInfo?.platform ? (platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1)) : 'Android/Native'})
-          </span>
-        </React.Fragment>
-      ) : (
-        <React.Fragment>
-          <Globe className="h-3 w-3" />
-          <span className="text-white">Web Browser</span>
-        </React.Fragment>
-      )}
-      <p className="text-sm sm:text-base text-white">
-        Only approved users can access this platform
-      </p>
-      
-      {/* Platform indicator */}
-      <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
-        {platformInfo?.isNative || navigator.userAgent.toLowerCase().indexOf('android') > -1 ? (
-          <React.Fragment>
-            <Smartphone className="h-3 w-3" />
-            <span className="text-white">
-              Mobile App ({platformInfo?.platform ? (platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1)) : 
-              (navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Android' : 'Native')})
-            </span>
+      <div className="space-y-3 sm:space-y-4">
+        <div className="text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+            Sign in to Ignite
+          </h2>
+          <p className="text-sm sm:text-base text-white">
+            Only approved users can access this platform
+          </p>
+          
+          {/* Platform indicator */}
+          <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
+            {platformInfo?.isNative || navigator.userAgent.toLowerCase().indexOf('android') > -1 ? (
+              <>
+                <Smartphone className="h-3 w-3" />
+                <span className="text-white">
+                  Mobile App ({platformInfo?.platform ? (platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1)) : 
+                  (navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Android' : 'Native')})
+                </span>
+              </>
+            ) : (
+              <>
+                <Globe className="h-3 w-3" />
+                <span className="text-white">Web Browser</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Authentication buttons */}
+        <div className="flex justify-center">
+          {platformInfo?.isNative || navigator.userAgent.toLowerCase().indexOf('android') > -1 ? (
             <button
               onClick={handleNativeGoogleSignIn}
-              className="flex items-center space-x-2 bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow mt-2"
+              disabled={isLoading}
+              className="flex items-center space-x-2 bg-purple-700 hover:bg-purple-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold shadow transition-colors"
             >
-              <Smartphone className="h-5 w-5 text-white" />
-              <span className="text-white">Sign in with Google (Mobile)</span>
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Smartphone className="h-5 w-5" />
+              )}
+              <span>Sign in with Google (Mobile)</span>
             </button>
-          </React.Fragment>
-        ) : (
-          <React.Fragment>
-            <Globe className="h-3 w-3" />
-            <span className="text-white">Web Browser</span>
-            <GoogleLogin
-              onSuccess={handleWebGoogleSuccess}
-              onError={handleGoogleError}
-              size="large"
-              theme="filled_blue"
-              text="signin_with"
-              shape="rectangular"
-              logo_alignment="left"
-              // Custom style for purple background and white text
-              ux_mode="popup"
-              width="100%"
-              style={{ backgroundColor: '#7c3aed', color: '#fff', borderRadius: '0.5rem', fontWeight: '600', marginTop: '0.5rem' }}
-            />
-          </React.Fragment>
+          ) : (
+            <div className="w-full max-w-sm">
+              <GoogleLogin
+                onSuccess={handleWebGoogleSuccess}
+                onError={handleGoogleError}
+                size="large"
+                theme="filled_blue"
+                text="signin_with"
+                shape="rectangular"
+                logo_alignment="left"
+                ux_mode="popup"
+                width="100%"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Error display */}
+        {error && (
+          <div className="flex items-center space-x-2 text-red-400 bg-red-900/20 p-3 rounded-lg">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span className="text-sm">{error}</span>
+          </div>
         )}
       </div>
 

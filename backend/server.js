@@ -57,11 +57,14 @@ app.use(limiter);
 */
 
 // CORS configuration - Allow specific origins
+const CLIENT_URL = process.env.CLIENT_URL;
+const ADMIN_URL = process.env.ADMIN_URL;
+const BACKEND_URL = process.env.BACKEND_VERCEL_URL || process.env.BACKEND_DROPLET_URL;
+
 const allowedOrigins = [
-  'https://ignite-client.ritaban.me',
-  'https://ignite-admin.ritaban.me', 
-  'https://ignite-backend-eight.vercel.app',
-  'https://ignite-backend-droplet.ritaban.me',
+  CLIENT_URL,
+  ADMIN_URL,
+  BACKEND_URL,
   'http://localhost:3000',
   'http://localhost:3001',
   // Add Google Drive API domain for CORS

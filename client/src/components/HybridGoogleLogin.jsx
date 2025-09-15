@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle, Loader2, Smartphone, Globe } from 'lucide-rea
 import { Capacitor } from '@capacitor/core';
 import PlatformAuthService from '../services/platformAuthService';
 import { useAuth } from '../contexts/AuthContext';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 
 const HybridGoogleLogin = () => {
   const { googleSignIn } = useAuth();
@@ -76,10 +77,31 @@ const HybridGoogleLogin = () => {
     setError('');
 
     try {
-      // Use native Google Auth service
-      const credentials = await PlatformAuthService.signInWithGoogle();
-      
-      // Send to backend using the same flow as web
+      if (!platformInfo?.isNative) {
+        throw new Error('Native platform not detected.');
+      }
+
+      await SocialLogin.initialize({
+        google: {
+          webClientId: '164410585415-3evmprdd3gpd6gp5kog0jg1apaj48lbg.apps.googleusercontent.com',
+          androidClientId: '164410585415-milahuh6dkdtrhs2ft53jpds8s12m3vm.apps.googleusercontent.com',
+        },
+      });
+
+      const result = await SocialLogin.login({
+        provider: 'google',
+        scopes: ['openid', 'email', 'profile'],
+      });
+
+      if (!result || !result.authentication?.idToken) {
+        throw new Error('Google sign-in failed. No ID token received.');
+      }
+
+      const credentials = {
+        idToken: result.authentication.idToken,
+        accessToken: result.authentication.accessToken,
+      };
+
       await googleSignIn(credentials);
     } catch (error) {
       console.error('Native Google sign-in error:', error);

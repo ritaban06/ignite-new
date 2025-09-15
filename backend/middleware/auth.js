@@ -5,15 +5,17 @@ const AccessLog = require('../models/AccessLog');
 
 // Special ObjectId for system admin
 const ADMIN_OBJECT_ID = new mongoose.Types.ObjectId('000000000000000000000001');
+const CLIENT_URL = process.env.CLIENT_URL;
+const ADMIN_URL = process.env.ADMIN_URL;
+const BACKEND_URL = process.env.BACKEND_VERCEL_URL || process.env.BACKEND_DROPLET_URL;
 
 // Helper function to ensure CORS headers are set
 const ensureCORS = (req, res) => {
   const origin = req.get('Origin');
   const allowedOrigins = [
-    'https://ignite-client.ritaban.me',
-    'https://ignite-admin.ritaban.me',
-    'https://ignite-backend-eight.vercel.app',
-    'https://ignite-backend-droplet.ritaban.me',
+    CLIENT_URL,
+    ADMIN_URL,
+    BACKEND_URL,
     'http://localhost:3000',
     'http://localhost:3001'
   ];

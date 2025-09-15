@@ -26,6 +26,7 @@ const GOOGLE_WEB_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_WEB_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_ANDROID_CLIENT_ID_DEBUG = process.env.GOOGLE_ANDROID_CLIENT_ID_DEBUG;
 const GOOGLE_ANDROID_CLIENT_ID_RELEASE = process.env.GOOGLE_ANDROID_CLIENT_ID_RELEASE;
+const CLIENT_URL = process.env.CLIENT_URL;
 // Note: Android OAuth clients don't have client secrets
 
 // Create OAuth2 clients for each platform
@@ -514,7 +515,7 @@ router.post('/google-verify', [
   body('credential').notEmpty().withMessage('Google credential token is required')
 ], async (req, res) => {
   // Set CORS headers explicitly
-  res.header('Access-Control-Allow-Origin', req.get('Origin') || 'https://ignite-client.ritaban.me');
+  res.header('Access-Control-Allow-Origin', req.get('Origin') || CLIENT_URL);
   res.header('Access-Control-Allow-Credentials', 'true');
   
   try {

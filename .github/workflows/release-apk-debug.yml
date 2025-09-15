@@ -37,18 +37,12 @@ jobs:
     - name: 🔍 Validate Environment Variables
       run: |
         echo "Checking required environment variables..."
-        if [ -z "${{ secrets.VITE_API_URL }}" ]; then
-          echo "❌ VITE_API_URL is not set"
-          exit 1
-        fi
-        if [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]; then
-          echo "❌ VITE_GOOGLE_CLIENT_ID is not set"
-          exit 1
-        fi
-        if [ -z "${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}" ]; then
-          echo "❌ VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG is not set"
-          exit 1
-        fi
+        [ -z "${{ secrets.VITE_API_URL }}" ] && echo "❌ VITE_API_URL is not set" && exit 1
+        [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ] && echo "❌ VITE_GOOGLE_CLIENT_ID is not set" && exit 1
+        [ -z "${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}" ] && echo "❌ VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG is not set" && exit 1
+        [ -z "${{ secrets.KEYSTORE_PASS }}" ] && echo "❌ KEYSTORE_PASS is not set" && exit 1
+        [ -z "${{ secrets.KEY_ALIAS }}" ] && echo "❌ KEY_ALIAS is not set" && exit 1
+        [ -z "${{ secrets.KEY_PASS }}" ] && echo "❌ KEY_PASS is not set" && exit 1
         echo "✅ All required environment variables are set"
 
     - name: 🛠 Build React app
@@ -79,13 +73,6 @@ jobs:
       run: pnpm exec cap sync android
       working-directory: client
 
-    # - name: 📝 Patch build.gradle for Java 17
-    #   run: |
-    #     # Explicitly set Java version in app/build.gradle
-    #     sed -i '/^android {/a \ \ \ \ compileOptions {\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }' app/build.gradle
-    #     echo "✅ Patched app/build.gradle to use Java 17."
-    #   working-directory: client/android
-
     - name: ⚡ Cache Android Gradle dependencies
       uses: actions/cache@v4
       with:
@@ -104,6 +91,10 @@ jobs:
     - name: 📱 Set up Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Decode Keystore
+      run: | 
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > client/android/app/my-release-key.jks
+
     - name: 🏗 Build Debug APK
       run: |
         echo "📂 Copying web assets into Android project..."
@@ -118,6 +109,9 @@ jobs:
         ANDROID_HOME: ${{ env.ANDROID_HOME }}
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_SOCIAL_LOGIN_PROVIDER: google
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+        KEY_PASS: ${{ secrets.KEY_PASS }}
+        KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
         VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
         RELEASE: false
 

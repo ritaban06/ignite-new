@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { AlertCircle, CheckCircle, Loader2, Smartphone, Globe } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import PlatformAuthService from '../services/platformAuthService';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -62,10 +63,12 @@ const HybridGoogleLogin = () => {
     setError('');
 
     try {
-      await googleSignIn(credentialResponse);
+      const { credential } = credentialResponse;
+      console.log('Web Google sign-in successful:', credential);
+      // Send the credential to your backend for verification
     } catch (error) {
       console.error('Web Google sign-in error:', error);
-      setError(error.message || 'Failed to sign in with Google. Please try again.');
+      setError('Failed to sign in with Google. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -76,14 +79,29 @@ const HybridGoogleLogin = () => {
     setError('');
 
     try {
-      // Use native Google Auth service
-      const credentials = await PlatformAuthService.signInWithGoogle();
-      
-      // Send to backend using the same flow as web
-      await googleSignIn(credentials);
+      // Initialize SocialLogin for Android
+      await SocialLogin.initialize({
+        google: {
+          webClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          androidClientId: import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG,
+        },
+      });
+
+      // Perform Google login
+      const result = await SocialLogin.login({
+        provider: 'google',
+        scopes: ['openid', 'email', 'profile'],
+      });
+
+      // Extract tokens from the result
+      const { idToken, accessToken } = result;
+      console.log('Android Google sign-in successful:', { idToken, accessToken });
+
+      // Send tokens to your backend for verification
+      // Example: await sendTokensToBackend(idToken, accessToken);
     } catch (error) {
-      console.error('Native Google sign-in error:', error);
-      setError(error.message || 'Failed to sign in with Google. Please try again.');
+      console.error('Android Google sign-in error:', error);
+      setError('Failed to sign in with Google on Android. Please try again.');
     } finally {
       setIsLoading(false);
     }

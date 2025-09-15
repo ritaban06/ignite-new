@@ -34,6 +34,16 @@ jobs:
       run: pnpm install --frozen-lockfile
       working-directory: client
 
+    - name: 🔧 Setup Android environment variables
+      run: |
+        echo "Setting up Android environment variables..."
+        echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > .env
+        echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> .env
+        echo "VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG=${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}" >> .env
+        echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> .env
+        echo "✅ Created .env file with production environment variables"
+      working-directory: client
+      
     - name: 🔍 Validate Environment Variables
       run: |
         echo "Checking required environment variables..."
@@ -48,12 +58,6 @@ jobs:
     - name: 🛠 Build React app
       run: pnpm run build
       working-directory: client
-      env:
-        VITE_API_URL: ${{ secrets.VITE_API_URL }}
-        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-        VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
-        NODE_ENV: production
-        VITE_SOCIAL_LOGIN_PROVIDER: google
 
     - name: ☕ Set up Java 21
       uses: actions/setup-java@v3
@@ -107,12 +111,8 @@ jobs:
       working-directory: client/android
       env:
         ANDROID_HOME: ${{ env.ANDROID_HOME }}
-        VITE_API_URL: ${{ secrets.VITE_API_URL }}
-        VITE_SOCIAL_LOGIN_PROVIDER: google
-        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         KEY_PASS: ${{ secrets.KEY_PASS }}
         KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
-        VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}
         RELEASE: false
 
     - name: 🏷 Rename Debug APK

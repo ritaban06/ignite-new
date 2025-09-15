@@ -81,6 +81,7 @@ const HybridGoogleLogin = () => {
         throw new Error('Native platform not detected.');
       }
 
+      // Initialize SocialLogin for Google Cloud
       await SocialLogin.initialize({
         google: {
           webClientId: '164410585415-3evmprdd3gpd6gp5kog0jg1apaj48lbg.apps.googleusercontent.com',
@@ -88,6 +89,7 @@ const HybridGoogleLogin = () => {
         },
       });
 
+      // Perform Google sign-in
       const result = await SocialLogin.login({
         provider: 'google',
         scopes: ['openid', 'email', 'profile'],
@@ -97,11 +99,13 @@ const HybridGoogleLogin = () => {
         throw new Error('Google sign-in failed. No ID token received.');
       }
 
+      // Extract tokens
       const credentials = {
         idToken: result.authentication.idToken,
         accessToken: result.authentication.accessToken,
       };
 
+      // Send tokens to backend for verification
       await googleSignIn(credentials);
     } catch (error) {
       console.error('Native Google sign-in error:', error);

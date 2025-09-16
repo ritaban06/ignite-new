@@ -50,7 +50,8 @@ jobs:
         [ -z "${{ secrets.VITE_API_URL }}" ] && echo "❌ VITE_API_URL is not set" && exit 1
         [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ] && echo "❌ VITE_GOOGLE_CLIENT_ID is not set" && exit 1
         [ -z "${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}" ] && echo "❌ VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG is not set" && exit 1
-        [ -z "${{ secrets.VITE_SECURE_GLOBAL_DISABLE }}" ] && echo "❌ VITE_SECURE_GLOBAL_DISABLE is not set" && exit 1
+        [ -z "${{ secrets.VITE_SECURE_GLOBAL_DISABLE }}" ] && echo "❌ VITE_SECURE_GLOBAL_DISABLE is not set" && exit 1\
+        [ -z "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" ] && echo "❌ GOOGLE_SERVICES_JSON_BASE64 is not set" && exit 1
         [ -z "${{ secrets.KEYSTORE_PASS }}" ] && echo "❌ KEYSTORE_PASS is not set" && exit 1
         [ -z "${{ secrets.KEY_ALIAS }}" ] && echo "❌ KEY_ALIAS is not set" && exit 1
         [ -z "${{ secrets.KEY_PASS }}" ] && echo "❌ KEY_PASS is not set" && exit 1
@@ -96,9 +97,13 @@ jobs:
     - name: 📱 Set up Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Add google-services.json
+      run: |
+        echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 -d > client/android/app/google-services.json
+
     - name: Decode Keystore
       run: | 
-        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > client/android/app/my-release-key.jks
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > client/android/app/app-signing-key.jks
 
     - name: 🏗 Build Debug APK
       run: |
@@ -114,6 +119,7 @@ jobs:
         ANDROID_HOME: ${{ env.ANDROID_HOME }}
         KEY_PASS: ${{ secrets.KEY_PASS }}
         KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         RELEASE: false
 
     - name: 🏷 Rename Debug APK

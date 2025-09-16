@@ -50,6 +50,7 @@ jobs:
         [ -z "${{ secrets.VITE_API_URL }}" ] && echo "❌ VITE_API_URL is not set" && exit 1
         [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ] && echo "❌ VITE_GOOGLE_CLIENT_ID is not set" && exit 1
         [ -z "${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}" ] && echo "❌ VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG is not set" && exit 1
+        [ -z "${{ secrets.VITE_SECURE_GLOBAL_DISABLE }}" ] && echo "❌ VITE_SECURE_GLOBAL_DISABLE is not set" && exit 1
         [ -z "${{ secrets.KEYSTORE_PASS }}" ] && echo "❌ KEYSTORE_PASS is not set" && exit 1
         [ -z "${{ secrets.KEY_ALIAS }}" ] && echo "❌ KEY_ALIAS is not set" && exit 1
         [ -z "${{ secrets.KEY_PASS }}" ] && echo "❌ KEY_PASS is not set" && exit 1

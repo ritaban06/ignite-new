@@ -85,7 +85,7 @@ const HybridGoogleLogin = () => {
       await SocialLogin.initialize({
         google: {
           webClientId: '164410585415-3evmprdd3gpd6gp5kog0jg1apaj48lbg.apps.googleusercontent.com',
-          androidClientId: '164410585415-milahuh6dkdtrhs2ft53jpds8s12m3vm.apps.googleusercontent.com',
+          androidClientId: '164410585415-p5qdku6ehjcq3g3i66c661p5gqq38021.apps.googleusercontent.com',
         },
       });
 

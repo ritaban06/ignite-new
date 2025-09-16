@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://ignite-backend-droplet.ritaban.me/api/:path*"
+      "destination": "https://ignite-backend-eight.vercel.app/api/:path*"
     },
     {
       "source": "/((?!api).*)",

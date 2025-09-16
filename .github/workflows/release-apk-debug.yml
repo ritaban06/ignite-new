@@ -40,7 +40,7 @@ jobs:
         echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > .env
         echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> .env
         echo "VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG=${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG }}" >> .env
-        echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> .env
+        echo "VITE_SECURE_GLOBAL_DISABLE=${{ secrets.VITE_SECURE_GLOBAL_DISABLE }}" >> .env
         echo "✅ Created .env file with production environment variables"
       working-directory: client
       

@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { enableGlobalSecurity, disableGlobalSecurity, isGlobalSecurityEnabled } from './utils/globalSecurity';
-import { isMaintenanceMode } from './utils/maintenanceMode';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -9,32 +8,22 @@ import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
-import NotFoundPage from './pages/NotFoundPage';
-import MaintenancePage from './pages/MaintenancePage';
+import Landingpage from './pages/Landingpage';
 // import SearchPage from './pages/SearchPage';
 import AuthDebug from './components/AuthDebug';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-// Import PlatformAuthService for platform detection
-import PlatformAuthService from './services/platformAuthService';
-
-// Get Google Client ID based on platform
+// Get the appropriate Google OAuth Client ID based on platform
 const getGoogleClientId = () => {
-  const platformInfo = PlatformAuthService.getPlatformInfo();
+  // const isAndroid = Capacitor.getPlatform() === 'android';
   
-  // Use the improved platform detection
-  if (platformInfo.isAndroid) {
-    // Check if we're in debug mode
-    if (platformInfo.buildType === 'debug') {
-      console.log('Using Android Debug Google Client ID');
-      return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID_DEBUG || import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    }
-    console.log('Using Android Release Google Client ID');
-    return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  }
+  // if (isAndroid) {
+  //   // For Android, use Android-specific client ID if available, fallback to web client ID
+  //   return import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  // }
   
-  console.log('Using default Google Client ID');
+  // For web, use web client ID
   return import.meta.env.VITE_GOOGLE_CLIENT_ID;
 };
 
@@ -42,9 +31,6 @@ const GOOGLE_CLIENT_ID = getGoogleClientId() || 'your-google-client-id-here';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
-
-  // Check if maintenance mode is enabled
-  const maintenanceModeEnabled = isMaintenanceMode();
 
   // Enable/disable global security listeners based on env value
   useEffect(() => {
@@ -58,12 +44,6 @@ function AppContent() {
       disableGlobalSecurity();
     };
   }, []);
-
-  // Show maintenance page if maintenance mode is enabled
-  if (maintenanceModeEnabled) {
-    return <MaintenancePage />;
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-purple-100 flex items-center justify-center">
@@ -76,7 +56,17 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <LoginPage />;
+    return (
+      <Routes>
+        <Route path="/" element={<Landingpage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/landing" element={<Landingpage />} />
+        {/* Redirect any authenticated-only routes back to landing */}
+        <Route path="/dashboard" element={<Landingpage />} />
+        {/* All other routes go to landing for non-authenticated users */}
+        <Route path="*" element={<Landingpage />} />
+      </Routes>
+    );
   }
 
   return (
@@ -85,12 +75,14 @@ function AppContent() {
       {/* <AuthDebug /> */}
       <main className="pt-16">
         <Routes>
+          {/* Redirect authenticated users to dashboard when they visit root or landing */}
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/landing" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           {/* <Route path="/search" element={<SearchPage />} /> */}
           {/* <Route path="/gdrive-manager" element={<GoogleDrivePDFManager />} /> */}
-          {/* Catch all other routes and show 404 page */}
-          <Route path="*" element={<NotFoundPage />} />
+          {/* Catch all other routes and redirect to dashboard for authenticated users */}
+          <Route path="*" element={<DashboardPage />} />
         </Routes>
       </main>
     </div>

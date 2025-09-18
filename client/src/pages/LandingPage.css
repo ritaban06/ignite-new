@@ -1,0 +1,343 @@
+@keyframes float {
+  0% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(1deg); }
+  75% { transform: translateY(5px) rotate(-1deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes glowPulse {
+  0% { opacity: 0.5; filter: blur(8px); }
+  50% { opacity: 1; filter: blur(12px); }
+  100% { opacity: 0.5; filter: blur(8px); }
+}
+
+@keyframes timelineGlow {
+  0% { transform: translateY(-100%); opacity: 0.4; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(100%); opacity: 0.4; }
+}
+
+@keyframes shine {
+  0% { 
+    transform: translateX(-100%) skewX(45deg);
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% { 
+    transform: translateX(100%) skewX(45deg);
+    opacity: 0.6;
+  }
+}
+
+@keyframes shimmer {
+  0% { 
+    background-position: -200% center;
+  }
+  100% { 
+    background-position: 200% center;
+  }
+}
+
+@keyframes morphGradient {
+  0% {
+    border-radius: 60% 40% 30% 70%/60% 30% 70% 40%;
+    background-position: 0% 50%;
+  }
+  50% {
+    border-radius: 30% 60% 70% 40%/50% 60% 30% 60%;
+    background-position: 100% 50%;
+  }
+  100% {
+    border-radius: 60% 40% 30% 70%/60% 30% 70% 40%;
+    background-position: 0% 50%;
+  }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pingSlow {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-float { 
+  animation: float 6s ease-in-out infinite; 
+  will-change: transform;
+}
+
+.animate-fade-in-down { 
+  animation: fadeInDown 1s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+.animate-fade-in-up { 
+  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+.animate-fade-in { 
+  animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: opacity;
+}
+
+.animate-ping-slow { 
+  animation: pingSlow 3s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-morph {
+  animation: morphGradient 15s ease-in-out infinite;
+  background-size: 400% 400%;
+  will-change: border-radius, background-position;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(108, 71, 255, 0.1),
+    rgba(255, 71, 199, 0.1),
+    rgba(108, 71, 255, 0.1)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+  will-change: background-position;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-600 { animation-delay: 600ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-900 { animation-delay: 900ms; }
+
+.features-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  position: relative;
+  z-index: 10;
+  padding: 1rem;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background: linear-gradient(135deg, rgba(108, 71, 255, 0.1), rgba(255, 71, 199, 0.05));
+  padding: 1.5rem;
+  border-radius: 1rem;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(108, 71, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: all 0.5s ease;
+}
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(108, 71, 255, 0.1),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Timeline specific styles */
+.timeline-card {
+  transition: all 0.3s ease;
+}
+
+.timeline-card:hover {
+  transform: scale(1.02);
+}
+
+.timeline-dot {
+  position: relative;
+  z-index: 20;
+}
+
+.timeline-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: rgba(108, 71, 255, 0.2);
+  filter: blur(8px);
+}
+
+.timeline-line {
+  overflow: hidden;
+}
+
+.timeline-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent, #6c47ff, transparent);
+  animation: timelineGlow 3s linear infinite;
+}
+
+/* Enhanced feature card animations */
+.feature-card {
+  animation: slideLeftToRight 0.8s ease-out forwards;
+  opacity: 0;
+  transform: translateX(-200%);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(108, 71, 255, 0.2);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.feature-card:nth-child(1) { animation-delay: 0s; }
+.feature-card:nth-child(2) { animation-delay: 0.2s; }
+.feature-card:nth-child(3) { animation-delay: 0.4s; }
+.feature-card:nth-child(4) { animation-delay: 0.6s; }
+
+@keyframes slideLeftToRight {
+  0% {
+    transform: translateX(-200%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 10px 20px -5px rgba(108, 71, 255, 0.3),
+    0 0 15px rgba(108, 71, 255, 0.2);
+  border-color: rgba(108, 71, 255, 0.4);
+  background: linear-gradient(135deg, rgba(108, 71, 255, 0.15), rgba(255, 71, 199, 0.1));
+}
+
+.feature-card:hover::before {
+  animation: shine 2s ease infinite;
+}
+
+/* Timeline Enhancements */
+.timeline-line {
+  position: relative;
+  overflow: visible;
+}
+
+.timeline-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(108, 71, 255, 0.8), rgba(255, 71, 199, 0.8));
+  transform: translateX(-50%);
+  filter: blur(4px);
+  opacity: 0.5;
+}
+
+.timeline-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, #6c47ff, #ff47c7);
+  transform: translateX(-50%);
+  animation: timelineGlow 3s ease-in-out infinite;
+}
+
+.timeline-dot {
+  position: relative;
+  z-index: 20;
+  transition: all 0.3s ease;
+}
+
+.timeline-dot:hover {
+  transform: scale(1.1);
+}
+
+.timeline-dot::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108, 71, 255, 0.3), transparent);
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* move content visually left-to-right by translating positive X on the track */
+@keyframes marqueeLTR {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(50%); }
+}
+
+.features-track {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  /* Duplicate content is expected; moving right by 50% creates a seamless loop visually moving cards left-to-right */
+  animation: marqueeLTR 12s linear infinite;
+}
+
+.features-track:hover {
+  animation-play-state: paused; /* pause on hover for accessibility */
+}
+
+.features-track > .feature-card {
+  min-width: 240px; /* ensures consistent card width for smooth scrolling */
+}
+
+/* Make sure duplicated block doesn't wrap */
+.features-track-dup {
+  display: contents; /* keep DOM simple while doubling child nodes */
+}

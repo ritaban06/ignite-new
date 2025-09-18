@@ -1,61 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
+import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Loader2, Smartphone, Globe } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
 import PlatformAuthService from '../services/platformAuthService';
 import { useAuth } from '../contexts/AuthContext';
-import { SocialLogin } from '@capgo/capacitor-social-login';
+import { toast } from 'react-hot-toast';
 
 const HybridGoogleLogin = () => {
+  const navigate = useNavigate();
   const { googleSignIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [platformInfo, setPlatformInfo] = useState(null);
 
   useEffect(() => {
-    // Initial platform information
+    // Get platform information
     const info = PlatformAuthService.getPlatformInfo();
     setPlatformInfo(info);
-    console.log('🔍 Initial Platform Info:', info);
-    
-    // Log user agent for debugging
-    const userAgent = navigator.userAgent;
-    console.log('🔍 User Agent:', userAgent);
-    
-    // Check if user agent contains Android but platform info doesn't reflect it
-    const isAndroidUA = userAgent.toLowerCase().indexOf('android') > -1;
-    if (isAndroidUA && !info.isAndroid) {
-      console.log('⚠️ Detected Android in user agent but platform info doesn\'t match');
-    }
-    
-    // Force update platform info after a short delay to ensure Capacitor is fully initialized
-    // This helps with cases where Capacitor might not be fully initialized on first render
-    const timer = setTimeout(() => {
-      const updatedInfo = PlatformAuthService.getPlatformInfo();
-      console.log('🔍 Updated Platform Info after delay:', updatedInfo);
-      
-      // Only update state if platform info has changed
-      if (JSON.stringify(updatedInfo) !== JSON.stringify(info)) {
-        console.log('🔄 Platform info changed, updating state');
-        setPlatformInfo(updatedInfo);
-      }
-    }, 1000);
-    
-    // Add a second check with a longer delay for more stubborn cases
-    const secondTimer = setTimeout(() => {
-      const finalInfo = PlatformAuthService.getPlatformInfo();
-      console.log('🔍 Final Platform Info check:', finalInfo);
-      
-      if (JSON.stringify(finalInfo) !== JSON.stringify(platformInfo)) {
-        console.log('🔄 Platform info changed in final check, updating state');
-        setPlatformInfo(finalInfo);
-      }
-    }, 3000);
-    
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(secondTimer);
-    };
+    console.log('🔍 Platform Info:', info);
   }, []);
 
   const handleWebGoogleSuccess = async (credentialResponse) => {
@@ -64,9 +26,13 @@ const HybridGoogleLogin = () => {
 
     try {
       await googleSignIn(credentialResponse);
+      // Show success toast and redirect to dashboard
+      toast.success('Successfully signed in!');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Web Google sign-in error:', error);
       setError(error.message || 'Failed to sign in with Google. Please try again.');
+      toast.error('Failed to sign in with Google. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -77,35 +43,14 @@ const HybridGoogleLogin = () => {
     setError('');
 
     try {
-      if (!platformInfo?.isNative) {
-        throw new Error('Native platform not detected.');
-      }
-
-      // Initialize SocialLogin for Google Cloud
-      await SocialLogin.initialize({
-        google: {
-          webClientId: '164410585415-lc2ofbhvaqd028453ff66tq2na9n4uov.apps.googleusercontent.com',
-          androidClientId: '164410585415-p5qdku6ehjcq3g3i66c661p5gqq38021.apps.googleusercontent.com',
-        },
-      });
-
-      // Perform Google sign-in
-      const result = await SocialLogin.login({
-        provider: 'google',
-        scopes: ['openid', 'email', 'profile'],
-      });
-
-      if (!result || !result.authentication?.idToken) {
-        throw new Error('Google sign-in failed. No ID token received.');
-      }
-
-      // Extract tokens
-      const credentials = {
-        idToken: result.authentication.idToken,
-        accessToken: result.authentication.accessToken,
-      };
-
-      // Send tokens to backend for verification
+      // Use native Google Auth service
+      const credentials = await PlatformAuthService.signInWithGoogle();
+      await googleSignIn(credentials);
+      // Show success toast and redirect to dashboard
+      toast.success('Successfully signed in!');
+      navigate('/dashboard');
+      
+      // Send to backend using the same flow as web
       await googleSignIn(credentials);
     } catch (error) {
       console.error('Native Google sign-in error:', error);
@@ -119,8 +64,16 @@ const HybridGoogleLogin = () => {
     setError('Google sign-in was cancelled or failed. Please try again.');
   };
 
+  if (!platformInfo) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="space-y-4 sm:space-y-6">
       <div className="space-y-3 sm:space-y-4">
         <div className="text-center">
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
@@ -132,13 +85,10 @@ const HybridGoogleLogin = () => {
           
           {/* Platform indicator */}
           <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
-            {platformInfo?.isNative || navigator.userAgent.toLowerCase().indexOf('android') > -1 ? (
+            {platformInfo.isNative ? (
               <>
                 <Smartphone className="h-3 w-3" />
-                <span className="text-white">
-                  Mobile App ({platformInfo?.platform ? (platformInfo.platform.charAt(0).toUpperCase() + platformInfo.platform.slice(1)) : 
-                  (navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Android' : 'Native')})
-                </span>
+                <span>Mobile App ({platformInfo.platform})</span>
               </>
             ) : (
               <>
@@ -149,71 +99,77 @@ const HybridGoogleLogin = () => {
           </div>
         </div>
 
-        {/* Authentication buttons */}
+        {error && (
+          <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-200">
+            <div className="flex items-start space-x-2">
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs sm:text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-center">
-          {platformInfo?.isNative || navigator.userAgent.toLowerCase().indexOf('android') > -1 ? (
+          {isLoading ? (
+            <div className="flex items-center space-x-2 bg-gray-100 px-6 py-3 rounded-lg">
+              <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
+              <span className="text-gray-600">Verifying approval status...</span>
+            </div>
+          // ) : import.meta.env.DEV ? (
+          //   <div className="text-gray-500 text-center text-sm">Google login is disabled in development mode.</div>
+          ) : platformInfo.isNative ? (
             <button
               onClick={handleNativeGoogleSignIn}
-              disabled={isLoading}
-              className="flex items-center space-x-2 bg-purple-700 hover:bg-purple-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold shadow transition-colors"
+              className="flex items-center space-x-2 bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow"
             >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Smartphone className="h-5 w-5" />
-              )}
-              <span>Sign in with Google (Mobile)</span>
+              <Smartphone className="h-5 w-5 text-white" />
+              <span className="text-white">Sign in with Google (Mobile)</span>
             </button>
           ) : (
-            <div className="w-full max-w-sm">
-              <GoogleLogin
-                onSuccess={handleWebGoogleSuccess}
-                onError={handleGoogleError}
-                size="large"
-                theme="filled_blue"
-                text="signin_with"
-                shape="rectangular"
-                logo_alignment="left"
-                ux_mode="popup"
-                width="100%"
-              />
-            </div>
+            <GoogleLogin
+              onSuccess={handleWebGoogleSuccess}
+              onError={handleGoogleError}
+              size="large"
+              theme="filled_blue"
+              text="signin_with"
+              shape="rectangular"
+              logo_alignment="left"
+              // Custom style for purple background and white text
+              ux_mode="popup"
+              width="100%"
+              style={{ backgroundColor: '#7c3aed', color: '#fff', borderRadius: '0.5rem', fontWeight: '600' }}
+            />
           )}
         </div>
 
-        {/* Error display */}
-        {error && (
-          <div className="flex items-center space-x-2 text-red-400 bg-red-900/20 p-3 rounded-lg">
-            <AlertCircle className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm">{error}</span>
+        {/* Debug info for development - commented out since platformInfo is disabled */}
+        {/* {import.meta.env.DEV && (
+          <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
+            <p className="font-semibold">Debug Info:</p>
+            <p>Platform: {platformInfo.platform}</p>
+            <p>Native: {platformInfo.isNative ? 'Yes' : 'No'}</p>
+            <p>Web Client ID: {platformInfo.hasGoogleClientId ? 'Set' : 'Not Set'}</p>
+            <p>Android Client ID: {platformInfo.hasAndroidClientId ? 'Set' : 'Not Set'}</p>
+            <p>Using: {platformInfo.clientIdSource} Client ID</p>
+            <p>Current ID: {platformInfo.currentClientId}</p>
+            {platformInfo.warnings && platformInfo.warnings.length > 0 && (
+              <div className="text-orange-600">
+                <p className="font-semibold">Warnings:</p>
+                {platformInfo.warnings.map((warning, i) => (
+                  <p key={i}>• {warning}</p>
+                ))}
+              </div>
+            )}
+            {platformInfo.issues && platformInfo.issues.length > 0 && (
+              <div className="text-red-600">
+                <p className="font-semibold">Issues:</p>
+                {platformInfo.issues.map((issue, i) => (
+                  <p key={i}>• {issue}</p>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        )} */}
       </div>
-
-      {/* Debug info for development */}
-      {import.meta.env.DEV && (
-        <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
-          <p className="font-semibold">Debug Info:</p>
-          <p>Platform: {platformInfo?.platform}</p>
-          <p>Native: {platformInfo?.isNative ? 'Yes' : 'No'}</p>
-          <p>Android: {platformInfo?.isAndroid ? 'Yes' : 'No'}</p>
-          <p>iOS: {platformInfo?.isIOS ? 'Yes' : 'No'}</p>
-          <p>Web: {platformInfo?.isWeb ? 'Yes' : 'No'}</p>
-          <p>Build Type: {platformInfo?.buildType}</p>
-          <p>Current Client ID: {platformInfo?.currentClientId}</p>
-          <div className="mt-1 border-t border-gray-700 pt-1">
-            <p>User Agent:</p>
-            <p className="break-all text-[10px] text-gray-500">{navigator.userAgent}</p>
-          </div>
-          <div className="mt-1 border-t border-gray-700 pt-1">
-            <p>Direct UA Check:</p>
-            <p>Contains 'android': {navigator.userAgent.toLowerCase().indexOf('android') > -1 ? 'Yes' : 'No'}</p>
-            <p>Contains 'iphone/ipad': {/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()) ? 'Yes' : 'No'}</p>
-            <p>Capacitor.isNativePlatform(): {Capacitor.isNativePlatform() ? 'Yes' : 'No'}</p>
-            <p>Capacitor.getPlatform(): {Capacitor.getPlatform()}</p>
-          </div>
-        </div>
-      )}
 
       {/* Information Box */}
       <div className="bg-purple-700 p-4 rounded-lg border border-purple-800">

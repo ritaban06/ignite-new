@@ -289,6 +289,16 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
           'button[title*="Properties"]',
           '[data-testid="toolbar__properties-button"]',
           '.rpv-properties',
+          // Additional selectors for the hamburger menu
+          'button[aria-label*="More"]',
+          'button[title*="More"]',
+          'button[aria-label*="more"]',
+          'button[title*="more"]',
+          '.rpv-core__minimal__more-actions',
+          '.rpv-core__more-actions',
+          '.rpv-toolbar__more-actions-popover',
+          '.rpv-more-actions',
+          '[data-testid*="more-actions"]',
         ];
 
         selectors.forEach(selector => {
@@ -305,10 +315,15 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
       hideToolbarButtons();
       const timer = setTimeout(hideToolbarButtons, 500);
       const timer2 = setTimeout(hideToolbarButtons, 1000);
+      // Add additional timeouts for elements that might load later
+      const timer3 = setTimeout(hideToolbarButtons, 2000);
+      const timer4 = setTimeout(hideToolbarButtons, 3000);
       
       return () => {
         clearTimeout(timer);
         clearTimeout(timer2);
+        clearTimeout(timer3);
+        clearTimeout(timer4);
       };
     }
   }, [pdfUrl, isLoading, error]);

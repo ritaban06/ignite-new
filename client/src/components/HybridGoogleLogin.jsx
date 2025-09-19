@@ -172,7 +172,7 @@ const HybridGoogleLogin = () => {
       </div>
 
       {/* Information Box */}
-      <div className="bg-purple-700 p-4 rounded-lg border border-purple-800">
+      {/* <div className="bg-purple-700 p-4 rounded-lg border border-purple-800">
         <div className="flex items-start space-x-2">
           <CheckCircle className="h-5 w-5 text-white mt-0.5 flex-shrink-0" />
           <div className="text-sm text-white">
@@ -185,7 +185,7 @@ const HybridGoogleLogin = () => {
             </ul>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -127,15 +127,87 @@
 .delay-700 { animation-delay: 700ms; }
 .delay-900 { animation-delay: 900ms; }
 
-.features-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
+/* Feature card styling */
+.feature-card {
+  background: linear-gradient(135deg, rgba(108, 71, 255, 0.1), rgba(255, 71, 199, 0.05));
+  padding: 1.5rem;
+  border-radius: 1rem;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(108, 71, 255, 0.2);
   position: relative;
-  z-index: 10;
-  padding: 1rem;
-  max-width: 100%;
-  margin: 0 auto;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Feature card hover effects */
+.feature-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(108, 71, 255, 0.4);
+  box-shadow: 
+    0 10px 20px -5px rgba(108, 71, 255, 0.3),
+    0 0 15px rgba(108, 71, 255, 0.2);
+  background: linear-gradient(135deg, rgba(108, 71, 255, 0.15), rgba(255, 71, 199, 0.1));
+}
+
+/* Shimmer effect on hover */
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s ease;
+}
+
+.feature-card:hover::before {
+  animation: shimmer 2s infinite;
+}
+
+/* Glow effect */
+.feature-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(108, 71, 255, 0.1),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+/* Responsive padding adjustments */
+@media (max-width: 475px) {
+  .feature-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (min-width: 476px) and (max-width: 768px) {
+  .feature-card {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .feature-card {
+    padding: 1.75rem;
+  }
 }
 
 .feature-card {

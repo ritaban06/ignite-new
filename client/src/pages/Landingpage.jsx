@@ -24,75 +24,77 @@ const Landingpage = () => {
         </div>
       </div>
 			{/* Hero Section */}
-			<div className="w-full max-w-7xl mx-auto pt-6 sm:pt-8 md:pt-12 pb-4 sm:pb-6 md:pb-8 text-center">
+			<div className="w-full max-w-7xl mx-auto px-4 pt-6 sm:pt-8 md:pt-12 pb-4 sm:pb-6 md:pb-8 text-center">
 				<img
 					src="/newlogo.webp"
 					alt="Ignite"
-					className="mx-auto h-12 w-auto sm:h-16 md:h-20 lg:h-24 xl:h-28 filter drop-shadow-lg"
+					className="mx-auto h-10 w-auto xs:h-12 sm:h-16 md:h-20 lg:h-24 xl:h-28 filter drop-shadow-lg"
 				/>
-				<h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight animate-fade-in-down">
+				<h1 className="mt-3 xs:mt-4 sm:mt-6 text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight animate-fade-in-down">
 					Welcome to <span className="text-[#6c47ff]">Ignite</span>
 				</h1>
-				<p className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto animate-fade-in-up">
+				<p className="mt-2 xs:mt-3 sm:mt-4 text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto animate-fade-in-up">
 					Tired of wasting time searching for class notes, past year papers, or guidance during exams?
-					<br className="hidden sm:block" />
+					<br className="hidden xs:block" />
 					<span className="block mt-2">With Ignite Premium, we bring everything you need right at your fingertips.</span>
 				</p>
 			</div>
 			{/* CTA Section */}
-			<div className="w-full max-w-6xl mx-auto text-center py-8 sm:py-12 md:py-16">
-				<div className="flex flex-col sm:flex-row gap-4 sm:gap-6 md:gap-8 justify-center items-center">
-					<a href="/login" className="group relative w-full sm:w-auto px-8 sm:px-10 md:px-12 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-[#6c47ff] to-[#5433b7] text-white text-base sm:text-lg md:text-xl font-bold rounded-xl overflow-hidden">
+			<div className="w-full max-w-6xl mx-auto text-center px-4 py-6 xs:py-8 sm:py-12 md:py-16">
+				<div className="flex flex-col xs:flex-row gap-3 xs:gap-4 sm:gap-6 md:gap-8 justify-center items-center">
+					<a href="/login" className="group relative w-full xs:w-auto min-w-[160px] px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 xs:py-3 sm:py-4 md:py-5 bg-gradient-to-r from-[#6c47ff] to-[#5433b7] text-white text-sm xs:text-base sm:text-lg md:text-xl font-bold rounded-xl overflow-hidden">
 						<div className="absolute inset-0 bg-gradient-to-r from-[#8b6aff] to-[#6544e0] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-						<div className="absolute inset-0 bg-[url('/public/noise.png')] opacity-[0.15]"></div>
+						<div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.15]"></div>
 						<span className="relative">Get Started</span>
 						<div className="absolute inset-0 rounded-xl ring-2 ring-[#6c47ff]/50 group-hover:ring-[#6c47ff] transition-all duration-300"></div>
 					</a>
 					<button
 						onClick={handleLearnMore}
-						className="group relative w-full sm:w-auto px-8 sm:px-10 md:px-12 py-3 sm:py-4 md:py-5 bg-transparent text-white text-base sm:text-lg md:text-xl font-bold rounded-xl overflow-hidden border-2 border-[#6c47ff]/50 hover:border-[#6c47ff]"
+						className="group relative w-full xs:w-auto min-w-[160px] px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 xs:py-3 sm:py-4 md:py-5 bg-transparent text-white text-sm xs:text-base sm:text-lg md:text-xl font-bold rounded-xl overflow-hidden border-2 border-[#6c47ff]/50 hover:border-[#6c47ff]"
 					>
 						<div className="absolute inset-0 bg-[#6c47ff] opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-						<div className="absolute inset-0 bg-[url('/public/noise.png')] opacity-[0.15]"></div>
+						<div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.15]"></div>
 						<span className="relative">Learn More</span>
 					</button>
 				</div>
 			</div>
 
 			{/* Features Grid */}
-			<div className="w-full mx-auto px-2 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12" style={{ zIndex: 10, position: 'relative' }}>
-				<h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white text-center mb-6 sm:mb-8 md:mb-10">Why Choose Ignite?</h2>
-				<div className="features-container">
-					<div className="feature-card w-[280px] sm:w-[320px] md:w-[240px] lg:w-[280px] xl:w-[320px]">
-						<h3 className="text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">Exam-Ready Notes</h3>
-						<p className="text-white/80 text-sm sm:text-base md:text-lg mt-2">Handwritten & digital notes from professors of all years.</p>
-					</div>
-					<div className="feature-card w-[280px] sm:w-[320px] md:w-[240px] lg:w-[280px] xl:w-[320px]">
-						<h3 className="text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">Internal Papers</h3>
-						<p className="text-white/80 text-sm sm:text-base md:text-lg mt-2">Access previous internal exam papers for practice.</p>
-					</div>
-					<div className="feature-card w-[280px] sm:w-[320px] md:w-[240px] lg:w-[280px] xl:w-[320px]">
-						<h3 className="text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">University PYQs</h3>
-						<p className="text-white/80 text-sm sm:text-base md:text-lg mt-2">Curated PYQs for all subjects to boost confidence.</p>
-					</div>
-					<div className="feature-card w-[280px] sm:w-[320px] md:w-[240px] lg:w-[280px] xl:w-[320px]">
-						<h3 className="text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">24/7 Mentorship</h3>
-						<p className="text-white/80 text-sm sm:text-base md:text-lg mt-2">Direct WhatsApp guidance from mentors anytime.</p>
+			<div className="w-full mx-auto px-4 xs:px-6 sm:px-8 md:px-10 py-6 sm:py-8 md:py-12" style={{ zIndex: 10, position: 'relative' }}>
+				<h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white text-center mb-6 sm:mb-8 md:mb-10">Why Choose Ignite?</h2>
+				<div className="max-w-7xl mx-auto">
+					<div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 xs:gap-5 md:gap-6 lg:gap-8">
+						<div className="feature-card">
+							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">Exam-Ready Notes</h3>
+							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2">Handwritten & digital notes from professors of all years.</p>
+						</div>
+						<div className="feature-card">
+							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">Internal Papers</h3>
+							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2">Access previous internal exam papers for practice.</p>
+						</div>
+						<div className="feature-card">
+							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">University PYQs</h3>
+							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2">Curated PYQs for all subjects to boost confidence.</p>
+						</div>
+						<div className="feature-card">
+							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">24/7 Mentorship</h3>
+							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2">Direct WhatsApp guidance from mentors anytime.</p>
+						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Timeline Section */}
-			<div className="w-full max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20">
-        <div className="relative mb-16 text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white inline-block relative">
+			<div className="w-full max-w-5xl mx-auto px-4 xs:px-6 sm:px-8 md:px-10 py-8 xs:py-12 sm:py-16 md:py-20">
+        <div className="relative mb-10 xs:mb-12 sm:mb-16 text-center">
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white inline-block relative">
             How it works
-            <div className="absolute -bottom-3 left-0 right-0">
-              <div className="h-1 bg-gradient-to-r from-transparent via-[#6c47ff] to-transparent opacity-75"></div>
-              <div className="h-1 bg-gradient-to-r from-transparent via-[#6c47ff] to-transparent opacity-75 animate-glow-pulse"></div>
+            <div className="absolute -bottom-2 xs:-bottom-3 left-0 right-0">
+              <div className="h-0.5 xs:h-1 bg-gradient-to-r from-transparent via-[#6c47ff] to-transparent opacity-75"></div>
+              <div className="h-0.5 xs:h-1 bg-gradient-to-r from-transparent via-[#6c47ff] to-transparent opacity-75 animate-glow-pulse"></div>
             </div>
           </h2>
-          <p className="text-base sm:text-lg md:text-xl text-white/80 mt-6 font-normal max-w-2xl mx-auto leading-relaxed animate-fade-in-up">
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl text-white/80 mt-4 xs:mt-6 font-normal max-w-xs xs:max-w-sm sm:max-w-xl md:max-w-2xl mx-auto leading-relaxed animate-fade-in-up">
             Experience a seamless journey from exam notes to one-to-one mentorship, giving you complete control over your academic success
           </p>
         </div>

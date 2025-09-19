@@ -37,7 +37,7 @@ const Header = () => {
   }, [isMobileMenuOpen]);
 
   return (
-   <header className="fixed top-0 left-0 right-0 z-50 bg-purple-700/100 backdrop-blur-md shadow-lg border-b border-purple-200/20 animate-slide-down duration-700">
+   <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-[#0A0F1C] via-[#1A1B3B] to-[#241B4B] shadow-lg border-b border-[#6c47ff]/20 animate-slide-down duration-700">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="flex justify-between items-center h-16">
       
@@ -170,7 +170,7 @@ const Header = () => {
 
     {/* Mobile Menu */}
     {isMobileMenuOpen && (
-      <div className="md:hidden bg-gradient-to-br from-purple-800 via-purple-700 to-purple-900 backdrop-blur-md border border-purple-200/20 ">
+      <div className="md:hidden bg-gradient-to-br from-[#0A0F1C] via-[#1A1B3B] to-[#241B4B] border border-[#6c47ff]/20">
         <div className="px-2 pt-2 pb-3 space-y-1">
           {/* User Info */}
           <div className="px-3 py-2 text-center border-b border-white/10 mb-2">

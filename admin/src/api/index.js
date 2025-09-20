@@ -17,6 +17,7 @@ export const folderAPI = {
   getGDriveFolders: () => api.get('/folders/gdrive'),
   getPdfsInFolder: (folderId) => api.get(`/folders/${folderId}/pdfs`),
   updateFolder: (folderId, data) => api.put(`/folders/${folderId}`, data),
+  syncFoldersFromGDrive: () => api.post('/folders/gdrive/cache'),
 };
 
 // Add token to requests if available

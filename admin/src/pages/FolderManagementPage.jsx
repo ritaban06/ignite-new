@@ -39,9 +39,19 @@ export default function FolderManagementPage() {
       toast.success(`Folder "${folderData.name}" was updated by another admin`);
     });
     
-    // Clean up event listener
+    // Listen for the folder sync completion event from Sidebar
+    const handleFolderSyncComplete = () => {
+      console.log('Folder sync complete event received');
+      toast.success('Folder structure synchronized from Google Drive');
+      fetchGDriveFolders();
+    };
+    
+    window.addEventListener('folderSyncComplete', handleFolderSyncComplete);
+    
+    // Clean up event listeners
     return () => {
       socketService.off('folder:updated');
+      window.removeEventListener('folderSyncComplete', handleFolderSyncComplete);
     };
   }, []);
 
@@ -51,12 +61,10 @@ export default function FolderManagementPage() {
       // Fetch subject folders (top-level folders with their children)
       const subjectFoldersResponse = await folderAPI.getSubjectFolders();
       const subjectFoldersData = subjectFoldersResponse.data;
-      // console.log('Subject folders data:', JSON.stringify(subjectFoldersData, null, 2));
       
       // Fetch all folders including hierarchy
       const allFoldersResponse = await folderAPI.getGDriveFolders();
       const allFoldersData = allFoldersResponse.data;
-      // console.log('All folders data:', JSON.stringify(allFoldersData, null, 2));
       
       // Create a flat array of all folders for operations that need it
       const flattenFolders = (folders, result = []) => {
@@ -70,11 +78,12 @@ export default function FolderManagementPage() {
       };
       
       const allFoldersFlat = flattenFolders(allFoldersData);
-      // console.log('Flattened folders:', allFoldersFlat);
       
       // Create metadata map by gdriveId
       const metadataMap = new Map();
-      subjectFoldersData.forEach(folder => {
+      
+      // Add metadata from all folders, both subject and subfolders
+      allFoldersFlat.forEach(folder => {
         // Store the folder's own metadata
         metadataMap.set(folder.gdriveId, {
           description: folder.description,
@@ -87,42 +96,58 @@ export default function FolderManagementPage() {
       });
       
       // Ensure children arrays are properly initialized
-  const ensureChildrenArrays = (folders) => {
-    if (!Array.isArray(folders)) {
-      // console.error('ensureChildrenArrays received non-array:', folders);
-      return [];
-    }
-    
-    return folders.map(folder => {
-      if (!folder) {
-        console.error('Null or undefined folder in ensureChildrenArrays');
-        return { children: [] };
-      }
-      
-      // Make sure children is always an array
-      if (!folder.children) folder.children = [];
-      if (!Array.isArray(folder.children)) folder.children = [];
-      
-      // Recursively ensure children arrays for nested folders
-      if (folder.children.length > 0) {
-        folder.children = ensureChildrenArrays(folder.children);
-      }
-      
-      return folder;
-    });
-  };
+      const ensureChildrenArrays = (folders) => {
+        if (!Array.isArray(folders)) {
+          return [];
+        }
+        
+        return folders.map(folder => {
+          if (!folder) {
+            console.error('Null or undefined folder in ensureChildrenArrays');
+            return { children: [] };
+          }
+          
+          // Make sure children is always an array
+          if (!folder.children) folder.children = [];
+          if (!Array.isArray(folder.children)) folder.children = [];
+          
+          // Recursively ensure children arrays for nested folders
+          if (folder.children.length > 0) {
+            folder.children = ensureChildrenArrays(folder.children);
+          }
+          
+          return folder;
+        });
+      };
       
       const processedSubjectFolders = ensureChildrenArrays(subjectFoldersData);
       const processedAllFolders = ensureChildrenArrays(allFoldersData);
       
-      // console.log('Processed subject folders:', processedSubjectFolders);
+      // Validate for duplicate folders and log warnings
+      const checkForDuplicates = (folders, path = '') => {
+        const seen = new Set();
+        folders.forEach(folder => {
+          const currentPath = path ? `${path}/${folder.name}` : folder.name;
+          if (seen.has(folder.gdriveId)) {
+            console.warn(`Duplicate folder detected: ${folder.name} (${folder.gdriveId}) at path ${currentPath}`);
+          }
+          seen.add(folder.gdriveId);
+          
+          if (folder.children && folder.children.length > 0) {
+            checkForDuplicates(folder.children, currentPath);
+          }
+        });
+      };
+      
+      // Check for duplicates in the folder structure
+      checkForDuplicates(processedAllFolders);
       
       setSubjectFolders(processedSubjectFolders);
       setAllFolders(processedAllFolders);
       setFolderMetadata(metadataMap);
       
-  // Do not expand any folders by default
-  setExpandedFolders(new Set());
+      // Do not expand any folders by default
+      setExpandedFolders(new Set());
       
     } catch (error) {
       toast.error('Failed to load folders');

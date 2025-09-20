@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Upload, 
@@ -11,9 +11,10 @@ import {
   Bug,
   Download,
   Folder,
-  Tags
+  Tags,
+  AlertTriangle
 } from 'lucide-react';
-import { userAPI, pdfAPI } from '../api';
+import { userAPI, pdfAPI, folderAPI } from '../api';
 import api from '../api';
 
 const navigation = [
@@ -60,13 +61,46 @@ export default function Sidebar() {
   const handleCacheDriveFolders = async () => {
     setCacheLoading(true);
     setCacheResult(null);
+    
     try {
-      const res = await api.post('/folders/gdrive/cache');
-      setCacheResult({ success: true, ...res.data });
-      setTimeout(() => setCacheResult(null), 3000);
-    } catch (err) {
-      setCacheResult({ success: false, error: err?.response?.data?.error || 'Failed to cache folders' });
+      // Use the folderAPI directly instead of raw api
+      const res = await folderAPI.syncFoldersFromGDrive();
+      
+      // On success, show the results for longer (5 seconds instead of 3)
+      setCacheResult({ 
+        success: true, 
+        added: res.data.added || 0,
+        updated: res.data.updated || 0, 
+        removed: res.data.removed || 0,
+        total: res.data.total || 0,
+        message: res.data.message || 'Folders synchronized successfully!'
+      });
+      
+      // If currently on the folders page, trigger a refresh
+      if (window.location.pathname === '/folders') {
+        // Dispatch a custom event that FolderManagementPage can listen for
+        const event = new CustomEvent('folderSyncComplete');
+        window.dispatchEvent(event);
+      }
+      
       setTimeout(() => setCacheResult(null), 5000);
+    } catch (err) {
+      console.error('Error syncing folders:', err);
+      
+      // Improved error message handling
+      const errorMessage = err?.response?.data?.message || 
+                          err?.response?.data?.error || 
+                          err?.message || 
+                          'Failed to synchronize folders from Google Drive';
+                          
+      setCacheResult({ 
+        success: false, 
+        error: errorMessage,
+        details: err?.response?.data?.details || ''
+      });
+      
+      // Show errors for longer (8 seconds)
+      setTimeout(() => setCacheResult(null), 8000);
     } finally {
       setCacheLoading(false);
     }
@@ -133,9 +167,10 @@ export default function Sidebar() {
               onClick={handleCacheDriveFolders}
               disabled={cacheLoading}
               className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-60"
+              title="Synchronize folders from Google Drive and clean up duplicates"
             >
-              <Download className="mr-3 h-5 w-5 text-yellow-300" />
-              {cacheLoading ? 'Caching Folders...' : 'Sync Folders from Google Drive'}
+              <Download className={`mr-3 h-5 w-5 text-yellow-300 ${cacheLoading ? 'animate-pulse' : ''}`} />
+              {cacheLoading ? 'Synchronizing Folders...' : 'Sync Folders from Google Drive'}
             </button>
             {/* Status Message for Folder Sync */}
             {cacheResult && (
@@ -144,9 +179,23 @@ export default function Sidebar() {
                   ? 'bg-green-800 text-green-200'
                   : 'bg-red-800 text-red-200'
               }`}>
-                {cacheResult.success
-                  ? `Sync complete: ${cacheResult.added ?? 0} added, ${cacheResult.updated ?? 0} updated, ${cacheResult.removed ?? 0} removed. Total scanned: ${cacheResult.total ?? 0}.`
-                  : `Error: ${cacheResult.error}`}
+                {cacheResult.success ? (
+                  <div className="space-y-1">
+                    <div className="font-medium">Synchronization complete:</div>
+                    <div>• {cacheResult.added} folders added</div>
+                    <div>• {cacheResult.updated} folders updated</div>
+                    <div>• {cacheResult.removed} folders removed</div>
+                    <div>• {cacheResult.total} folders scanned</div>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="flex items-center font-medium">
+                      <AlertTriangle className="w-4 h-4 mr-1" /> Error:
+                    </div>
+                    <div>{cacheResult.error}</div>
+                    {cacheResult.details && <div className="text-xs opacity-80">{cacheResult.details}</div>}
+                  </div>
+                )}
               </div>
             )}
             {/* Status Message for Sheets Sync */}

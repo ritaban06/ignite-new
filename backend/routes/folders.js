@@ -39,7 +39,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
         const folderObj = {
           name: folder.name,
           gdriveId: folder.id,
-          parent: parentGdriveId,
+          parent: parentGdriveId, // This is the parent's Google Drive ID
           ownerName: ownerName,
           children: []
         };
@@ -82,16 +82,93 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     // Remove folders that no longer exist in Drive
     for (const folder of dbFolders) {
       if (!allDriveIds.has(folder.gdriveId)) {
+        // Log the deletion for debugging
+        console.log(`Removing folder ${folder.name} (${folder.gdriveId}) - no longer exists in Google Drive`);
         await Folder.deleteOne({ _id: folder._id });
         removed++;
       }
     }
+    
+    // Clean up duplicate entries where a folder exists both as top-level and as a child
+    // This fixes any historical data issues
+    const allFolders = await Folder.find({}).lean();
+    const topLevelFolders = allFolders.filter(f => f.parent === null);
+    
+    // Create a map of all child folders in the hierarchy
+    const childFolderMap = new Map();
+    
+    const collectChildFolders = (folders) => {
+      if (!folders) return;
+      for (const folder of folders) {
+        if (folder.gdriveId) {
+          childFolderMap.set(folder.gdriveId, true);
+        }
+        if (folder.children && folder.children.length > 0) {
+          collectChildFolders(folder.children);
+        }
+      }
+    };
+    
+    // Collect all children from the hierarchy
+    for (const topFolder of topLevelFolders) {
+      if (topFolder.children && topFolder.children.length > 0) {
+        collectChildFolders(topFolder.children);
+      }
+    }
+    
+    // Find top-level folders that should actually be children
+    const folderCleanupPromises = [];
+    for (const topFolder of topLevelFolders) {
+      // If this folder appears in folderParentMap with a non-null parent
+      // and also exists as a top-level folder, it's a duplicate
+      const parentInDrive = folderParentMap.get(topFolder.gdriveId);
+      if (parentInDrive !== null && parentInDrive !== undefined && childFolderMap.has(topFolder.gdriveId)) {
+        console.log(`Found duplicate top-level folder ${topFolder.name} (${topFolder.gdriveId}) - should only be a child`);
+        folderCleanupPromises.push(Folder.deleteOne({ _id: topFolder._id }));
+        removed++;
+      }
+    }
+    
+    // Wait for all cleanup operations to complete
+    if (folderCleanupPromises.length > 0) {
+      await Promise.all(folderCleanupPromises);
+    }
 
+    // Track all folders we've seen to prevent duplicates
+    const processedGdriveIds = new Set();
+    const folderParentMap = new Map(); // Maps gdriveId to parent gdriveId
+    
+    // First build a map of all folder relationships from Google Drive
+    const buildFolderParentMap = (folders, parentId = null) => {
+      for (const folder of folders) {
+        folderParentMap.set(folder.gdriveId, parentId);
+        if (folder.children && folder.children.length > 0) {
+          buildFolderParentMap(folder.children, folder.gdriveId);
+        }
+      }
+    };
+    
+    // Build the parent map
+    buildFolderParentMap(folderHierarchy);
+    
     // Process the folder hierarchy and save to MongoDB
     const processFolderHierarchy = async (folders, parentMetadata = null) => {
+      const processedFolders = [];
+      
       for (const folder of folders) {
-        // Check if this is a subject folder (top-level)
-        const isSubjectFolder = folder.parent === null;
+        // If we've already processed this folder in another part of the tree, skip creating it again
+        // This prevents the same folder from appearing both as top-level and as a child
+        if (processedGdriveIds.has(folder.gdriveId)) {
+          console.log(`Skipping duplicate folder ${folder.name} (${folder.gdriveId}) - already processed`);
+          continue;
+        }
+        
+        // Check if this folder should be a top-level folder or a subfolder based on Google Drive structure
+        const parentGdriveId = folderParentMap.get(folder.gdriveId);
+        const isTopLevelFolder = parentGdriveId === null;
+        
+        // Mark this folder as processed
+        processedGdriveIds.add(folder.gdriveId);
         
         // Find existing folder in DB
         const existingFolder = await Folder.findOne({ gdriveId: folder.gdriveId });
@@ -106,7 +183,9 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           semesters: folder.semesters || parentMetadata?.semesters || [0],
           tags: folder.tags || (parentMetadata?.tags ? [...parentMetadata.tags, folder.name.toLowerCase()] : [folder.name.toLowerCase()]),
           accessControlTags: folder.accessControlTags || parentMetadata?.accessControlTags || [],
-          createdByName: folder.ownerName || 'Ignite Admin'
+          createdByName: folder.ownerName || 'Ignite Admin',
+          // Set parent to parent's gdriveId - only top-level folders have null parent
+          parent: parentGdriveId
         };
         
         // Process children with inherited metadata
@@ -134,37 +213,42 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           }
         }
         
-        // Update or create the folder in MongoDB
-        if (!existingFolder) {
-          // Create new folder with children
-          await Folder.create({
-            ...folderMetadata,
-            parent: null, // Top-level folders have null parent
-            children: processedChildren
-          });
-          added++;
-        } else {
-          // Update existing folder - PRESERVE EXISTING METADATA
-          existingFolder.name = folderMetadata.name;
-          
-          // Only update these fields if they don't already exist or are empty
-          existingFolder.description = existingFolder.description || folderMetadata.description;
-          existingFolder.departments = existingFolder.departments?.length > 0 ? existingFolder.departments : folderMetadata.departments;
-          // Preserve existing years and semesters even if they are [0] (which is now the default)
-          existingFolder.years = existingFolder.years?.length > 0 ? existingFolder.years : folderMetadata.years;
-          existingFolder.semesters = existingFolder.semesters?.length > 0 ? existingFolder.semesters : folderMetadata.semesters;
-          existingFolder.tags = existingFolder.tags?.length > 0 ? existingFolder.tags : folderMetadata.tags;
-          existingFolder.accessControlTags = existingFolder.accessControlTags?.length > 0 ? existingFolder.accessControlTags : folderMetadata.accessControlTags;
-          
-          existingFolder.createdByName = existingFolder.createdByName || folderMetadata.createdByName;
-          existingFolder.children = processedChildren;
-          
-          await existingFolder.save();
-          updated++;
+        // Only create or update top-level folders
+        // Subfolders are handled through the children array of their parent
+        if (isTopLevelFolder) {
+          if (!existingFolder) {
+            // Create new folder with children
+            const newFolder = await Folder.create({
+              ...folderMetadata,
+              parent: null, // Top-level folders have null parent
+              children: processedChildren
+            });
+            added++;
+            processedFolders.push(newFolder);
+          } else {
+            // Update existing folder - PRESERVE EXISTING METADATA
+            existingFolder.name = folderMetadata.name;
+            
+            // Only update these fields if they don't already exist or are empty
+            existingFolder.description = existingFolder.description || folderMetadata.description;
+            existingFolder.departments = existingFolder.departments?.length > 0 ? existingFolder.departments : folderMetadata.departments;
+            // Preserve existing years and semesters even if they are [0] (which is now the default)
+            existingFolder.years = existingFolder.years?.length > 0 ? existingFolder.years : folderMetadata.years;
+            existingFolder.semesters = existingFolder.semesters?.length > 0 ? existingFolder.semesters : folderMetadata.semesters;
+            existingFolder.tags = existingFolder.tags?.length > 0 ? existingFolder.tags : folderMetadata.tags;
+            existingFolder.accessControlTags = existingFolder.accessControlTags?.length > 0 ? existingFolder.accessControlTags : folderMetadata.accessControlTags;
+            
+            existingFolder.createdByName = existingFolder.createdByName || folderMetadata.createdByName;
+            existingFolder.children = processedChildren;
+            
+            await existingFolder.save();
+            updated++;
+            processedFolders.push(existingFolder);
+          }
         }
       }
       
-      return folders;
+      return processedFolders;
     };
     
     // Process the entire hierarchy

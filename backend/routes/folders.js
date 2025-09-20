@@ -405,14 +405,14 @@ router.get('/subject-folders', authenticate, async (req, res) => {
     // Get all top-level folders from MongoDB
     const subjectFolders = await Folder.find({ parent: null }).lean();
     // Helper function to transform folder and its children recursively
-    const transformFolderWithChildren = (folder) => {
+    const transformFolderWithChildren = (folder, parentGdriveId = null) => {
       // Transform the current folder
       const transformed = {
         gdriveId: folder.gdriveId,
         id: folder.gdriveId, // For backward compatibility
         _id: folder._id,
         name: folder.name,
-        parent: null,
+        parent: parentGdriveId,
         // Include metadata directly
         departments: folder.departments || [],
         years: folder.years || [],
@@ -435,21 +435,31 @@ router.get('/subject-folders', authenticate, async (req, res) => {
       };
       
       // Transform children recursively if they exist
-      if (folder.children && folder.children.length > 0) {
-        // console.log(`Folder ${folder.name} has ${folder.children.length} children`);
+      if (folder.children && Array.isArray(folder.children) && folder.children.length > 0) {
+        console.log(`Folder ${folder.name} has ${folder.children.length} children:`, folder.children.map(c => c.name));
         transformed.children = folder.children.map(child => {
-          return transformFolderWithChildren({
-            ...child,
-            _id: child._id || folder._id, // Use parent _id if child doesn't have one
+          // Ensure child has required properties
+          const childFolder = {
             gdriveId: child.gdriveId,
-            parent: folder.gdriveId
-          });
+            _id: child._id || folder._id, // Use parent _id if child doesn't have one
+            name: child.name,
+            departments: child.departments || folder.departments || [],
+            years: child.years || folder.years || [],
+            semesters: child.semesters || folder.semesters || [],
+            description: child.description || folder.description || '',
+            tags: child.tags || folder.tags || [],
+            accessControlTags: child.accessControlTags || folder.accessControlTags || [],
+            children: child.children || []
+          };
+          
+          // Recursively transform the child with the current folder as parent
+          return transformFolderWithChildren(childFolder, folder.gdriveId);
         });
       } else {
         transformed.children = [];
       }
       
-      // console.log(`Transformed folder ${transformed.name} has ${transformed.children ? transformed.children.length : 0} children`);
+      console.log(`Transformed folder ${transformed.name} has ${transformed.children ? transformed.children.length : 0} children`);
       return transformed;
     };
     

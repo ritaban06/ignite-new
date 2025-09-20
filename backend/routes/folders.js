@@ -89,6 +89,23 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       }
     }
     
+    // Track all folders we've seen to prevent duplicates
+    const processedGdriveIds = new Set();
+    const folderParentMap = new Map(); // Maps gdriveId to parent gdriveId
+    
+    // First build a map of all folder relationships from Google Drive
+    const buildFolderParentMap = (folders, parentId = null) => {
+      for (const folder of folders) {
+        folderParentMap.set(folder.gdriveId, parentId);
+        if (folder.children && folder.children.length > 0) {
+          buildFolderParentMap(folder.children, folder.gdriveId);
+        }
+      }
+    };
+    
+    // Build the parent map
+    buildFolderParentMap(folderHierarchy);
+
     // Clean up duplicate entries where a folder exists both as top-level and as a child
     // This fixes any historical data issues
     const allFolders = await Folder.find({}).lean();
@@ -133,23 +150,6 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     if (folderCleanupPromises.length > 0) {
       await Promise.all(folderCleanupPromises);
     }
-
-    // Track all folders we've seen to prevent duplicates
-    const processedGdriveIds = new Set();
-    const folderParentMap = new Map(); // Maps gdriveId to parent gdriveId
-    
-    // First build a map of all folder relationships from Google Drive
-    const buildFolderParentMap = (folders, parentId = null) => {
-      for (const folder of folders) {
-        folderParentMap.set(folder.gdriveId, parentId);
-        if (folder.children && folder.children.length > 0) {
-          buildFolderParentMap(folder.children, folder.gdriveId);
-        }
-      }
-    };
-    
-    // Build the parent map
-    buildFolderParentMap(folderHierarchy);
     
     // Process the folder hierarchy and save to MongoDB
     const processFolderHierarchy = async (folders, parentMetadata = null) => {

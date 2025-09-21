@@ -347,46 +347,83 @@ const DashboardPage = () => {
         semester: user.semester
       });
       
-      // Recursively filter folders and subfolders based on user access control
-      const filterFoldersRecursively = (folders) => {
-        return folders
-          .map(folder => {
-            // Get folder metadata using its ID
-            const metadata = metadataMap.get(folder.id);
-            
-            console.log(`Checking folder: ${folder.name} (ID: ${folder.id})`, 
-              metadata ? {
-                departments: metadata.departments,
-                years: metadata.years,
-                semesters: metadata.semesters,
-                hasMetadata: true
-              } : { hasMetadata: false }
-            );
-            
-            // Check access for this folder
-            const hasAccess = !metadata ? true : checkFolderAccess(metadata, user);
-            
-            console.log(`Access to folder "${folder.name}": ${hasAccess ? 'GRANTED' : 'DENIED'}`);
-            
-            // If access denied, exclude this folder completely
-            if (!hasAccess) return null;
-            
-            // For folders with access granted, recursively filter their children
-            let children = [];
-            if (Array.isArray(folder.children) && folder.children.length > 0) {
-              console.log(`Processing ${folder.children.length} children of "${folder.name}"`);
-              children = filterFoldersRecursively(folder.children);
-              console.log(`After filtering, "${folder.name}" has ${children.length} accessible children`);
-            }
-            
-            // Return folder with filtered children
-            return {
+      // Step 1: First pass to collect all accessible folders regardless of hierarchy
+      const accessibleFolderIds = new Set();
+      const collectAccessibleFolders = (folders) => {
+        folders.forEach(folder => {
+          const metadata = metadataMap.get(folder.id);
+          const hasAccess = !metadata ? true : checkFolderAccess(metadata, user);
+          
+          console.log(`First pass - Checking folder: ${folder.name} (ID: ${folder.id})`, 
+            metadata ? {
+              departments: metadata.departments,
+              years: metadata.years,
+              semesters: metadata.semesters,
+              hasMetadata: true
+            } : { hasMetadata: false }
+          );
+          
+          console.log(`First pass - Access to folder "${folder.name}": ${hasAccess ? 'GRANTED' : 'DENIED'}`);
+          
+          if (hasAccess) {
+            accessibleFolderIds.add(folder.id);
+          }
+          
+          // Always check children, even if parent is not accessible
+          if (Array.isArray(folder.children) && folder.children.length > 0) {
+            collectAccessibleFolders(folder.children);
+          }
+        });
+      };
+      
+      // Execute first pass to identify all accessible folders
+      collectAccessibleFolders(allFolders);
+      console.log(`Found ${accessibleFolderIds.size} accessible folders for user`);
+      
+      // Step 2: Second pass to build a modified hierarchy
+      const filterFoldersRecursively = (folders, parentIsAccessible = true) => {
+        const result = [];
+        
+        for (const folder of folders) {
+          const hasAccess = accessibleFolderIds.has(folder.id);
+          const metadata = metadataMap.get(folder.id);
+          
+          console.log(`Second pass - Folder "${folder.name}" accessible: ${hasAccess}`);
+          
+          // Process children
+          let children = [];
+          if (Array.isArray(folder.children) && folder.children.length > 0) {
+            console.log(`Processing ${folder.children.length} children of "${folder.name}"`);
+            // Always process children, even if this folder isn't accessible
+            children = filterFoldersRecursively(folder.children, hasAccess);
+            console.log(`After filtering, "${folder.name}" has ${children.length} accessible children`);
+          }
+          
+          if (hasAccess) {
+            // This folder is accessible, add it with its accessible children
+            result.push({
               ...folder,
               metadata: metadata || null,
-              children,
-            };
-          })
-          .filter(Boolean); // Remove null entries (denied folders)
+              children: children
+            });
+          } else if (!parentIsAccessible && children.length > 0) {
+            // Parent isn't accessible and this folder isn't accessible,
+            // but it has accessible children - elevate those children to this level
+            result.push(...children);
+          } else if (parentIsAccessible && children.length > 0) {
+            // Parent is accessible, this folder isn't, but it has accessible children
+            // Create a placeholder folder with limited info but with accessible children
+            result.push({
+              ...folder,
+              metadata: metadata || null,
+              children: children,
+              isPlaceholder: true // Mark as placeholder for UI handling if needed
+            });
+          }
+          // If no accessible children and this folder isn't accessible, skip it entirely
+        }
+        
+        return result;
       };
 
       // Filter all folders recursively
@@ -933,18 +970,21 @@ const DashboardPage = () => {
             getCurrentSubfolders().map(folder => (
               <button
                 key={folder.id}
-                className="bg-[rgba(27,11,66,0.7)] border border-gray-700 rounded-lg p-4 flex flex-col items-center hover:bg-purple-700/80 transition-all duration-200 transform hover:scale-105"
+                className={`bg-[rgba(27,11,66,0.7)] border ${folder.isPlaceholder ? 'border-yellow-700 border-dashed' : 'border-gray-700'} rounded-lg p-4 flex flex-col items-center hover:bg-purple-700/80 transition-all duration-200 transform hover:scale-105`}
                 onClick={() => navigateToFolder(folder.id, folder.name)}
               >
                 <div className="relative">
-                  <Folder className="h-8 w-8 text-blue-400 mb-2" />
+                  <Folder className={`h-8 w-8 ${folder.isPlaceholder ? 'text-yellow-400' : 'text-blue-400'} mb-2`} />
                   {folder.children && folder.children.length > 0 && (
                     <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] text-white font-bold">
                       {folder.children.length}
                     </div>
                   )}
                 </div>
-                <span className="text-white font-semibold text-center">{folder.name}</span>
+                <span className="text-white font-semibold text-center">
+                  {folder.name}
+                  {folder.isPlaceholder && <span className="text-xs block text-yellow-400">(Contains accessible content)</span>}
+                </span>
                 {folder.metadata && (
                   <div className="mt-2 text-xs text-white/60 text-center">
                     {/* {folder.metadata.departments && folder.metadata.departments.length > 0 && (

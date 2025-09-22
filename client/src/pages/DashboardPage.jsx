@@ -352,7 +352,7 @@ const DashboardPage = () => {
       const collectAccessibleFolders = (folders) => {
         folders.forEach(folder => {
           const metadata = metadataMap.get(folder.id);
-          const hasAccess = !metadata ? true : checkFolderAccess(metadata, user);
+          const hasAccess = metadata && checkFolderAccess(metadata, user);
           
           console.log(`First pass - Checking folder: ${folder.name} (ID: ${folder.id})`, 
             metadata ? {
@@ -533,9 +533,7 @@ const DashboardPage = () => {
         return false;
       }
     }
-    
-    return true;
-  };
+  }
   
   // Build folder hierarchy for nested display
   const buildFolderHierarchy = (folders) => {
@@ -983,7 +981,7 @@ const DashboardPage = () => {
                 </div>
                 <span className="text-white font-semibold text-center">
                   {folder.name}
-                  {folder.isPlaceholder && <span className="text-xs block text-yellow-400">(Contains accessible content)</span>}
+                  {/* {folder.isPlaceholder && <span className="text-xs block text-yellow-400">(Contains accessible content)</span>} */}
                 </span>
                 {folder.metadata && (
                   <div className="mt-2 text-xs text-white/60 text-center">

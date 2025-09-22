@@ -49,7 +49,7 @@ function AppContent() {
             <Route path="/users" element={<UsersPage />} />
             <Route path="/access-tags" element={<AccessTagsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/debug" element={<DebugPage />} />
+            {/* <Route path="/debug" element={<DebugPage />} /> */}
             <Route path="/docs" element={<Docs />} />
           </Routes>
         </main>

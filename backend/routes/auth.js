@@ -704,9 +704,9 @@ router.get('/test', (req, res) => {
     ],
     googleClientConfigured: {
       web: !!GOOGLE_WEB_CLIENT_ID,
-      android: !!GOOGLE_ANDROID_CLIENT_ID,
+      android: !!GOOGLE_ANDROID_CLIENT_ID_DEBUG || !!GOOGLE_ANDROID_CLIENT_ID_RELEASE,
       webClientId: GOOGLE_WEB_CLIENT_ID,
-      androidClientId: GOOGLE_ANDROID_CLIENT_ID
+      androidClientId: GOOGLE_ANDROID_CLIENT_ID_DEBUG || GOOGLE_ANDROID_CLIENT_ID_RELEASE
     }
   });
 });

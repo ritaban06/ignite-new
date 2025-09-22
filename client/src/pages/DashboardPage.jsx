@@ -305,7 +305,6 @@ const DashboardPage = () => {
 
   const fetchFolders = async () => {
     try {
-      setIsLoading(true);
       // console.log('Fetching folders...');
       
       // Get folders from Google Drive with hierarchy
@@ -456,8 +455,6 @@ const DashboardPage = () => {
     } catch (error) {
       console.error('Failed to load folders:', error);
       toast.error("Failed to load subjects");
-    } finally {
-      setIsLoading(false);
     }
   };
   
@@ -952,11 +949,13 @@ const DashboardPage = () => {
         </div>
         
         {/* Debug info */}
-        {/* <div className="mb-4 p-2 bg-black/30 rounded text-xs text-white/70 overflow-auto">
+        <div className="mb-4 p-2 bg-black/30 rounded text-xs text-white/70 overflow-auto">
           <div>Current folder: {selectedFolder || 'None (root level)'}</div>
           <div>Path: {currentPath.map(p => p.name).join(' > ') || 'Root'}</div>
           <div>Subfolders count: {getCurrentSubfolders().length}</div>
-        </div> */}
+          <div>Folder hierarchy length: {folderHierarchy.length}</div>
+          <div>Is loading: {isLoading ? 'Yes' : 'No'}</div>
+        </div>
         
         {/* Display current level folders */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

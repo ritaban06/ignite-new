@@ -16,8 +16,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     overview: {
       totalUsers: 0,
-      totalPdfs: 0,
-      activePdfs: 0,
+      totalFolders: 0,
       recentUploads: 0
     },
     distribution: {
@@ -37,6 +36,7 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       const response = await pdfAPI.getAnalytics();
+      // console.log('Dashboard data:', response.data); // Debugging API response
       setStats(response.data);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -111,8 +111,8 @@ export default function DashboardPage() {
           color="green"
         />
         <StatCard
-          title="Total PDFs"
-          value={stats.overview.totalPdfs}
+          title="Root Folders"
+          value={stats.overview.totalFolders}
           icon={FileText}
           color="primary"
         />
@@ -144,11 +144,11 @@ export default function DashboardPage() {
               Upload New PDF
             </Link> */}
             <Link
-              to="/pdfs"
+              to="/folders"
               className="flex items-center p-3 text-left text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
             >
               <FileText className="h-5 w-5 text-green-400 mr-3" />
-              Manage PDFs
+              Manage folders
             </Link>
             <Link
               to="/users"

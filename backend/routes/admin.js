@@ -4,6 +4,7 @@ const { body, query, validationResult } = require('express-validator');
 const PDF = require('../models/PDF');
 const User = require('../models/User');
 const AccessLog = require('../models/AccessLog');
+const Folder = require('../models/Folder');
 const googleSheetsService = require('../services/googleSheetsService');
 const googleDriveService = require('../services/googleDriveService');
 const { 
@@ -491,7 +492,8 @@ router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
       recentActivity,
       totalViews,
       topPdfs,
-      uploaderStats
+      uploaderStats,
+      totalFolders
     ] = await Promise.all([
       User.countDocuments({ role: 'client', isActive: true }),
       PDF.countDocuments(),
@@ -543,7 +545,8 @@ router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
         },
         { $sort: { count: -1 } },
         { $limit: 10 }
-      ])
+      ]),
+      Folder.countDocuments() // Count total folders
     ]);
 
     res.json({
@@ -552,7 +555,8 @@ router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
         totalPdfs,
         activePdfs,
         recentUploads,
-        totalViews: totalViews[0]?.totalViews || 0
+        totalViews: totalViews[0]?.totalViews || 0,
+        totalFolders // Include totalFolders in the overview
       },
       distribution: {
         byDepartment: departmentStats,

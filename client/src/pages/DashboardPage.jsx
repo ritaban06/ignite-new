@@ -460,76 +460,78 @@ const DashboardPage = () => {
   
   // Check if user has access to a folder based on access control
   const checkFolderAccess = (folderMetadata, user) => {
-    // If no metadata exists, allow access (default behavior for unconfigured folders)
-    if (!folderMetadata) return true;
-    
-    console.log(`Access check for folder: ${folderMetadata.name || 'Unknown'}`);
-    
-    // Convert user attributes to appropriate types for consistent comparison
-    const userDepartment = String(user.department || '').trim();
+    // Only allow access for year 1-4 and semester 1-8
     const userYear = parseInt(user.year);
     const userSemester = parseInt(user.semester);
-    
-    console.log(`User attributes: Department="${userDepartment}", Year=${userYear}, Semester=${userSemester}`);
-    
-    // If metadata exists but all access control arrays are empty, allow access
+    if (isNaN(userYear) || userYear < 1 || userYear > 4) {
+      console.log(`Access DENIED: Year ${userYear} is not in allowed range 1-4.`);
+      return false;
+    }
+    if (isNaN(userSemester) || userSemester < 1 || userSemester > 8) {
+      console.log(`Access DENIED: Semester ${userSemester} is not in allowed range 1-8.`);
+      return false;
+    }
+    // Hide folders with no metadata
+    if (!folderMetadata) {
+      console.log('Access DENIED: No metadata for folder');
+      return false;
+    }
+    // All three must match if metadata is present
+    const userDepartment = String(user.department || '').trim();
     const hasDepartmentRestrictions = folderMetadata.departments && folderMetadata.departments.length > 0;
     const hasYearRestrictions = folderMetadata.years && folderMetadata.years.length > 0;
     const hasSemesterRestrictions = folderMetadata.semesters && folderMetadata.semesters.length > 0;
+    // If any restriction is missing, deny access
+    if (!hasDepartmentRestrictions || !hasYearRestrictions || !hasSemesterRestrictions) {
+      console.log('Access DENIED: Missing department/year/semester restrictions in metadata');
+      return false;
+    }
+    // If year or semester is [0] (only 0, not mixed), do not show folder
+    const onlyYearZero = folderMetadata.years.length === 1 && folderMetadata.years[0] === 0;
+    const onlySemesterZero = folderMetadata.semesters.length === 1 && folderMetadata.semesters[0] === 0;
+    if (onlyYearZero || onlySemesterZero) {
+      console.log('Access DENIED: Year or Semester is only 0 (do not show to any user)');
+      return false;
+    }
+    // Check department
+    const departmentCheck = userDepartment && folderMetadata.departments.some(dept => 
+      String(dept).trim().toLowerCase() === userDepartment.toLowerCase()
+    );
+    if (!departmentCheck) {
+      console.log('Access DENIED: Department does not match');
+      return false;
+    }
+    // Check year
+    const yearCheck = !isNaN(userYear) && folderMetadata.years.includes(userYear);
+    if (!yearCheck) {
+      console.log('Access DENIED: Year does not match');
+      return false;
+    }
+    // Check semester
+    // If semesters contains 0 and other values, allow any semester in 1-8
+    let semesterCheck = false;
+    if (folderMetadata.semesters.includes(0)) {
+      semesterCheck = userSemester >= 1 && userSemester <= 8;
+    } else {
+      semesterCheck = folderMetadata.semesters.includes(userSemester);
+    }
+    if (!semesterCheck) {
+      console.log('Access DENIED: Semester does not match');
+      return false;
+    }
+    // Access tags (optional)
     const hasAccessTagRestrictions = folderMetadata.accessControlTags && folderMetadata.accessControlTags.length > 0;
-    
-    console.log(`Restrictions: Departments=${hasDepartmentRestrictions}, Years=${hasYearRestrictions}, Semesters=${hasSemesterRestrictions}, Tags=${hasAccessTagRestrictions}`);
-    
-    // If no restrictions are set, allow access
-    if (!hasDepartmentRestrictions && !hasYearRestrictions && !hasSemesterRestrictions && !hasAccessTagRestrictions) {
-      console.log(`No restrictions set for folder "${folderMetadata.name}", allowing access`);
-      return true;
-    }
-    
-    // Check departments (only if restrictions are set)
-    if (hasDepartmentRestrictions) {
-      // Convert each department to string for reliable comparison
-      const departmentCheck = userDepartment && folderMetadata.departments.some(dept => 
-        String(dept).trim().toLowerCase() === userDepartment.toLowerCase()
-      );
-      console.log(`Department check: ${departmentCheck} (User: ${userDepartment}, Folder: ${folderMetadata.departments.join(', ')})`);
-      if (!departmentCheck) {
-        console.log(`Access DENIED to "${folderMetadata.name}": Department restriction failed`);
-        return false;
-      }
-    }
-    
-    // Check years (only if restrictions are set)
-    if (hasYearRestrictions) {
-      // Check if user's year (as number) is included in the allowed years
-      const yearCheck = !isNaN(userYear) && folderMetadata.years.includes(userYear);
-      console.log(`Year check: ${yearCheck} (User: ${userYear}, Folder years: ${folderMetadata.years.join(', ')})`);
-      if (!yearCheck) {
-        console.log(`Access DENIED to "${folderMetadata.name}": Year restriction failed`);
-        return false;
-      }
-    }
-    
-    // Check semesters (only if restrictions are set)
-    if (hasSemesterRestrictions) {
-      // Check if user's semester (as number) is included in the allowed semesters
-      const semesterCheck = !isNaN(userSemester) && folderMetadata.semesters.includes(userSemester);
-      console.log(`Semester check: ${semesterCheck} (User: ${userSemester}, Folder semesters: ${folderMetadata.semesters.join(', ')})`);
-      if (!semesterCheck) {
-        console.log(`Access DENIED to "${folderMetadata.name}": Semester restriction failed`);
-        return false;
-      }
-    }
-    
-    // Check access control tags (only if restrictions are set and user has tags)
     if (hasAccessTagRestrictions && user.accessTags && user.accessTags.length > 0) {
       const hasRequiredTag = folderMetadata.accessControlTags.some(tag => 
         user.accessTags.includes(tag)
       );
       if (!hasRequiredTag) {
+        console.log('Access DENIED: Access tag does not match');
         return false;
       }
     }
+    // All checks passed
+    return true;
   }
   
   // Build folder hierarchy for nested display

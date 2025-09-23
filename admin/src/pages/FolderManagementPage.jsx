@@ -36,7 +36,7 @@ export default function FolderManagementPage() {
       // Refresh folder data
       fetchGDriveFolders();
       
-      toast.success(`Folder "${folderData.name}" was updated by another admin`);
+      // toast.success(`Folder "${folderData.name}" was updated by another admin`);
     });
     
     // Listen for the folder sync completion event from Sidebar

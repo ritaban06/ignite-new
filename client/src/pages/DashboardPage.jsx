@@ -304,31 +304,43 @@ const DashboardPage = () => {
   }, []);
 
   const fetchFolders = async () => {
+      // Attach metadata to all folders and subfolders recursively
+      const attachMetadataRecursively = (folders) => {
+        return folders.map(folder => {
+          const metadata = metadataMap.get(folder.gdriveId) || null;
+          let children = [];
+          if (Array.isArray(folder.children) && folder.children.length > 0) {
+            children = attachMetadataRecursively(folder.children);
+          }
+          return {
+            ...folder,
+            metadata,
+            children
+          };
+        });
+      };
+      // Debug: log metadata attachment
+      const debugLogMetadata = (folders, level = 0) => {
+        folders.forEach(folder => {
+          const indent = ' '.repeat(level * 2);
+          console.log(`${indent}Folder: ${folder.name}, gdriveId: ${folder.gdriveId}, hasMetadata: ${!!folder.metadata}`);
+          if (folder.children && folder.children.length > 0) {
+            debugLogMetadata(folder.children, level + 1);
+          }
+        });
+      };
     try {
-      // console.log('Fetching folders...');
-      
       // Get folders from Google Drive with hierarchy
       const gdriveResponse = await folderAPI.getFolders();
       const allFolders = gdriveResponse.data;
-      
-      // console.log('All folders from Google Drive:', allFolders);
-      // console.log('Number of folders from Google Drive:', allFolders.length);
-      
       // Get folder metadata from MongoDB for access control
       const metadataResponse = await folderAPI.getFoldersWithMetadata();
       const folderMetadata = metadataResponse.data;
-      
-      // console.log('Folder metadata from MongoDB:', folderMetadata);
-      // console.log('Number of folder metadata records:', folderMetadata.length);
-      
       // Create a map of folder metadata by gdriveId
       const metadataMap = new Map();
       folderMetadata.forEach(folder => {
         if (folder.gdriveId) {
-          // Store the complete metadata object
           metadataMap.set(folder.gdriveId, folder);
-          
-          // If this folder has children in the metadata, create entries for them too
           if (folder.children && Array.isArray(folder.children)) {
             folder.children.forEach(childFolder => {
               if (childFolder.gdriveId) {
@@ -338,95 +350,73 @@ const DashboardPage = () => {
           }
         }
       });
-      
-      console.log('Metadata map size:', metadataMap.size);
-      console.log('User info:', {
-        department: user.department,
-        year: user.year, 
-        semester: user.semester
-      });
-      
+      // Attach metadata and debug log after allFolders is defined
+      // Attach metadata to all folders and subfolders recursively
+      const attachMetadataRecursively = (folders) => {
+        return folders.map(folder => {
+          const metadata = metadataMap.get(folder.gdriveId) || null;
+          let children = [];
+          if (Array.isArray(folder.children) && folder.children.length > 0) {
+            children = attachMetadataRecursively(folder.children);
+          }
+          return {
+            ...folder,
+            metadata,
+            children
+          };
+        });
+      };
+      const foldersWithMetadata = attachMetadataRecursively(allFolders);
       // Step 1: First pass to collect all accessible folders regardless of hierarchy
       const accessibleFolderIds = new Set();
       const collectAccessibleFolders = (folders) => {
         folders.forEach(folder => {
-          const metadata = metadataMap.get(folder.id);
+          const metadata = folder.metadata;
           const hasAccess = metadata && checkFolderAccess(metadata, user);
-          
-          console.log(`First pass - Checking folder: ${folder.name} (ID: ${folder.id})`, 
-            metadata ? {
-              departments: metadata.departments,
-              years: metadata.years,
-              semesters: metadata.semesters,
-              hasMetadata: true
-            } : { hasMetadata: false }
-          );
-          
-          console.log(`First pass - Access to folder "${folder.name}": ${hasAccess ? 'GRANTED' : 'DENIED'}`);
-          
           if (hasAccess) {
             accessibleFolderIds.add(folder.id);
           }
-          
-          // Always check children, even if parent is not accessible
           if (Array.isArray(folder.children) && folder.children.length > 0) {
             collectAccessibleFolders(folder.children);
           }
         });
       };
-      
-      // Execute first pass to identify all accessible folders
-      collectAccessibleFolders(allFolders);
-      console.log(`Found ${accessibleFolderIds.size} accessible folders for user`);
-      
+      collectAccessibleFolders(foldersWithMetadata);
       // Step 2: Second pass to build a modified hierarchy
       const filterFoldersRecursively = (folders, parentIsAccessible = true) => {
         const result = [];
-        
         for (const folder of folders) {
           const hasAccess = accessibleFolderIds.has(folder.id);
-          const metadata = metadataMap.get(folder.id);
-          
-          console.log(`Second pass - Folder "${folder.name}" accessible: ${hasAccess}`);
-          
-          // Process children
+          const metadata = folder.metadata;
           let children = [];
           if (Array.isArray(folder.children) && folder.children.length > 0) {
-            console.log(`Processing ${folder.children.length} children of "${folder.name}"`);
-            // Always process children, even if this folder isn't accessible
             children = filterFoldersRecursively(folder.children, hasAccess);
-            console.log(`After filtering, "${folder.name}" has ${children.length} accessible children`);
           }
-          
           if (hasAccess) {
-            // This folder is accessible, add it with its accessible children
             result.push({
               ...folder,
               metadata: metadata || null,
               children: children
             });
           } else if (!parentIsAccessible && children.length > 0) {
-            // Parent isn't accessible and this folder isn't accessible,
-            // but it has accessible children - elevate those children to this level
-            result.push(...children);
+            // Recursively promote all accessible descendants to root
+            const promoted = children.filter(child => accessibleFolderIds.has(child.id) || (child.children && child.children.length > 0));
+            promoted.forEach(promotedFolder => {
+              console.log(`Promoting folder to root: ${promotedFolder.name} (gdriveId: ${promotedFolder.gdriveId}) due to inaccessible parent: ${folder.name}`);
+              result.push(promotedFolder);
+            });
           } else if (parentIsAccessible && children.length > 0) {
-            // Parent is accessible, this folder isn't, but it has accessible children
-            // Create a placeholder folder with limited info but with accessible children
             result.push({
               ...folder,
               metadata: metadata || null,
               children: children,
-              isPlaceholder: true // Mark as placeholder for UI handling if needed
+              isPlaceholder: true
             });
           }
-          // If no accessible children and this folder isn't accessible, skip it entirely
         }
-        
         return result;
       };
-
-      // Filter all folders recursively
-      const filteredFolders = filterFoldersRecursively(allFolders);
+      const filteredFolders = filterFoldersRecursively(foldersWithMetadata);
       // Build folder hierarchy
       const hierarchy = buildFolderHierarchy(filteredFolders);
       // Flatten hierarchy to get accessible folders for quick access
@@ -441,16 +431,10 @@ const DashboardPage = () => {
         return result;
       };
       const accessibleFoldersFlat = flattenFolders(hierarchy);
-      
-      // Log the hierarchy for debugging
-      // console.log('Folder hierarchy built with root folders:', hierarchy.length);
-      // console.log('Root folder names:', hierarchy.map(f => f.name));
-      
-  setFolderHierarchy(hierarchy);
-  setAccessibleFolders(accessibleFoldersFlat);
-      
+      setFolderHierarchy(hierarchy);
+      setAccessibleFolders(accessibleFoldersFlat);
       if (hierarchy.length === 0) {
-        // console.warn('No folders in hierarchy after building. This might indicate a problem.');
+        // No folders in hierarchy after building
       }
     } catch (error) {
       console.error('Failed to load folders:', error);
@@ -502,13 +486,17 @@ const DashboardPage = () => {
       return false;
     }
     // Check year
-    const yearCheck = !isNaN(userYear) && folderMetadata.years.includes(userYear);
+    let yearCheck = false;
+    if (folderMetadata.years.includes(0)) {
+      yearCheck = userYear >= 1 && userYear <= 4;
+    } else {
+      yearCheck = folderMetadata.years.includes(userYear);
+    }
     if (!yearCheck) {
       console.log('Access DENIED: Year does not match');
       return false;
     }
     // Check semester
-    // If semesters contains 0 and other values, allow any semester in 1-8
     let semesterCheck = false;
     if (folderMetadata.semesters.includes(0)) {
       semesterCheck = userSemester >= 1 && userSemester <= 8;
@@ -536,95 +524,82 @@ const DashboardPage = () => {
   
   // Build folder hierarchy for nested display
   const buildFolderHierarchy = (folders) => {
-    // console.log('Building folder hierarchy from folders:', folders.length, 'folders');
-    // console.log('Sample folder structure:', folders.length > 0 ? JSON.stringify(folders[0], null, 2) : 'No folders');
-    
+    // Debug: log promoted folders
+    const debugLogPromoted = (folders, level = 0) => {
+      folders.forEach(folder => {
+        const indent = ' '.repeat(level * 2);
+        console.log(`${indent}Promoted/Root: ${folder.name}, id: ${folder.id}, hasMetadata: ${!!folder.metadata}`);
+        if (folder.children && folder.children.length > 0) {
+          debugLogPromoted(folder.children, level + 1);
+        }
+      });
+    };
+    // Helper to check if folder is accessible (matches current logic)
+    const isAccessibleFolder = (folder) => {
+      // If folder has no metadata, or only year/semester 0, it's not accessible
+      if (!folder.metadata) return false;
+      const years = folder.metadata.years || [];
+      const semesters = folder.metadata.semesters || [];
+      const onlyYearZero = years.length === 1 && years[0] === 0;
+      const onlySemesterZero = semesters.length === 1 && semesters[0] === 0;
+      return !(onlyYearZero || onlySemesterZero);
+    };
+
+    // Recursively build hierarchy, promoting accessible children if parent is not accessible
+    const promoteAccessibleFolders = (folders) => {
+      let result = [];
+      folders.forEach(folder => {
+        const children = Array.isArray(folder.children) ? promoteAccessibleFolders(folder.children) : [];
+        if (isAccessibleFolder(folder)) {
+          // Accessible parent, keep as is
+          result.push({ ...folder, children });
+        } else if (children.length > 0) {
+          // Inaccessible parent, promote accessible children to this level
+          result = result.concat(children);
+        }
+        // If not accessible and no accessible children, skip
+      });
+      return result;
+    };
+
+    // Build hierarchy as before
     const folderMap = new Map();
     const rootFolders = [];
-    
-    // Create a map of all folders with empty children arrays
     folders.forEach(folder => {
-      // Check if folder has an id
-      if (!folder.id) {
-        console.warn('Found folder without ID:', folder);
-        return;
-      }
-      
-      // Initialize with empty children array if not present
+      if (!folder.id) return;
       const folderWithChildren = { 
         ...folder, 
         children: Array.isArray(folder.children) ? [...folder.children] : [] 
       };
-      
       folderMap.set(folder.id, folderWithChildren);
-      // console.log(`Added folder to map: ${folder.name} (${folder.id}), children: ${folderWithChildren.children.length}`);
     });
-    
-    // console.log('Folder map created with', folderMap.size, 'entries');
-    
-    // Build the hierarchy by adding children to their parents
     folders.forEach(folder => {
-      if (!folder.id) return; // Skip folders without ID
-      
+      if (!folder.id) return;
       const folderNode = folderMap.get(folder.id);
-      if (!folderNode) {
-        console.warn(`Folder node not found in map for ID: ${folder.id}`);
-        return;
-      }
-      
-      // Check if this folder has a parent and if that parent exists in our map
+      if (!folderNode) return;
       if (folder.parent && folderMap.has(folder.parent)) {
         const parentFolder = folderMap.get(folder.parent);
-        // console.log(`Adding folder '${folder.name}' as child to parent '${parentFolder.name}'`);
-        
-        // Ensure parent has a children array
-        if (!Array.isArray(parentFolder.children)) {
-          // console.warn(`Parent folder '${parentFolder.name}' has no children array, creating one`);
-          parentFolder.children = [];
-        }
-        
+        if (!Array.isArray(parentFolder.children)) parentFolder.children = [];
         parentFolder.children.push(folderNode);
-        // console.log(`Parent '${parentFolder.name}' now has ${parentFolder.children.length} children`);
       } else {
-        // console.log(`Adding folder '${folder.name}' as a root folder (no parent or parent not in map)`);
         rootFolders.push(folderNode);
       }
     });
-    
-    // console.log('Root folders before sorting:', rootFolders.map(f => f.name));
-    // console.log('Root folders count:', rootFolders.length);
-    
-    // Sort children alphabetically by name for better organization
+    // Promote accessible folders to root if parent is not accessible
+  let promoted = promoteAccessibleFolders(rootFolders);
+  debugLogPromoted(promoted);
+    // Sort children alphabetically
     const sortFolderChildren = (folders) => {
       folders.forEach(folder => {
         if (folder.children && folder.children.length > 0) {
-          // console.log(`Sorting ${folder.children.length} children of '${folder.name}'`);
           folder.children.sort((a, b) => a.name.localeCompare(b.name));
           sortFolderChildren(folder.children);
         }
       });
     };
-    
-    // Sort root folders and their children
-    rootFolders.sort((a, b) => a.name.localeCompare(b.name));
-    sortFolderChildren(rootFolders);
-    
-    // Log detailed information about the hierarchy
-    // console.log('Final root folders:', rootFolders.map(f => ({ 
-    //   name: f.name, 
-    //   id: f.id, 
-    //   childCount: f.children ? f.children.length : 0 
-    // })));
-    
-    // Log the first level of children for each root folder
-    rootFolders.forEach(folder => {
-      if (folder.children && folder.children.length > 0) {
-        // console.log(`Children of root folder '${folder.name}':`, 
-        //   folder.children.map(child => ({ name: child.name, id: child.id })));
-      }
-    });
-    
-    return rootFolders;
+    promoted.sort((a, b) => a.name.localeCompare(b.name));
+    sortFolderChildren(promoted);
+    return promoted;
   };
 
   const fetchFilesInFolder = async (folderId) => {

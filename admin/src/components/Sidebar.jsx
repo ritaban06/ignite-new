@@ -31,18 +31,27 @@ export default function Sidebar() {
   const [cacheLoading, setCacheLoading] = useState(false);
   const [cacheResult, setCacheResult] = useState(null);
 
+  // Google Drive base folder from admin env
+  const driveBaseFolderId = import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID;
+  const GOOGLE_DRIVE_FOLDER_URL = driveBaseFolderId
+    ? `https://drive.google.com/drive/folders/${driveBaseFolderId}`
+    : null;
+
+  const handleOpenDriveRoot = () => {
+    if (GOOGLE_DRIVE_FOLDER_URL) {
+      window.open(GOOGLE_DRIVE_FOLDER_URL, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const handleSyncSheets = async () => {
     setIsSyncing(true);
     setSyncStatus(null);
-    
     try {
       const response = await userAPI.syncSheets();
       setSyncStatus({
         type: 'success',
         message: `Sync successful! ${response.data.data.usersCount} users loaded.`
       });
-      
-      // Clear status after 3 seconds
       setTimeout(() => setSyncStatus(null), 3000);
     } catch (error) {
       console.error('Sync failed:', error);
@@ -50,8 +59,6 @@ export default function Sidebar() {
         type: 'error',
         message: error.response?.data?.message || 'Sync failed. Please try again.'
       });
-      
-      // Clear status after 5 seconds
       setTimeout(() => setSyncStatus(null), 5000);
     } finally {
       setIsSyncing(false);
@@ -98,6 +105,15 @@ export default function Sidebar() {
         error: errorMessage,
         details: err?.response?.data?.details || ''
       });
+                {/* Open Google Drive Root Button */}
+                <button
+                  onClick={handleOpenDriveRoot}
+                  className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-green-700 hover:bg-green-600"
+                  title="Open Google Drive root folder in a new tab"
+                >
+                  <Folder className="mr-3 h-5 w-5 text-green-300" />
+                  Open Google Drive Root
+                </button>
       
       // Show errors for longer (8 seconds)
       setTimeout(() => setCacheResult(null), 8000);
@@ -171,6 +187,16 @@ export default function Sidebar() {
             >
               <Download className={`mr-3 h-5 w-5 text-yellow-300 ${cacheLoading ? 'animate-pulse' : ''}`} />
               {cacheLoading ? 'Synchronizing Folders...' : 'Sync Folders from Google Drive'}
+            </button>
+            {/* Open Google Drive Root Button */}
+            <button
+              onClick={handleOpenDriveRoot}
+              className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-green-700 hover:bg-green-600"
+              title="Open Google Drive root folder in a new tab"
+              disabled={!GOOGLE_DRIVE_FOLDER_URL}
+            >
+              <Folder className="mr-3 h-5 w-5 text-green-300" />
+              Open Google Drive Root
             </button>
             {/* Status Message for Folder Sync */}
             {cacheResult && (

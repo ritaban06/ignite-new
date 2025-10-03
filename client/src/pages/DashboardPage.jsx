@@ -304,13 +304,13 @@ const DashboardPage = () => {
   }, []);
 
   const fetchFolders = async () => {
-      // Attach metadata to all folders and subfolders recursively
-      const attachMetadataRecursively = (folders) => {
+      // Attach metadata to all folders and subfolders recursively using provided map
+      const attachMetadataRecursively = (folders, metadataMap) => {
         return folders.map(folder => {
           const metadata = metadataMap.get(folder.gdriveId) || null;
           let children = [];
           if (Array.isArray(folder.children) && folder.children.length > 0) {
-            children = attachMetadataRecursively(folder.children);
+            children = attachMetadataRecursively(folder.children, metadataMap);
           }
           return {
             ...folder,
@@ -338,35 +338,18 @@ const DashboardPage = () => {
       const folderMetadata = metadataResponse.data;
       // Create a map of folder metadata by gdriveId
       const metadataMap = new Map();
-      folderMetadata.forEach(folder => {
-        if (folder.gdriveId) {
-          metadataMap.set(folder.gdriveId, folder);
-          if (folder.children && Array.isArray(folder.children)) {
-            folder.children.forEach(childFolder => {
-              if (childFolder.gdriveId) {
-                metadataMap.set(childFolder.gdriveId, childFolder);
-              }
-            });
-          }
+      const addToMapRecursively = (node) => {
+        if (!node || typeof node !== 'object') return;
+        if (node.gdriveId) {
+          metadataMap.set(node.gdriveId, node);
         }
-      });
-      // Attach metadata and debug log after allFolders is defined
-      // Attach metadata to all folders and subfolders recursively
-      const attachMetadataRecursively = (folders) => {
-        return folders.map(folder => {
-          const metadata = metadataMap.get(folder.gdriveId) || null;
-          let children = [];
-          if (Array.isArray(folder.children) && folder.children.length > 0) {
-            children = attachMetadataRecursively(folder.children);
-          }
-          return {
-            ...folder,
-            metadata,
-            children
-          };
-        });
+        if (Array.isArray(node.children) && node.children.length > 0) {
+          node.children.forEach(addToMapRecursively);
+        }
       };
-      const foldersWithMetadata = attachMetadataRecursively(allFolders);
+      folderMetadata.forEach(addToMapRecursively);
+      // Attach metadata and debug log after allFolders is defined
+      const foldersWithMetadata = attachMetadataRecursively(allFolders, metadataMap);
       // Step 1: First pass to collect all accessible folders regardless of hierarchy
       const accessibleFolderIds = new Set();
       const collectAccessibleFolders = (folders) => {
@@ -534,15 +517,9 @@ const DashboardPage = () => {
         }
       });
     };
-    // Helper to check if folder is accessible (matches current logic)
+    // Helper: use unified access check for current user
     const isAccessibleFolder = (folder) => {
-      // If folder has no metadata, or only year/semester 0, it's not accessible
-      if (!folder.metadata) return false;
-      const years = folder.metadata.years || [];
-      const semesters = folder.metadata.semesters || [];
-      const onlyYearZero = years.length === 1 && years[0] === 0;
-      const onlySemesterZero = semesters.length === 1 && semesters[0] === 0;
-      return !(onlyYearZero || onlySemesterZero);
+      return checkFolderAccess(folder.metadata, user);
     };
 
     // Recursively build hierarchy, promoting accessible children if parent is not accessible

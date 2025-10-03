@@ -24,13 +24,13 @@ const Landingpage = () => {
         </div>
       </div>
 			{/* Hero Section */}
-			<div className="w-full max-w-7xl mx-auto px-4 pt-6 sm:pt-8 md:pt-12 pb-4 sm:pb-6 md:pb-8 text-center">
+			<div className="w-full max-w-7xl mx-auto px-4 pt-4 xs:pt-36 lg:pt-20 pb-4 sm:pb-6 md:pb-8 text-center">
 				<img
 					src="/newlogo.webp"
 					alt="Ignite"
-					className="mx-auto h-10 w-auto xs:h-12 sm:h-16 md:h-20 lg:h-24 xl:h-28 filter drop-shadow-lg"
+					className="mx-auto max-w-[49%] h-auto xs:max-w-none xs:h-12 sm:h-16 md:h-20 lg:h-56 xl:h-56 filter drop-shadow-lg"
 				/>
-				<h1 className="mt-3 xs:mt-4 sm:mt-6 text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight animate-fade-in-down">
+				<h1 className="mt-3 xs:mt-4 sm:mt-6 text-4xl leading-[1.7] xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white animate-fade-in-down">
 					Welcome to <span className="text-[#6c47ff]">Ignite</span>
 				</h1>
 				<p className="mt-2 xs:mt-3 sm:mt-4 text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto animate-fade-in-up">
@@ -42,19 +42,24 @@ const Landingpage = () => {
 			{/* CTA Section */}
 			<div className="w-full max-w-6xl mx-auto text-center px-4 py-6 xs:py-8 sm:py-12 md:py-16">
 				<div className="flex flex-col xs:flex-row gap-3 xs:gap-4 sm:gap-6 md:gap-8 justify-center items-center">
-					<a href="/login" className="group relative w-full xs:w-auto min-w-[160px] px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 xs:py-3 sm:py-4 md:py-5 bg-gradient-to-r from-[#6c47ff] to-[#5433b7] text-white text-sm xs:text-base sm:text-lg md:text-xl font-bold rounded-xl overflow-hidden">
+					<a href="/login" className="group relative w-full xs:w-auto min-w-[160px] px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 xs:py-3 sm:py-4 md:py-5 bg-gradient-to-r from-[#6c47ff] to-[#5433b7] text-white text-sm xs:text-base sm:text-lg md:text-xl font-bold rounded-xl overflow-hidden shadow-[0_0_20px_rgba(108,71,255,0.3)] hover:shadow-[0_0_25px_rgba(108,71,255,0.5)] transition-all duration-500">
 						<div className="absolute inset-0 bg-gradient-to-r from-[#8b6aff] to-[#6544e0] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 						<div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.15]"></div>
 						<span className="relative">Get Started</span>
-						<div className="absolute inset-0 rounded-xl ring-2 ring-[#6c47ff]/50 group-hover:ring-[#6c47ff] transition-all duration-300"></div>
+						<div className="absolute inset-0 rounded-xl ring-2 ring-[#6c47ff]/50 group-hover:ring-[#6c47ff] transition-all duration-300">
+							<div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#6c47ff]/0 via-[#6c47ff]/50 to-[#6c47ff]/0 animate-border-shine"></div>
+						</div>
 					</a>
 					<button
 						onClick={handleLearnMore}
-						className="group relative w-full xs:w-auto min-w-[160px] px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 xs:py-3 sm:py-4 md:py-5 bg-transparent text-white text-sm xs:text-base sm:text-lg md:text-xl font-bold rounded-xl overflow-hidden border-2 border-[#6c47ff]/50 hover:border-[#6c47ff]"
+						className="group relative w-full xs:w-auto min-w-[160px] px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 xs:py-3 sm:py-4 md:py-5 bg-transparent text-white text-sm xs:text-base sm:text-lg md:text-xl font-bold rounded-xl overflow-hidden shadow-[0_0_20px_rgba(108,71,255,0.15)] hover:shadow-[0_0_25px_rgba(108,71,255,0.3)] transition-all duration-500"
 					>
 						<div className="absolute inset-0 bg-[#6c47ff] opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
 						<div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.15]"></div>
 						<span className="relative">Learn More</span>
+						<div className="absolute inset-0 rounded-xl border-2 border-[#6c47ff]/30 group-hover:border-[#6c47ff]/60 transition-all duration-300">
+							<div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#6c47ff]/0 via-[#6c47ff]/30 to-[#6c47ff]/0 animate-border-shine"></div>
+						</div>
 					</button>
 				</div>
 			</div>
@@ -64,21 +69,37 @@ const Landingpage = () => {
 				<h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white text-center mb-6 sm:mb-8 md:mb-10">Why Choose Ignite?</h2>
 				<div className="max-w-7xl mx-auto">
 					<div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 xs:gap-5 md:gap-6 lg:gap-8">
-						<div className="feature-card">
-							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">Exam-Ready Notes</h3>
-							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2">Handwritten & digital notes from professors of all years.</p>
+						<div className="group p-6 rounded-xl backdrop-blur-md bg-gradient-to-br from-[#6c47ff]/5 via-[#6c47ff]/10 to-[#6c47ff]/5 hover:bg-gradient-to-br hover:from-[#6c47ff]/10 hover:via-[#6c47ff]/15 hover:to-[#6c47ff]/10 transition-all duration-500 relative overflow-hidden shadow-[0_0_15px_rgba(108,71,255,0.15)] hover:shadow-[0_0_25px_rgba(108,71,255,0.25)]">
+							<div className="absolute inset-0 bg-gradient-to-br from-[#6c47ff]/0 via-[#6c47ff]/5 to-[#6c47ff]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+							<div className="absolute inset-0 rounded-xl border border-[#6c47ff]/20 group-hover:border-[#6c47ff]/40 transition-all duration-500">
+								<div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#6c47ff]/0 via-[#6c47ff]/50 to-[#6c47ff]/0 opacity-0 group-hover:opacity-100 animate-border-shine"></div>
+							</div>
+							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff] relative z-10 group-hover:text-[#8b6aff] transition-colors duration-300">Exam-Ready Notes</h3>
+							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2 relative z-10">Handwritten & digital notes from professors of all years.</p>
 						</div>
-						<div className="feature-card">
-							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">Internal Papers</h3>
-							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2">Access previous internal exam papers for practice.</p>
+						<div className="group p-6 rounded-xl backdrop-blur-md bg-gradient-to-br from-[#6c47ff]/5 via-[#6c47ff]/10 to-[#6c47ff]/5 hover:bg-gradient-to-br hover:from-[#6c47ff]/10 hover:via-[#6c47ff]/15 hover:to-[#6c47ff]/10 transition-all duration-500 relative overflow-hidden shadow-[0_0_15px_rgba(108,71,255,0.15)] hover:shadow-[0_0_25px_rgba(108,71,255,0.25)]">
+							<div className="absolute inset-0 bg-gradient-to-br from-[#6c47ff]/0 via-[#6c47ff]/5 to-[#6c47ff]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+							<div className="absolute inset-0 rounded-xl border border-[#6c47ff]/20 group-hover:border-[#6c47ff]/40 transition-all duration-500">
+								<div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#6c47ff]/0 via-[#6c47ff]/50 to-[#6c47ff]/0 opacity-0 group-hover:opacity-100 animate-border-shine"></div>
+							</div>
+							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff] relative z-10 group-hover:text-[#8b6aff] transition-colors duration-300">Internal Papers</h3>
+							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2 relative z-10">Access previous internal exam papers for practice.</p>
 						</div>
-						<div className="feature-card">
-							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">University PYQs</h3>
-							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2">Curated PYQs for all subjects to boost confidence.</p>
+						<div className="group p-6 rounded-xl backdrop-blur-md bg-gradient-to-br from-[#6c47ff]/5 via-[#6c47ff]/10 to-[#6c47ff]/5 hover:bg-gradient-to-br hover:from-[#6c47ff]/10 hover:via-[#6c47ff]/15 hover:to-[#6c47ff]/10 transition-all duration-500 relative overflow-hidden shadow-[0_0_15px_rgba(108,71,255,0.15)] hover:shadow-[0_0_25px_rgba(108,71,255,0.25)]">
+							<div className="absolute inset-0 bg-gradient-to-br from-[#6c47ff]/0 via-[#6c47ff]/5 to-[#6c47ff]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+							<div className="absolute inset-0 rounded-xl border border-[#6c47ff]/20 group-hover:border-[#6c47ff]/40 transition-all duration-500">
+								<div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#6c47ff]/0 via-[#6c47ff]/50 to-[#6c47ff]/0 opacity-0 group-hover:opacity-100 animate-border-shine"></div>
+							</div>
+							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff] relative z-10 group-hover:text-[#8b6aff] transition-colors duration-300">University PYQs</h3>
+							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2 relative z-10">Curated PYQs for all subjects to boost confidence.</p>
 						</div>
-						<div className="feature-card">
-							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff]">24/7 Mentorship</h3>
-							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2">Direct WhatsApp guidance from mentors anytime.</p>
+						<div className="group p-6 rounded-xl backdrop-blur-md bg-gradient-to-br from-[#6c47ff]/5 via-[#6c47ff]/10 to-[#6c47ff]/5 hover:bg-gradient-to-br hover:from-[#6c47ff]/10 hover:via-[#6c47ff]/15 hover:to-[#6c47ff]/10 transition-all duration-500 relative overflow-hidden shadow-[0_0_15px_rgba(108,71,255,0.15)] hover:shadow-[0_0_25px_rgba(108,71,255,0.25)]">
+							<div className="absolute inset-0 bg-gradient-to-br from-[#6c47ff]/0 via-[#6c47ff]/5 to-[#6c47ff]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+							<div className="absolute inset-0 rounded-xl border border-[#6c47ff]/20 group-hover:border-[#6c47ff]/40 transition-all duration-500">
+								<div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#6c47ff]/0 via-[#6c47ff]/50 to-[#6c47ff]/0 opacity-0 group-hover:opacity-100 animate-border-shine"></div>
+							</div>
+							<h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-semibold text-[#6c47ff] relative z-10 group-hover:text-[#8b6aff] transition-colors duration-300">24/7 Mentorship</h3>
+							<p className="text-white/80 text-xs xs:text-sm sm:text-base md:text-lg mt-2 relative z-10">Direct WhatsApp guidance from mentors anytime.</p>
 						</div>
 					</div>
 				</div>
@@ -197,7 +218,17 @@ const Landingpage = () => {
 				</div>
 			</div>
 
-			
+			{/* Footer */}
+			<div className="w-full py-6 sm:py-8 mt-8 border-t border-[#6c47ff]/20">
+				<div className="max-w-7xl mx-auto px-4 text-center">
+					<p className="text-white/60 text-sm sm:text-base">
+						Made and Developed by Samarth{' '}
+						<span className="text-[#6c47ff] font-semibold hover:text-[#8b6aff] transition-colors duration-300">
+							Pravidhi
+						</span>
+					</p>
+				</div>
+			</div>
 		</div>
 	);
 };

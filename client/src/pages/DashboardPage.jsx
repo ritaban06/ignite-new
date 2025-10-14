@@ -739,7 +739,7 @@ const DashboardPage = () => {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
-    navigate(`/dashboard/folder/${urlFriendlyName}`);
+    navigate(`/dashboard/folder/${urlFriendlyName}`, { replace: true });
     fetchFilesInFolder(folderId);
   };
   
@@ -754,16 +754,15 @@ const DashboardPage = () => {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
-      navigate(`/dashboard/folder/${urlFriendlyName}`);
+      navigate(`/dashboard/folder/${urlFriendlyName}`, { replace: true });
       fetchFilesInFolder(parentFolder.id);
     } else {
       // Go back to root (show all folders)
-      setIsLoading(true);
       setSelectedFolder(null);
       setFiles([]);
       setCurrentPath([]);
-      navigate('/dashboard');
-      setIsLoading(false);
+      navigate('/dashboard', { replace: true });
+      loadDashboardData();
     }
   };
   

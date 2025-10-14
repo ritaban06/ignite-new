@@ -884,12 +884,12 @@ const DashboardPage = () => {
       {currentPath.length > 0 && (
         <div className="mb-4 bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 border border-[rgba(255,255,255,0.15)]">
           <div className="flex items-center space-x-2 text-white/80 overflow-x-auto pb-2">
-            <button
+            {/* <button
               onClick={() => navigateBack()}
               className="flex items-center hover:text-white transition-colors flex-shrink-0"
             >
               ← Back
-            </button>
+            </button> */}
             <span className="text-white/60 flex-shrink-0">/</span>
             <button
               onClick={() => {

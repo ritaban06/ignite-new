@@ -216,6 +216,7 @@ const DashboardPage = () => {
         setSelectedFolder(null);
         setFiles([]);
         setCurrentPath([]);
+        loadDashboardData();
         return;
       }
       
@@ -232,26 +233,33 @@ const DashboardPage = () => {
           return;
         }
         
-        // Find folder by URL name
-        const findFolder = (folders) => {
+        // Find folder and its complete path in hierarchy
+        const findFolderAndPath = (folders, targetName, currentPath = []) => {
           for (const folder of folders) {
             const folderUrlName = folder.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-            if (folderUrlName === urlFolderName) {
-              return folder;
+            if (folderUrlName === targetName) {
+              return {
+                folder,
+                path: [...currentPath, { id: folder.id, name: folder.name }]
+              };
             }
             if (folder.children?.length) {
-              const found = findFolder(folder.children);
+              const found = findFolderAndPath(
+                folder.children, 
+                targetName, 
+                [...currentPath, { id: folder.id, name: folder.name }]
+              );
               if (found) return found;
             }
           }
           return null;
         };
         
-        const folder = findFolder(folderHierarchy);
-        if (folder && folder.id !== selectedFolder) {
-          setSelectedFolder(folder.id);
-          setCurrentPath([{ id: folder.id, name: folder.name }]);
-          fetchFilesInFolder(folder.id);
+        const result = findFolderAndPath(folderHierarchy, urlFolderName);
+        if (result && result.folder.id !== selectedFolder) {
+          setSelectedFolder(result.folder.id);
+          setCurrentPath(result.path);
+          fetchFilesInFolder(result.folder.id);
         }
       }
     };

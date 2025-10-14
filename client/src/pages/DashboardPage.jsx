@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Search,
   MoveUp,
@@ -130,10 +131,46 @@ const DashboardPage = () => {
     }
   }, [pagination.currentPage]);
 
-  // Load initial data
+  // Get URL params
+  const { folderName: urlFolderName } = useParams();
+  
+  // Load initial data and handle direct folder access from URL
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (urlFolderName) {
+      // If we have a folder name in the URL, wait for folder hierarchy to load first
+      const loadFolderFromUrl = async () => {
+        await loadDashboardData();
+        // Find the folder info from hierarchy by matching the URL-friendly name
+        const findFolderByUrlName = (folders) => {
+          for (const folder of folders) {
+            const folderUrlName = folder.name
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+            if (folderUrlName === urlFolderName) {
+              return folder;
+            }
+            if (folder.children && folder.children.length > 0) {
+              const found = findFolderByUrlName(folder.children);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        
+        const folderInfo = findFolderByUrlName(folderHierarchy);
+        if (folderInfo) {
+          navigateToFolder(folderInfo.id, folderInfo.name);
+        } else {
+          // If folder not found, navigate back to dashboard
+          navigate('/dashboard');
+        }
+      };
+      loadFolderFromUrl();
+    } else {
+      loadDashboardData();
+    }
+  }, [urlFolderName]);
   
   // Set up socket.io listeners for real-time updates
   useEffect(() => {
@@ -592,11 +629,10 @@ const DashboardPage = () => {
     }
   };
   
+  const navigate = useNavigate();
+  
   // Navigate to a folder (handles both root and nested folders)
   const navigateToFolder = (folderId, folderName) => {
-    // console.log(`Navigating to folder: ${folderName} (ID: ${folderId})`);
-    // Don't set isLoading true here; it's done in fetchFilesInFolder
-    
     // Find the complete path to this folder
     const findFolderPath = (folders, targetId, currentPath = []) => {
       for (const folder of folders) {
@@ -615,38 +651,35 @@ const DashboardPage = () => {
     // of the current folder to maintain proper path
     if (selectedFolder) {
       const currentSubfolders = getCurrentSubfolders();
-      // console.log('Current subfolders:', currentSubfolders.map(f => ({ id: f.id, name: f.name })));
-      
       const isDirectChild = currentSubfolders && currentSubfolders.some(f => f.id === folderId);
-      // console.log(`Is ${folderName} a direct child of current folder? ${isDirectChild}`);
       
       if (isDirectChild) {
         // It's a direct child, just add to the current path
         const newPath = [...currentPath, { id: folderId, name: folderName }];
-        // console.log('Setting new path (direct child):', newPath);
         setCurrentPath(newPath);
       } else {
         // It's not a direct child, we need to find the complete path
         const newPath = findFolderPath(folderHierarchy, folderId);
         if (newPath) {
-          // console.log('Setting new path (found in hierarchy):', newPath);
           setCurrentPath(newPath);
         } else {
           // Fallback if path not found
-          // console.log('Path not found in hierarchy, using fallback path');
           setCurrentPath([{ id: folderId, name: folderName }]);
         }
       }
     } else {
       // We're at the root level
-      // console.log('Setting path from root level');
       setCurrentPath([{ id: folderId, name: folderName }]);
     }
     
-    // console.log(`Fetching files for folder: ${folderName}`);
     setSelectedFolder(folderId);
+    // Update URL to reflect the current folder name only
+    const urlFriendlyName = folderName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    navigate(`/dashboard/folder/${urlFriendlyName}`);
     fetchFilesInFolder(folderId);
-    // Don't set isLoading false here; it's done in fetchFilesInFolder after data is loaded
   };
   
   // Navigate back in folder hierarchy
@@ -656,6 +689,11 @@ const DashboardPage = () => {
       const parentFolder = newPath[newPath.length - 1];
       setCurrentPath(newPath);
       setSelectedFolder(parentFolder.id);
+      const urlFriendlyName = parentFolder.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      navigate(`/dashboard/folder/${urlFriendlyName}`);
       fetchFilesInFolder(parentFolder.id);
     } else {
       // Go back to root (show all folders)
@@ -663,6 +701,7 @@ const DashboardPage = () => {
       setSelectedFolder(null);
       setFiles([]);
       setCurrentPath([]);
+      navigate('/dashboard');
       setIsLoading(false);
     }
   };
@@ -872,6 +911,11 @@ const DashboardPage = () => {
                     const newPath = currentPath.slice(0, index + 1);
                     setCurrentPath(newPath);
                     setSelectedFolder(pathItem.id);
+                    const urlFriendlyName = pathItem.name
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, '-')
+                      .replace(/^-+|-+$/g, '');
+                    navigate(`/dashboard/folder/${urlFriendlyName}`);
                     fetchFilesInFolder(pathItem.id);
                   }}
                   className={`hover:text-white transition-colors flex-shrink-0 ${

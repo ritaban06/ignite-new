@@ -76,11 +76,12 @@ function AppContent() {
       <main className="pt-16">
         <Routes>
           {/* Redirect authenticated users to dashboard when they visit root or landing */}
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/landing" element={<DashboardPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          {/* <Route path="/search" element={<SearchPage />} /> */}
-          {/* <Route path="/gdrive-manager" element={<GoogleDrivePDFManager />} /> */}
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/landing" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard/folder/:folderName" element={<DashboardPage />} />
+        {/* <Route path="/search" element={<SearchPage />} /> */}
+        {/* <Route path="/gdrive-manager" element={<GoogleDrivePDFManager />} /> */}
           {/* Catch all other routes and redirect to dashboard for authenticated users */}
           <Route path="*" element={<DashboardPage />} />
         </Routes>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
   MoveUp,
@@ -131,8 +131,9 @@ const DashboardPage = () => {
     }
   }, [pagination.currentPage]);
 
-  // Get URL params
+  // Get URL params and location
   const { folderName: urlFolderName } = useParams();
+  const location = useLocation();
   
   // Load initial data and handle direct folder access from URL
   useEffect(() => {
@@ -205,6 +206,58 @@ const DashboardPage = () => {
   useEffect(() => {
     loadFiles();
   }, [loadFiles]);
+
+  // Handle back/forward navigation
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const path = location.pathname;
+      
+      if (path === '/dashboard') {
+        setSelectedFolder(null);
+        setFiles([]);
+        setCurrentPath([]);
+        return;
+      }
+      
+      if (path.startsWith('/dashboard/folder/') && folderHierarchy.length > 0) {
+        const urlSegments = path.split('/');
+        const urlFolderName = urlSegments[urlSegments.length - 1];
+        
+        // Don't update if we're already on this folder
+        const currentFolderUrlName = currentPath.length > 0 
+          ? currentPath[currentPath.length - 1].name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+          : '';
+          
+        if (urlFolderName === currentFolderUrlName) {
+          return;
+        }
+        
+        // Find folder by URL name
+        const findFolder = (folders) => {
+          for (const folder of folders) {
+            const folderUrlName = folder.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            if (folderUrlName === urlFolderName) {
+              return folder;
+            }
+            if (folder.children?.length) {
+              const found = findFolder(folder.children);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        
+        const folder = findFolder(folderHierarchy);
+        if (folder && folder.id !== selectedFolder) {
+          setSelectedFolder(folder.id);
+          setCurrentPath([{ id: folder.id, name: folder.name }]);
+          fetchFilesInFolder(folder.id);
+        }
+      }
+    };
+    
+    handleLocationChange();
+  }, [location.pathname]);
 
         // Listen for refresh event from Header logo click
         useEffect(() => {

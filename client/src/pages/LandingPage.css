@@ -1,33 +1,29 @@
 @keyframes float {
-  0% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-10px) rotate(1deg); }
-  75% { transform: translateY(5px) rotate(-1deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
 }
 
 @keyframes glowPulse {
-  0% { opacity: 0.5; filter: blur(8px); }
-  50% { opacity: 1; filter: blur(12px); }
-  100% { opacity: 0.5; filter: blur(8px); }
+  0% { opacity: 0.4; filter: blur(6px); }
+  50% { opacity: 0.8; filter: blur(8px); }
+  100% { opacity: 0.4; filter: blur(6px); }
 }
 
 @keyframes timelineGlow {
-  0% { transform: translateY(-100%); opacity: 0.4; }
-  50% { opacity: 0.8; }
-  100% { transform: translateY(100%); opacity: 0.4; }
+  0% { transform: translateY(-100%); opacity: 0.3; }
+  50% { opacity: 0.5; }
+  100% { transform: translateY(100%); opacity: 0.3; }
 }
 
 @keyframes shine {
   0% { 
     transform: translateX(-100%) skewX(45deg);
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 0.8;
+    opacity: 0.3;
   }
   100% { 
     transform: translateX(100%) skewX(45deg);
-    opacity: 0.6;
+    opacity: 0.3;
   }
 }
 
@@ -65,16 +61,17 @@
 }
 
 .animate-border-shine {
-  animation: border-shine 2s ease-in-out infinite;
+  animation: border-shine 3s ease-in-out infinite;
   will-change: transform;
 }
+
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-20px); }
+  from { opacity: 0; transform: translateY(-16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -84,38 +81,43 @@
 }
 
 @keyframes pingSlow {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 0.4; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+
+@keyframes slideIn {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
 .animate-float { 
-  animation: float 6s ease-in-out infinite; 
+  animation: float 8s ease-in-out infinite; 
   will-change: transform;
 }
 
 .animate-fade-in-down { 
-  animation: fadeInDown 1s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInDown 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, opacity;
 }
 
 .animate-fade-in-up { 
-  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, opacity;
 }
 
 .animate-fade-in { 
-  animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   will-change: opacity;
 }
 
 .animate-ping-slow { 
-  animation: pingSlow 3s ease-in-out infinite;
+  animation: pingSlow 4s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
 .animate-morph {
-  animation: morphGradient 15s ease-in-out infinite;
+  animation: morphGradient 20s ease-in-out infinite;
   background-size: 400% 400%;
   will-change: border-radius, background-position;
 }
@@ -123,12 +125,12 @@
 .animate-shimmer {
   background: linear-gradient(
     90deg,
+    rgba(108, 71, 255, 0.05),
     rgba(108, 71, 255, 0.1),
-    rgba(255, 71, 199, 0.1),
-    rgba(108, 71, 255, 0.1)
+    rgba(108, 71, 255, 0.05)
   );
   background-size: 200% 100%;
-  animation: shimmer 3s linear infinite;
+  animation: shimmer 4s linear infinite;
   will-change: background-position;
 }
 
@@ -143,13 +145,13 @@
 
 /* Feature card styling */
 .feature-card {
-  background: linear-gradient(135deg, rgba(108, 71, 255, 0.1), rgba(255, 71, 199, 0.05));
-  padding: 1.5rem;
-  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 2rem;
+  border-radius: 0.75rem;
   text-align: center;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(108, 71, 255, 0.2);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
   height: 100%;
@@ -160,15 +162,13 @@
 
 /* Feature card hover effects */
 .feature-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(108, 71, 255, 0.4);
-  box-shadow: 
-    0 10px 20px -5px rgba(108, 71, 255, 0.3),
-    0 0 15px rgba(108, 71, 255, 0.2);
-  background: linear-gradient(135deg, rgba(108, 71, 255, 0.15), rgba(255, 71, 199, 0.1));
+  transform: translateY(-3px);
+  border-color: rgba(108, 71, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-/* Shimmer effect on hover */
+/* Subtle shimmer effect on hover */
 .feature-card::before {
   content: '';
   position: absolute;
@@ -179,92 +179,33 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.1),
     transparent
   );
-  transition: 0.5s ease;
+  transition: 0.4s ease;
 }
 
 .feature-card:hover::before {
-  animation: shimmer 2s infinite;
-}
-
-/* Glow effect */
-.feature-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(108, 71, 255, 0.1),
-    transparent
-  );
-  background-size: 200% 100%;
   animation: shimmer 3s infinite;
-  pointer-events: none;
 }
 
 /* Responsive padding adjustments */
 @media (max-width: 475px) {
   .feature-card {
-    padding: 1.25rem;
+    padding: 1.5rem;
   }
 }
 
 @media (min-width: 476px) and (max-width: 768px) {
   .feature-card {
-    padding: 1.5rem;
+    padding: 1.75rem;
   }
 }
 
 @media (min-width: 769px) {
   .feature-card {
-    padding: 1.75rem;
+    padding: 2rem;
   }
-}
-
-.feature-card {
-  background: linear-gradient(135deg, rgba(108, 71, 255, 0.1), rgba(255, 71, 199, 0.05));
-  padding: 1.5rem;
-  border-radius: 1rem;
-  text-align: center;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(108, 71, 255, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-.feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: all 0.5s ease;
-}
-
-.feature-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(108, 71, 255, 0.1),
-    transparent
-  );
-  background-size: 200% 100%;
-  animation: shimmer 3s infinite;
-  pointer-events: none;
 }
 
 .text-gradient {
@@ -279,7 +220,7 @@
 }
 
 .timeline-card:hover {
-  transform: scale(1.02);
+  transform: translateY(-3px);
 }
 
 .timeline-dot {
@@ -290,10 +231,10 @@
 .timeline-dot::after {
   content: '';
   position: absolute;
-  inset: -4px;
+  inset: -3px;
   border-radius: 50%;
-  background: rgba(108, 71, 255, 0.2);
-  filter: blur(8px);
+  background: rgba(108, 71, 255, 0.15);
+  filter: blur(6px);
 }
 
 .timeline-line {
@@ -307,48 +248,27 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to bottom, transparent, #6c47ff, transparent);
-  animation: timelineGlow 3s linear infinite;
+  background: linear-gradient(to bottom, transparent, rgba(108, 71, 255, 0.6), transparent);
+  animation: timelineGlow 4s linear infinite;
 }
 
-/* Enhanced feature card animations */
+/* Simplified feature card animations */
 .feature-card {
-  animation: slideLeftToRight 0.8s ease-out forwards;
+  animation: fadeIn 0.8s ease-out forwards;
   opacity: 0;
-  transform: translateX(-200%);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(108, 71, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
   transition: all 0.3s ease;
 }
 
-.feature-card:nth-child(1) { animation-delay: 0s; }
+.feature-card:nth-child(1) { animation-delay: 0.1s; }
 .feature-card:nth-child(2) { animation-delay: 0.2s; }
-.feature-card:nth-child(3) { animation-delay: 0.4s; }
-.feature-card:nth-child(4) { animation-delay: 0.6s; }
-
-@keyframes slideLeftToRight {
-  0% {
-    transform: translateX(-200%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 
-    0 10px 20px -5px rgba(108, 71, 255, 0.3),
-    0 0 15px rgba(108, 71, 255, 0.2);
-  border-color: rgba(108, 71, 255, 0.4);
-  background: linear-gradient(135deg, rgba(108, 71, 255, 0.15), rgba(255, 71, 199, 0.1));
-}
+.feature-card:nth-child(3) { animation-delay: 0.3s; }
+.feature-card:nth-child(4) { animation-delay: 0.4s; }
 
 .feature-card:hover::before {
-  animation: shine 2s ease infinite;
+  animation: shine 2.5s ease infinite;
 }
 
 /* Timeline Enhancements */
@@ -362,12 +282,12 @@
   position: absolute;
   top: 0;
   left: 50%;
-  width: 2px;
+  width: 1px;
   height: 100%;
-  background: linear-gradient(180deg, rgba(108, 71, 255, 0.8), rgba(255, 71, 199, 0.8));
+  background: linear-gradient(180deg, rgba(108, 71, 255, 0.5), rgba(108, 71, 255, 0.5));
   transform: translateX(-50%);
-  filter: blur(4px);
-  opacity: 0.5;
+  filter: blur(1px);
+  opacity: 0.4;
 }
 
 .timeline-line::after {
@@ -375,11 +295,11 @@
   position: absolute;
   top: 0;
   left: 50%;
-  width: 2px;
+  width: 1px;
   height: 100%;
-  background: linear-gradient(180deg, #6c47ff, #ff47c7);
+  background: linear-gradient(180deg, #6c47ff, #6c47ff);
   transform: translateX(-50%);
-  animation: timelineGlow 3s ease-in-out infinite;
+  animation: timelineGlow 4s ease-in-out infinite;
 }
 
 .timeline-dot {
@@ -389,19 +309,19 @@
 }
 
 .timeline-dot:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .timeline-dot::before {
   content: '';
   position: absolute;
-  inset: -8px;
+  inset: -6px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(108, 71, 255, 0.3), transparent);
-  animation: glowPulse 2s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(108, 71, 255, 0.2), transparent);
+  animation: glowPulse 3s ease-in-out infinite;
 }
 
-/* move content visually left-to-right by translating positive X on the track */
+/* Simplified marquee animation */
 @keyframes marqueeLTR {
   0% { transform: translateX(0); }
   100% { transform: translateX(50%); }
@@ -409,10 +329,9 @@
 
 .features-track {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   align-items: stretch;
-  /* Duplicate content is expected; moving right by 50% creates a seamless loop visually moving cards left-to-right */
-  animation: marqueeLTR 12s linear infinite;
+  animation: marqueeLTR 20s linear infinite;
 }
 
 .features-track:hover {
@@ -420,10 +339,10 @@
 }
 
 .features-track > .feature-card {
-  min-width: 240px; /* ensures consistent card width for smooth scrolling */
+  min-width: 280px; /* ensures consistent card width for smooth scrolling */
 }
 
 /* Make sure duplicated block doesn't wrap */
 .features-track-dup {
-  display: contents; /* keep DOM simple while doubling child nodes */
+  display: contents;
 }

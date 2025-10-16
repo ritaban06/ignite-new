@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Viewer, Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { toolbarPlugin, MoreActionsPopover } from '@react-pdf-viewer/toolbar';
+import { fullScreenPlugin } from '@react-pdf-viewer/full-screen';
+import '@react-pdf-viewer/full-screen/lib/styles/index.css';
 import { X } from 'lucide-react';
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
@@ -24,25 +26,24 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
   const fetchingRef = useRef(false);
   const currentPdfIdRef = useRef(null);
 
+  // Full screen plugin
+  const fullScreenPluginInstance = fullScreenPlugin();
+  const { EnterFullScreen } = fullScreenPluginInstance;
 
-  // Create secure toolbar plugin that disables download, print, and open
-  const secureToolbarPluginInstance = toolbarPlugin({
-    // Transform the toolbar to remove dangerous buttons
-    transform: (slot) => ({
-      ...slot,
-      // Remove download button completely
-      Download: () => <></>,
-      DownloadMenuItem: () => <></>,
-      // Remove print button completely  
-      Print: () => <></>,
-      PrintMenuItem: () => <></>,
-      // Remove open file button
-      Open: () => <></>,
-      // Remove more actions that might contain download/print
-      MoreActions: () => <></>,
-      MoreActionsPopover: () => <></>,
-    }),
-  });
+  // Secure toolbar plugin (disables all except fullscreen)
+const secureToolbarPluginInstance = toolbarPlugin({
+  transform: (slot) => ({
+    // Keep only FullScreen
+    ...slot,
+    Open: () => <></>,
+    Download: () => <></>,
+    DownloadMenuItem: () => <></>,
+    Print: () => <></>,
+    PrintMenuItem: () => <></>,
+    MoreActions: () => <></>,
+    MoreActionsPopover: () => <></>,
+  }),
+});
 
   // Create default layout plugin instance with lazy loading enabled
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
@@ -450,17 +451,33 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
             )}
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            {/* Annotation button removed (annotationMode not defined) */}
-            <div className="text-xs text-red-600 mr-1 sm:mr-4 hidden sm:inline">
-              🔒 Viewing Only - Download & Print Disabled
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors touch-target"
-            >
-              <X size={18} className="sm:w-5 sm:h-5" />
-            </button>
-          </div>
+  <div className="text-xs text-red-600 mr-1 sm:mr-4 hidden sm:inline">
+    🔒 Viewing Only - Download & Print Disabled
+  </div>
+
+  {/* Fullscreen Button */}
+  <EnterFullScreen>
+    {(props) => (
+      <button
+        onClick={props.onClick}
+        className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+        title="Enter Fullscreen"
+      >
+        🖵
+      </button>
+    )}
+  </EnterFullScreen>
+
+  {/* Close Button */}
+  <button
+    onClick={onClose}
+    className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors touch-target"
+    title="Close Viewer"
+  >
+    <X size={18} className="sm:w-5 sm:h-5" />
+  </button>
+</div>
+
         </div>
 
         {/* Content */}
@@ -496,7 +513,7 @@ const SecurePDFViewer = ({ pdfId, isOpen, onClose }) => {
               <Worker workerUrl="/pdfjs/pdf.worker.min.js">
                 <Viewer
                   fileUrl={pdfUrl}
-                  plugins={[defaultLayoutPluginInstance]}
+                  plugins={[defaultLayoutPluginInstance, fullScreenPluginInstance]}
                   onDocumentLoad={(e) => {
                     // console.log('✅ PDF Document loaded successfully!');
                     // console.log('Number of pages:', e.doc.numPages);

@@ -818,7 +818,7 @@ const DashboardPage = () => {
       Welcome back, {user?.name}
     </h1>
     <p className="mt-2 text-xs sm:text-base text-white/80">
-      {user?.department} Dept • Year {user?.year} • Semester {user?.semester}
+      {/* {user?.department} Dept • Year {user?.year} • Semester {user?.semester} */}
     </p>
   </div>
 </div>

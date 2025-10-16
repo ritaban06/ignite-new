@@ -27,7 +27,7 @@ const HybridGoogleLogin = () => {
     try {
       await googleSignIn(credentialResponse);
       // Show success toast and redirect to dashboard
-      toast.success('Successfully signed in!');
+      // toast.success('Successfully signed in!');
       navigate('/dashboard');
     } catch (error) {
       console.error('Web Google sign-in error:', error);
@@ -47,7 +47,7 @@ const HybridGoogleLogin = () => {
       const credentials = await PlatformAuthService.signInWithGoogle();
       await googleSignIn(credentials);
       // Show success toast and redirect to dashboard
-      toast.success('Successfully signed in!');
+      // toast.success('Successfully signed in!');
       navigate('/dashboard');
       
       // Send to backend using the same flow as web
@@ -87,13 +87,13 @@ const HybridGoogleLogin = () => {
           <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
             {platformInfo.isNative ? (
               <>
-                <Smartphone className="h-3 w-3" />
-                <span>Mobile App ({platformInfo.platform})</span>
+                {/* <Smartphone className="h-3 w-3" />
+                <span>Mobile App ({platformInfo.platform})</span> */}
               </>
             ) : (
               <>
-                <Globe className="h-3 w-3" />
-                <span className="text-white">Web Browser</span>
+                {/* <Globe className="h-3 w-3" />
+                <span className="text-white">Web Browser</span> */}
               </>
             )}
           </div>

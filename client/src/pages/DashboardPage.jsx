@@ -818,7 +818,7 @@ const DashboardPage = () => {
       Welcome back, {user?.name}
     </h1>
     <p className="mt-2 text-xs sm:text-base text-white/80">
-      {user?.department} Dept • Year {user?.year} • Semester {user?.semester}
+      {/* {user?.department} Dept • Year {user?.year} • Semester {user?.semester} */}
     </p>
   </div>
 </div>
@@ -936,7 +936,7 @@ const DashboardPage = () => {
 
         {/* Info Text */}
         <div className="mt-3 text-sm text-white/70 text-center">
-          Showing PDFs for {user?.department} Department - Year {user?.year} - Sem {user?.semester}
+          {/* Showing PDFs for {user?.department} Department - Year {user?.year} - Sem {user?.semester} */}
         </div>
       </div>
 

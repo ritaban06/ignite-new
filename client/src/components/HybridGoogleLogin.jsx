@@ -87,13 +87,13 @@ const HybridGoogleLogin = () => {
           <div className="mt-2 flex items-center justify-center space-x-2 text-xs text-gray-500">
             {platformInfo.isNative ? (
               <>
-                <Smartphone className="h-3 w-3" />
-                <span>Mobile App ({platformInfo.platform})</span>
+                {/* <Smartphone className="h-3 w-3" />
+                <span>Mobile App ({platformInfo.platform})</span> */}
               </>
             ) : (
               <>
-                <Globe className="h-3 w-3" />
-                <span className="text-white">Web Browser</span>
+                {/* <Globe className="h-3 w-3" />
+                <span className="text-white">Web Browser</span> */}
               </>
             )}
           </div>

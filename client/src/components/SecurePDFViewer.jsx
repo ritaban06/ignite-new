@@ -4,7 +4,7 @@ import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { toolbarPlugin, MoreActionsPopover } from '@react-pdf-viewer/toolbar';
 import { fullScreenPlugin } from '@react-pdf-viewer/full-screen';
 import '@react-pdf-viewer/full-screen/lib/styles/index.css';
-import { X } from 'lucide-react';
+import { X, Maximize, Minimize } from 'lucide-react';
 import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
 
@@ -461,9 +461,13 @@ const secureToolbarPluginInstance = toolbarPlugin({
       <button
         onClick={props.onClick}
         className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-        title="Enter Fullscreen"
+        title={props.isFullScreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
       >
-        🖵
+        {props.isFullScreen ? (
+          <Minimize size={18} className="sm:w-5 sm:h-5" />
+        ) : (
+          <Maximize size={18} className="sm:w-5 sm:h-5" />
+        )}
       </button>
     )}
   </EnterFullScreen>

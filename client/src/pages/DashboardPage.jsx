@@ -56,10 +56,7 @@ const DashboardPage = () => {
   const [recentFiles, setRecentFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({
-    // Removed department and year filters since backend handles user restrictions
-    subject: "",
-  });
+  const [filters, setFilters] = useState({});
   const [selectedFile, setSelectedFile] = useState(null); // { id, url, name, type }
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [pagination, setPagination] = useState({
@@ -297,27 +294,26 @@ const DashboardPage = () => {
     try {
       setIsLoading(true);
 
-      // Only send search query and pagination - let backend handle department/year restrictions
+      // Include search query and pagination only
       const searchParams = {
         q: searchQuery.trim(),
         page: 1,
         limit: 12
-        // No subject/folder filter
       };
 
       console.log("Dashboard searching with params:", searchParams);
 
       const response = await pdfAPI.searchPDFs(searchParams);
 
-      if (response.data && Array.isArray(response.data.files)) {
-        setFiles(response.data.files);
-        setPagination(
-          response.data.pagination || {
-            currentPage: 1,
-            totalPages: 1,
-            totalCount: response.data.files ? response.data.files.length : 0,
-          }
-        );
+      if (response.data?.files) {
+        const files = Array.isArray(response.data.files) ? response.data.files : [];
+        setFiles(files);
+        // Use response pagination if available, otherwise calculate based on results
+        setPagination({
+          currentPage: response.data.pagination?.currentPage || 1,
+          totalPages: response.data.pagination?.totalPages || Math.ceil(files.length / 12),
+          totalCount: response.data.pagination?.totalCount || files.length,
+        });
 
         if (!response.data.files || response.data.files.length === 0) {
           toast(`No files found matching your search criteria`);
@@ -363,18 +359,8 @@ const DashboardPage = () => {
     }
   };
 
-  const handleFilterChange = (filterKey, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterKey]: value,
-    }));
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
-
   const clearFilters = () => {
-    setFilters({
-      subject: "",
-    });
+    setFilters({});
     setSearchQuery("");
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
     // Reload the default PDFs
@@ -906,31 +892,21 @@ const DashboardPage = () => {
             />
           </div>
 
-          {/* Subject Filter + Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <input
-              type="text"
-              value={filters.subject}
-              onChange={(e) => handleFilterChange("subject", e.target.value)}
-              placeholder="Filter by subject (optional)"
-              className="block w-full px-3 py-2 bg-transparent border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
-            />
-
-            <div className="flex space-x-2">
-              <button
-                type="submit"
-                className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-500 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
-              >
-                Search
-              </button>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="px-4 py-2 border border-white/20 text-white/80 rounded-lg hover:bg-white/10 transition-colors"
-              >
-                Clear
-              </button>
-            </div>
+          {/* Search Buttons */}
+          <div className="flex justify-end space-x-2 mt-4">
+            <button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-500 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="px-4 py-2 border border-white/20 text-white/80 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              Clear
+            </button>
           </div>
         </form>
 

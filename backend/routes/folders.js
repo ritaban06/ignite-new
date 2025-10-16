@@ -6,6 +6,18 @@ const AccessLog = require('../models/AccessLog');
 const { authenticate } = require('../middleware/auth');
 const { emitFolderUpdate } = require('../utils/socketEvents');
 
+// Load Google Drive credentials from environment variable
+let credentials;
+try {
+  credentials = process.env.GDRIVE_CREDENTIALS ? JSON.parse(process.env.GDRIVE_CREDENTIALS) : null;
+  if (!credentials) {
+    console.error('GDRIVE_CREDENTIALS environment variable is not set');
+  }
+} catch (error) {
+  console.error('Error parsing GDRIVE_CREDENTIALS:', error);
+  credentials = null;
+}
+
 const router = express.Router();
 const PDF = require('../models/PDF');
 
@@ -875,39 +887,112 @@ router.delete('/:id', authenticate, async (req, res) => {
 
 // Helper function for searching files in folders
 async function searchFilesInFolders(folders, user, searchTerm, googleDriveService) {
-  let results = [];
-  for (const folder of folders) {
-    if (folder.children && folder.children.length > 0) {
-      results = results.concat(await searchFilesInFolders(folder.children, user, searchTerm, googleDriveService));
-    }
-    // Search files in this folder
-    if (folder.gdriveId) {
-      const files = await googleDriveService.listFilesRecursive(folder.gdriveId);
-      const matchingFiles = files.filter(file =>
-        file.name && file.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      results = results.concat(matchingFiles);
-    }
+  if (!folders || !Array.isArray(folders) || !searchTerm || !googleDriveService) {
+    throw new Error('Invalid parameters for searchFilesInFolders');
   }
-  return results;
+
+  let results = [];
+  try {
+    for (const folder of folders) {
+      // Skip if folder is not accessible to user
+      if (!folder) continue;
+
+      try {
+        // Recursively search in children
+        if (folder.children && Array.isArray(folder.children) && folder.children.length > 0) {
+          const childResults = await searchFilesInFolders(folder.children, user, searchTerm, googleDriveService);
+          if (Array.isArray(childResults)) {
+            results = results.concat(childResults);
+          }
+        }
+
+        // Search files in current folder
+        if (folder.gdriveId) {
+          try {
+            const files = await googleDriveService.listFilesRecursive(folder.gdriveId);
+            if (Array.isArray(files)) {
+              const matchingFiles = files.filter(file =>
+                file && file.name && 
+                typeof file.name === 'string' && 
+                file.name.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+              results = results.concat(matchingFiles);
+            }
+          } catch (driveError) {
+            console.error(`Error listing files in folder ${folder.gdriveId}:`, driveError);
+            // Continue with other folders instead of failing completely
+          }
+        }
+      } catch (folderError) {
+        console.error(`Error processing folder:`, folderError);
+        // Continue with other folders
+      }
+    }
+    return results;
+  } catch (error) {
+    console.error('Error in searchFilesInFolders:', error);
+    throw error;
+  }
 }
 
 // Route: /folders/search
 router.get('/search', authenticate, async (req, res) => {
   try {
-    const { q } = req.query;
+    // Validate and sanitize input
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(50, parseInt(req.query.limit) || 12));
+    const searchTerm = (req.query.q || '').trim();
+    
+    if (!searchTerm) {
+      return res.status(400).json({ error: 'Search term is required' });
+    }
+
     const user = req.user;
+    if (!user) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
+    // Get root folders
     const rootFolders = await Folder.find({ parent: null }).lean();
-    const googleDriveService = new GoogleDriveService(
-      credentials,
-      null
-    );
-    const results = await searchFilesInFolders(rootFolders, user, q, googleDriveService);
-    res.json({
-      query: q,
-      files: results,
-      totalCount: results.length
-    });
+    if (!rootFolders || !Array.isArray(rootFolders)) {
+      return res.status(500).json({ error: 'Failed to retrieve folder structure' });
+    }
+    
+    try {
+      // Validate required credentials
+      if (!credentials || !credentials.private_key || !credentials.client_email) {
+        console.error('Invalid credentials state:', 
+          credentials ? 'Missing required fields' : 'No credentials found');
+        throw new Error('Google Drive credentials are not properly configured');
+      }
+
+      // Initialize Google Drive service
+      const googleDriveService = new GoogleDriveService(credentials, process.env.GDRIVE_BASE_FOLDER_ID || null);
+      
+      // Get all matching files
+      let results = await searchFilesInFolders(rootFolders, user, searchTerm, googleDriveService);
+      
+      // Ensure results is always an array
+      results = Array.isArray(results) ? results : [];
+      
+      // Calculate pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = Math.min(startIndex + limit, results.length);
+      const paginatedResults = results.slice(startIndex, endIndex);
+      
+      res.json({
+        query: searchTerm,
+        files: paginatedResults,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(results.length / limit) || 1,
+          totalCount: results.length
+        }
+      });
+    } catch (driveError) {
+      console.error('Google Drive service error:', driveError);
+      return res.status(500).json({ error: 'Failed to search files', details: driveError.message });
+    }
   } catch (error) {
     res.status(500).json({ error: 'Search failed', message: error.message });
   }

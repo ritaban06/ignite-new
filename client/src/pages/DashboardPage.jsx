@@ -936,7 +936,7 @@ const DashboardPage = () => {
 
         {/* Info Text */}
         <div className="mt-3 text-sm text-white/70 text-center">
-          Showing PDFs for {user?.department} Department - Year {user?.year} - Sem {user?.semester}
+          {/* Showing PDFs for {user?.department} Department - Year {user?.year} - Sem {user?.semester} */}
         </div>
       </div>
 

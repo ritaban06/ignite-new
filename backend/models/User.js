@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
     required: function() { 
       return this.role === 'client'; 
     },
-    enum: ['AIML', 'CSE', 'ECE', 'EEE', 'IT']
+    enum: ['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']
   },
   year: {
     type: Number,

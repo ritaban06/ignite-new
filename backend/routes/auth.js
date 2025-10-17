@@ -50,7 +50,7 @@ router.post('/register', [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
   body('name').trim().isLength({ min: 2, max: 50 }),
-  body('department').isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  body('department').isIn(['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']),
   body('year').isInt({ min: 1, max: 4 })
 ], async (req, res) => {
   try {

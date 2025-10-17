@@ -707,7 +707,7 @@ router.post('/upload', [
   authenticate,
   upload.single('pdf'),
   body('title').notEmpty(),
-  body('department').isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  body('department').isIn(['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']),
   body('year').isInt({ min: 1, max: 4 }),
   body('subject').notEmpty(),
 ], async (req, res) => {

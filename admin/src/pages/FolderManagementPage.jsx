@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Department, Year, and Semester options
-const DEPARTMENTS = ['AIML', 'CSE', 'ECE', 'EEE', 'IT'];
+const DEPARTMENTS = ['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS'];
 const YEARS = ['1', '2', '3', '4'];
 const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8'];
 import { Folder, FileText, Edit, Trash2, Plus, User, ChevronRight, ChevronDown, Check, X } from 'lucide-react';

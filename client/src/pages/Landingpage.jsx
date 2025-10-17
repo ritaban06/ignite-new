@@ -75,7 +75,7 @@ const Landingpage = () => {
       </div>
       
       {/* Clean Navbar */}
-      <header className={`w-full ${navbarSolid ? 'bg-black/70' : 'bg-black/10'} transition-colors duration-300 backdrop-blur-sm border-b border-white/10 sticky top-0 z-50`}>
+      <header className={`mb-12 w-full ${navbarSolid ? 'bg-black/70' : 'bg-black/10'} transition-colors duration-300 backdrop-blur-sm border-b border-white/10 fixed top-0 z-50`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Logo */}
@@ -217,6 +217,9 @@ const Landingpage = () => {
           )}
         </div>
       </header>
+	  <div className="flex justify-between items-center h-16 md:h-20">
+            
+    </div>
 			{/* Hero Section - Clean Educational Theme */}
 			<div className="w-full max-w-7xl mx-auto px-4 pt-8 xs:pt-36 lg:pt-24 pb-6 sm:pb-8 md:pb-10 text-center relative">
 				{/* Minimalist educational icons floating in background */}
@@ -298,7 +301,7 @@ const Landingpage = () => {
 						<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#6c47ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
 						</svg>
-						<span className="text-sm">Fast Downloads</span>
+						<span className="text-sm">Expert-Tested Academic Resources</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#6c47ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -608,7 +611,7 @@ const Landingpage = () => {
 							</svg>
 						</div>
 						<p className="text-white/80 italic mb-6 text-sm sm:text-base">
-							"Having access to previous year question papers with solutions was a game-changer for me. I could identify patterns and focus on important topics, which helped me score an A+ in my finals."
+							"Having access to previous year question papers was a game-changer for me. I could identify patterns and focus on important topics, which helped me score in my finals."
 						</p>
 						<div className="flex items-center">
 							<div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#6c47ff] to-[#47ffd1] flex items-center justify-center text-white font-bold text-lg">
@@ -616,7 +619,7 @@ const Landingpage = () => {
 							</div>
 							<div className="ml-4">
 								<h4 className="text-white font-medium text-sm sm:text-base">Rohan Kumar</h4>
-								<p className="text-white/60 text-xs sm:text-sm">Mechanical Engineering, 4th Year</p>
+								<p className="text-white/60 text-xs sm:text-sm">Mechanical Engineering, 2nd Year</p>
 							</div>
 						</div>
 					</div>
@@ -746,7 +749,7 @@ const Landingpage = () => {
 									</div>
 									<div className="ml-3">
 										<p className="text-white/60 text-sm">Email</p>
-										<p className="text-white text-sm font-medium mt-1">support@ignite.edu</p>
+										<p className="text-white text-sm font-medium mt-1">ignite.samarthtmsl@gmail.com</p>
 									</div>
 								</div>
 								
@@ -758,7 +761,9 @@ const Landingpage = () => {
 									</div>
 									<div className="ml-3">
 										<p className="text-white/60 text-sm">Phone</p>
-										<p className="text-white text-sm font-medium mt-1">+91 9876543210</p>
+										<p className="text-white text-sm font-medium mt-1">+91 62822 23170</p>
+										<p className="text-white text-sm font-medium mt-1">+91 70617 51339</p>
+										<p className="text-white text-sm font-medium mt-1">+91 87970 77633</p>
 									</div>
 								</div>
 								
@@ -771,7 +776,8 @@ const Landingpage = () => {
 									</div>
 									<div className="ml-3">
 										<p className="text-white/60 text-sm">Location</p>
-										<p className="text-white text-sm font-medium mt-1">Delhi, India</p>
+										<p className="text-white text-sm font-medium mt-1">Techno Main Salt Lake,
+											EM-4/1, Sector-V, Salt Lake,Kolkata : 700091</p>
 									</div>
 								</div>
 							</div>

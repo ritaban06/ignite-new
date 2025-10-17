@@ -250,7 +250,7 @@ const FileViewer = ({ fileUrl, fileName }) => {
 
   // Fallback
   return (
-    <div>
+    <div className='z-100'>
       <iframe
         src={authenticatedUrl}
         title={fileName}

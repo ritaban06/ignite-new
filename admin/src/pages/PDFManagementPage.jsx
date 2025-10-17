@@ -18,7 +18,7 @@ import { folderAPI } from '../api';
 import toast from 'react-hot-toast';
 
 const DEPARTMENTS = [
-  'All', 'AIML', 'CSE', 'ECE', 'EEE', 'IT'
+  'All', 'CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS'
 ];
 
 const YEARS = ['All', '1', '2', '3', '4'];

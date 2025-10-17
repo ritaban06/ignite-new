@@ -133,7 +133,7 @@ router.post('/upload', (req, res) => {
 router.get('/pdfs', [
   authenticate,
   requireAdmin,
-  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  query('department').optional().isIn(['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('subject').optional().trim(),
   query('isActive').optional().isBoolean(),
@@ -336,7 +336,7 @@ router.get('/users', [
   authenticate,
   requireAdmin,
   query('role').optional().isIn(['client', 'admin']),
-  query('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  query('department').optional().isIn(['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']),
   query('year').optional().isInt({ min: 1, max: 4 }),
   query('isActive').optional().isBoolean(),
   query('page').optional().isInt({ min: 1 }).toInt(),
@@ -411,7 +411,7 @@ router.put('/users/:userId', [
   requireAdmin,
   body('isActive').optional().isBoolean(),
   body('name').optional().trim().isLength({ min: 2, max: 50 }),
-  body('department').optional().isIn(['AIML', 'CSE', 'ECE', 'EEE', 'IT']),
+  body('department').optional().isIn(['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']),
   body('year').optional().isInt({ min: 1, max: 4 }),
   body('accessTags').optional().isArray(),
   body('accessTags.*').optional().isString().trim().isLength({ min: 1, max: 50 })

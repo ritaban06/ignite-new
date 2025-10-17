@@ -27,6 +27,7 @@ const LoginPage = () => {
           <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-[#47ffd1]/5 rounded-full blur-2xl animate-float" />
         </div>
       </div>
+
       <div className="max-w-md w-full space-y-6 sm:space-y-8">
         {/* Logo and Header */}
         <div className="text-center relative z-10">
@@ -39,7 +40,7 @@ const LoginPage = () => {
             Welcome to Ignite
           </h2>
           <p className="mt-2 text-sm text-white/80">
-            Access your PDF library with approved credentials
+            Access your online library with your registered email
           </p>
         </div>
 

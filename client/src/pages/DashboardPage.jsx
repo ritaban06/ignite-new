@@ -798,7 +798,7 @@ const DashboardPage = () => {
       className="min-h-screen bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] animate-fade-in duration-700 pt-2"
     >
   {/* Welcome Header */}
-  <div className="w-full max-w-7xl mx-auto mt-8 sm:mt-12 lg:mt-20 px-2 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 bg-[rgba(27,11,66,0.7)] backdrop-blur-md rounded-xl sm:rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)]">
+  <div className="w-full max-w-7xl mx-auto mt-2 sm:mt-4 lg:mt-8 px-2 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 bg-[rgba(27,11,66,0.7)] backdrop-blur-md rounded-xl sm:rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)]">
   <div className="text-center">
     <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white">
       Welcome back, {user?.name}
@@ -876,9 +876,10 @@ const DashboardPage = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-[rgba(255,255,255,0.15)]">
+      {/*KAJER JINIS THIS IS GOOD WORK HAVE TO FIX IT LATER*/}
+      {/*<div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-[rgba(255,255,255,0.15)]">
         <form onSubmit={handleSearch} className="space-y-4">
-          {/* Search Bar */}
+          {/* Search Bar 
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-white/60" />
@@ -892,7 +893,7 @@ const DashboardPage = () => {
             />
           </div>
 
-          {/* Search Buttons */}
+          {/* Search Buttons 
           <div className="flex justify-end space-x-2 mt-4">
             <button
               type="submit"
@@ -910,11 +911,11 @@ const DashboardPage = () => {
           </div>
         </form>
 
-        {/* Info Text */}
+        {/* Info Text 
         <div className="mt-3 text-sm text-white/70 text-center">
-          {/* Showing PDFs for {user?.department} Department - Year {user?.year} - Sem {user?.semester} */}
+          {/* Showing PDFs for {user?.department} Department - Year {user?.year} - Sem {user?.semester} 
         </div>
-      </div>
+      </div>*/}
 
       {/* Breadcrumb Navigation */}
       {currentPath.length > 0 && (
@@ -966,8 +967,10 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Subject Folders Grid (Google Drive style) */}
       <div className="mb-8 bg-gradient-to-br from-[#1b0b42] via-[#24125a] to-[#2d176b] rounded-xl shadow-lg border border-[rgba(255,255,255,0.12)] p-6">
+
+      {/* Subject Folders Grid (Google Drive style) */}
+      <div className="">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">
             {selectedFolder ? 'Subfolders' : 'Available Subjects'}
@@ -1052,8 +1055,8 @@ const DashboardPage = () => {
 
       {/* File List for selected subject/folder */}
       {selectedFolder && (
-        <div className="mb-8">
-          <div className="bg-[rgba(255,255,255,0.06)] backdrop-blur-md rounded-xl shadow-lg p-6 border border-[rgba(255,255,255,0.15)]">
+        <div className="mt-10">
+          <div className="">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">
                 Files in {currentPath.length > 0 ? currentPath[currentPath.length - 1].name : 'Selected Folder'}
@@ -1103,6 +1106,8 @@ const DashboardPage = () => {
           </div>
         </div>
       )}
+
+</div>
 
       {/* Recent PDFs */}
       {/* <div className="mb-8">
@@ -1160,7 +1165,7 @@ const DashboardPage = () => {
 
   {/* File Viewer Modal */}
   {isViewerOpen && selectedFile && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-60">
       <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-4 relative">
         <button
           className="absolute top-2 right-2 text-gray-700 hover:text-red-500 text-xl font-bold"

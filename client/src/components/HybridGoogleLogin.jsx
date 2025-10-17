@@ -116,14 +116,6 @@ const HybridGoogleLogin = () => {
             </div>
           // ) : import.meta.env.DEV ? (
           //   <div className="text-gray-500 text-center text-sm">Google login is disabled in development mode.</div>
-          ) : platformInfo.isNative ? (
-            <button
-              onClick={handleNativeGoogleSignIn}
-              className="flex items-center space-x-2 bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow"
-            >
-              <Smartphone className="h-5 w-5 text-white" />
-              <span className="text-white">Sign in with Google (Mobile)</span>
-            </button>
           ) : (
             <GoogleLogin
               onSuccess={handleWebGoogleSuccess}
@@ -138,9 +130,17 @@ const HybridGoogleLogin = () => {
               width="100%"
               style={{ backgroundColor: '#7c3aed', color: '#fff', borderRadius: '0.5rem', fontWeight: '600' }}
             />
-          )}
+          ) }
         </div>
 
+
+        <div className="text-center">
+          <p className="text-sm sm:text-base text-white mt-8 mb-2">
+            Or if not registered for Ignite yet,
+          </p>
+          
+          <button className="border-solid border-2 px-8 py-2 border-purple-500 text-purple-500 hover:text-white hover:bg-purple-600 transition-all duration-300 rounded-md px-4 py-2 mt-2" onClick={() => window.open('https://forms.gle/1GCxyjUxntzAKmDt8', '_blank')}>Join IGNITE</button>
+        </div>
         {/* Debug info for development - commented out since platformInfo is disabled */}
         {/* {import.meta.env.DEV && (
           <div className="text-xs text-gray-500 text-center space-y-1 bg-yellow-50 p-2 rounded border">
@@ -170,6 +170,7 @@ const HybridGoogleLogin = () => {
           </div>
         )} */}
       </div>
+
 
       {/* Information Box */}
       {/* <div className="bg-purple-700 p-4 rounded-lg border border-purple-800">

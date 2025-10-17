@@ -4,7 +4,7 @@ import { pdfAPI } from '../api';
 import toast from 'react-hot-toast';
 
 const DEPARTMENTS = [
-  'AIML', 'CSE', 'ECE', 'EEE', 'IT'
+  'CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS'
 ];
 
 const YEARS = [1, 2, 3, 4];

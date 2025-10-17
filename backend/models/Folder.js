@@ -27,7 +27,7 @@ const subfolderSchema = new mongoose.Schema({
   departments: [{
     type: String,
     trim: true,
-    enum: ['AIML', 'CSE', 'ECE', 'EEE', 'IT']
+    enum: ['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']
   }],
   semesters: [{
     type: Number,
@@ -88,7 +88,7 @@ const folderSchema = new mongoose.Schema({
   departments: [{
     type: String,
     trim: true,
-    enum: ['AIML', 'CSE', 'ECE', 'EEE', 'IT']
+    enum: ['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']
   }],
   semesters: [{
     type: Number,

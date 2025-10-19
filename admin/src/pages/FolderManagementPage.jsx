@@ -26,6 +26,10 @@ export default function FolderManagementPage() {
   const [showAllFolders, setShowAllFolders] = useState(false);
   const [availableTags, setAvailableTags] = useState([]);
   const [selectedAccessTags, setSelectedAccessTags] = useState([]);
+  const [showPropagationModal, setShowPropagationModal] = useState(false);
+  const [pendingUpdateData, setPendingUpdateData] = useState(null);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [bulkUpdateProgress, setBulkUpdateProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     fetchGDriveFolders();
@@ -234,6 +238,24 @@ export default function FolderManagementPage() {
   const isSubfolder = (folderId) => {
     const parentFolder = findParentFolder(folderId, subjectFolders);
     return parentFolder !== null;
+  };
+
+  // Helper function to check if a folder has subfolders
+  const hasSubfolders = (folderId) => {
+    const folder = findFolderById(folderId, allFolders);
+    return folder && folder.children && folder.children.length > 0;
+  };
+
+  // Helper function to get all descendant folders recursively
+  const getAllDescendantFolders = (folder) => {
+    let descendants = [];
+    if (folder.children && folder.children.length > 0) {
+      folder.children.forEach(child => {
+        descendants.push(child);
+        descendants = descendants.concat(getAllDescendantFolders(child));
+      });
+    }
+    return descendants;
   };
 
   // Toggle between showing all folders or just subject folders
@@ -585,9 +607,79 @@ export default function FolderManagementPage() {
       tags: editForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
       accessControlTags: selectedAccessTags,
     };
+
+    // Check if this folder has subfolders and if metadata has changed
+    const folderHasSubfolders = hasSubfolders(selectedFolder.gdriveId);
+    
+    // Check if the metadata has actually changed from what was originally set for this folder
+    const originalFolder = findFolderById(selectedFolder.gdriveId, allFolders);
+    
+    // Helper function to safely compare arrays
+    const arraysEqual = (arr1, arr2) => {
+      const a1 = (arr1 || []).map(String).sort();
+      const a2 = (arr2 || []).map(String).sort();
+      return JSON.stringify(a1) === JSON.stringify(a2);
+    };
+    
+    const hasMetadataChanges = (
+      !arraysEqual(updateData.departments, originalFolder.departments) ||
+      !arraysEqual(updateData.years, originalFolder.years) ||
+      !arraysEqual(updateData.semesters, originalFolder.semesters) ||
+      !arraysEqual(updateData.tags, originalFolder.tags) ||
+      !arraysEqual(updateData.accessControlTags, originalFolder.accessControlTags) ||
+      updateData.description !== (originalFolder.description || '')
+    );
+
+    // If this folder has subfolders and metadata has changed, show propagation modal
+    if (folderHasSubfolders && hasMetadataChanges) {
+      setPendingUpdateData(updateData);
+      setShowPropagationModal(true);
+      return;
+    }
+
+    // Otherwise, proceed with normal update
+    await performFolderUpdate(updateData, false);
+  };
+
+  const performFolderUpdate = async (updateData, propagateToSubfolders = false) => {
     try {
+      setIsBulkUpdating(propagateToSubfolders);
+      
       // Use gdriveId instead of id for folder identification
       const response = await folderAPI.updateFolder(selectedFolder.gdriveId, updateData);
+      
+      // If propagating to subfolders, update each subfolder
+      if (propagateToSubfolders) {
+        const folder = findFolderById(selectedFolder.gdriveId, allFolders);
+        const descendantFolders = getAllDescendantFolders(folder);
+        
+        setBulkUpdateProgress({ current: 0, total: descendantFolders.length });
+        
+        let successCount = 0;
+        let failedFolders = [];
+        
+        for (let i = 0; i < descendantFolders.length; i++) {
+          const descendant = descendantFolders[i];
+          try {
+            setBulkUpdateProgress({ current: i + 1, total: descendantFolders.length });
+            await folderAPI.updateFolder(descendant.gdriveId, {
+              ...updateData,
+              name: descendant.name // Keep original name for each subfolder
+            });
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to update subfolder ${descendant.name}:`, error);
+            failedFolders.push(descendant.name);
+          }
+        }
+        
+        if (failedFolders.length > 0) {
+          toast.error(`Failed to update ${failedFolders.length} subfolder(s): ${failedFolders.join(', ')}`);
+        }
+        if (successCount > 0) {
+          toast.success(`Successfully updated ${successCount} subfolder(s)`);
+        }
+      }
       
       // Emit socket.io event for real-time updates to other admins and clients
       socketService.emitFolderUpdate({
@@ -597,24 +689,44 @@ export default function FolderManagementPage() {
         action: 'updated'
       });
       
-      toast.success('Folder updated successfully! Metadata will be inherited by subfolders.');
+      const message = propagateToSubfolders 
+        ? 'Folder and subfolders update completed!'
+        : 'Folder updated successfully! Metadata will be inherited by subfolders.';
+      toast.success(message);
+      
       setShowEditModal(false);
       setSelectedFolder(null);
       setSelectedAccessTags([]);
+      setShowPropagationModal(false);
+      setPendingUpdateData(null);
+      setIsBulkUpdating(false);
+      setBulkUpdateProgress({ current: 0, total: 0 });
+      
       // Always re-fetch folders after update to get latest parent metadata
       await fetchGDriveFolders();
     } catch (error) {
+      setIsBulkUpdating(false);
+      setBulkUpdateProgress({ current: 0, total: 0 });
+      
       // If error is AxiosError and status is 500, but update seems successful, show warning
       if (error?.response?.status === 500) {
         toast.success('Folder updated');
         setShowEditModal(false);
         setSelectedFolder(null);
         setSelectedAccessTags([]);
+        setShowPropagationModal(false);
+        setPendingUpdateData(null);
         await fetchGDriveFolders();
       } else {
         console.error('Error updating folder:', error);
         toast.error('Failed to update folder');
       }
+    }
+  };
+
+  const handlePropagationChoice = async (propagate) => {
+    if (pendingUpdateData) {
+      await performFolderUpdate(pendingUpdateData, propagate);
     }
   };
 
@@ -866,6 +978,100 @@ export default function FolderManagementPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Propagation Modal */}
+      {showPropagationModal && selectedFolder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg max-w-lg w-full p-6 border border-gray-700">
+            <h2 className="text-xl font-bold text-white mb-4">Apply Changes to Subfolders?</h2>
+            <p className="text-gray-300 mb-4">
+              This folder has subfolders. Do you want to apply these metadata changes to:
+            </p>
+            
+            {/* Show affected subfolders */}
+            {(() => {
+              const folder = findFolderById(selectedFolder.gdriveId, allFolders);
+              const descendantFolders = getAllDescendantFolders(folder);
+              return descendantFolders.length > 0 && (
+                <div className="mb-4 p-3 bg-gray-700 rounded">
+                  <p className="text-white font-medium mb-2">Subfolders that will be affected:</p>
+                  <div className="max-h-32 overflow-y-auto">
+                    <ul className="text-sm text-gray-300 space-y-1">
+                      {descendantFolders.map((subfolder, index) => (
+                        <li key={subfolder.gdriveId} className="flex items-center">
+                          <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center mr-2">
+                            {index + 1}
+                          </span>
+                          {subfolder.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">Total: {descendantFolders.length} subfolder(s)</p>
+                </div>
+              );
+            })()}
+            
+            <div className="space-y-3 mb-6">
+              <div className="p-3 bg-gray-700 rounded border-l-4 border-blue-500">
+                <p className="text-white font-medium">This folder only</p>
+                <p className="text-gray-400 text-sm">Subfolders will inherit these changes automatically unless they have their own explicit metadata.</p>
+              </div>
+              <div className="p-3 bg-gray-700 rounded border-l-4 border-orange-500">
+                <p className="text-white font-medium">This folder and all subfolders</p>
+                <p className="text-gray-400 text-sm">All subfolders will be explicitly updated with these same metadata values, overriding any existing subfolder-specific metadata.</p>
+              </div>
+            </div>
+            {/* Progress indicator for bulk updates */}
+            {isBulkUpdating && (
+              <div className="mb-4 p-3 bg-gray-700 rounded">
+                <p className="text-white font-medium mb-2">Updating subfolders...</p>
+                <div className="w-full bg-gray-600 rounded-full h-2">
+                  <div 
+                    className="bg-orange-600 h-2 rounded-full transition-all duration-300" 
+                    style={{ 
+                      width: `${bulkUpdateProgress.total > 0 ? (bulkUpdateProgress.current / bulkUpdateProgress.total) * 100 : 0}%` 
+                    }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-300 mt-1">
+                  {bulkUpdateProgress.current} of {bulkUpdateProgress.total} folders updated
+                </p>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
+                onClick={() => {
+                  setShowPropagationModal(false);
+                  setPendingUpdateData(null);
+                }}
+                disabled={isBulkUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => handlePropagationChoice(false)}
+                disabled={isBulkUpdating}
+              >
+                This Folder Only
+              </button>
+              <button
+                className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                onClick={() => handlePropagationChoice(true)}
+                disabled={isBulkUpdating}
+              >
+                {isBulkUpdating && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
+                All Subfolders
+              </button>
+            </div>
           </div>
         </div>
       )}

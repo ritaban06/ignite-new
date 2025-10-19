@@ -249,6 +249,7 @@ const secureToolbarPluginInstance = toolbarPlugin({
         (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
         (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) ||
         (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) ||
+        (e.metaKey && e.shiftKey && (e.key === 's' || e.key === 'S')) ||
         e.key === 'F12' ||
         e.keyCode === 123
       ) {
@@ -268,10 +269,12 @@ const secureToolbarPluginInstance = toolbarPlugin({
           keyDescription = 'Ctrl+P (Print)';
         } else if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) {
           keyDescription = 'Ctrl+A (Select All)';
+        } else if (e.metaKey && e.shiftKey && (e.key === 's' || e.key === 'S')) {
+          keyDescription = 'Win+Shift+S (Screenshot Tool)';
         } else if (e.key === 'F12' || e.keyCode === 123) {
           keyDescription = 'F12 (Developer Tools)';
         } else {
-          keyDescription = `${e.ctrlKey ? 'Ctrl+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.key}`;
+          keyDescription = `${e.ctrlKey ? 'Ctrl+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.metaKey ? 'Win+' : ''}${e.key}`;
         }
         
         // toast.error(`${keyDescription} is disabled for security reasons`);

@@ -487,9 +487,9 @@ const secureToolbarPluginInstance = toolbarPlugin({
             )}
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-  <div className="text-xs text-red-600 mr-1 sm:mr-4 hidden sm:inline">
+  {/* <div className="text-xs text-red-600 mr-1 sm:mr-4 hidden sm:inline">
     🔒 Viewing Only - Download & Print Disabled
-  </div>
+  </div> */}
 
   {/* Fullscreen Button */}
   <EnterFullScreen>
@@ -642,7 +642,7 @@ const secureToolbarPluginInstance = toolbarPlugin({
         {/* Footer */}
         <div className="p-4 bg-gray-100 border-t text-center text-sm text-gray-600">
           <p>This PDF is protected and can only be viewed through Ignite.</p>
-          <p className="text-xs text-red-500 mt-1">Download, Print, and Right-click are disabled</p>
+          {/* <p className="text-xs text-red-500 mt-1">Download, Print, and Right-click are disabled</p> */}
         </div>
       </div>
     </div>

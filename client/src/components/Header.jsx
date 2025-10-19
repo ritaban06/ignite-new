@@ -38,8 +38,37 @@ const Header = () => {
     return () => document.body.classList.remove('overflow-hidden');
   }, [isMobileMenuOpen]);
 
+  // Check if any modal is open by looking for modal indicators in the DOM or body classes
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Check for common modal indicators
+    const checkModalState = () => {
+      // Look for modal elements or body classes that indicate a modal is open
+      const hasModalBackdrop = document.querySelector('[class*="fixed"][class*="inset-0"][class*="bg-black"][class*="bg-opacity"]');
+      const hasModalClass = document.body.classList.contains('modal-open');
+      const hasOverflowHidden = document.body.style.overflow === 'hidden';
+      
+      setIsModalOpen(!!(hasModalBackdrop || hasModalClass || hasOverflowHidden));
+    };
+
+    // Initial check
+    checkModalState();
+
+    // Set up observer for DOM changes
+    const observer = new MutationObserver(checkModalState);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-   <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-[#0A0F1C] via-[#1A1B3B] to-[#241B4B] shadow-lg border-b border-[#6c47ff]/20 animate-slide-down duration-700">
+   <header className={`fixed top-0 left-0 right-0 ${isModalOpen ? 'z-10' : 'z-50'} bg-gradient-to-br from-[#0A0F1C] via-[#1A1B3B] to-[#241B4B] shadow-lg border-b border-[#6c47ff]/20 animate-slide-down transition-all duration-300`}>
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="flex justify-between items-center h-16">
       

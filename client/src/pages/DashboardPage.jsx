@@ -129,6 +129,22 @@ const DashboardPage = () => {
     }
   }, [pagination.currentPage]);
 
+  // Handle modal state for body class
+  useEffect(() => {
+    if (isViewerOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [isViewerOpen]);
+
   // Get URL params and location
   const { folderId } = useParams();
   const location = useLocation();
@@ -595,7 +611,7 @@ const DashboardPage = () => {
     const debugLogPromoted = (folders, level = 0) => {
       folders.forEach(folder => {
         const indent = ' '.repeat(level * 2);
-        console.log(`${indent}Promoted/Root: ${folder.name}, id: ${folder.id}, hasMetadata: ${!!folder.metadata}`);
+        // console.log(`${indent}Promoted/Root: ${folder.name}, id: ${folder.id}, hasMetadata: ${!!folder.metadata}`);
         if (folder.children && folder.children.length > 0) {
           debugLogPromoted(folder.children, level + 1);
         }
@@ -1165,7 +1181,7 @@ const DashboardPage = () => {
 
   {/* File Viewer Modal */}
   {isViewerOpen && selectedFile && (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-60">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-60">
       <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-4 relative">
         <button
           className="absolute top-2 right-2 text-gray-700 hover:text-red-500 text-xl font-bold"

@@ -38,7 +38,7 @@ const PDFCard = ({ pdf, onView, showDetails = true }) => {
           
           <button
             onClick={onView}
-            className="flex-shrink-0 flex items-center space-x-1 px-2 sm:px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-500 text-white rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
+            className="flex-shrink-0 flex items-center justify-center sm:space-x-1 px-2 sm:px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-500 text-white rounded-lg hover:shadow-md transition-all duration-200 transform hover:scale-105"
           >
             <Eye className="h-4 w-4" />
             <span className="text-sm font-medium hidden sm:inline">View</span>

@@ -1181,8 +1181,8 @@ const DashboardPage = () => {
 
   {/* File Viewer Modal */}
   {isViewerOpen && selectedFile && (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-60">
-      <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-4 relative">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-60 pt-20 p-4">
+      <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-4 relative max-h-[85vh] overflow-auto">
         <button
           className="absolute top-2 right-2 text-gray-700 hover:text-red-500 text-xl font-bold"
           onClick={handleCloseViewer}

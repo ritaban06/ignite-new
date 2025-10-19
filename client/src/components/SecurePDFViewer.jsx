@@ -472,8 +472,8 @@ const secureToolbarPluginInstance = toolbarPlugin({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-2 sm:p-4" style={{ userSelect: 'none' }}>
-      <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] pt-20 p-2 sm:p-4" style={{ userSelect: 'none' }}>
+      <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-6xl max-h-[85vh] sm:max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b">
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">

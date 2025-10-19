@@ -500,10 +500,10 @@ router.get('/proxy/:fileId', [
     }
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'inline; filename="secured.pdf"',
+      'Content-Disposition': 'inline',
       'Cache-Control': 'private, no-cache, no-store, must-revalidate',
       'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
+      'X-Frame-Options': 'SAMEORIGIN',
       'X-Download-Options': 'noopen',
       'Content-Security-Policy': "default-src 'none'; object-src 'none'; script-src 'none';"
     });

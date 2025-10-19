@@ -152,7 +152,8 @@ const secureToolbarPluginInstance = toolbarPlugin({
           const pdfResponse = await fetch(response.data.viewUrl, {
             method: 'GET',
             headers: {
-              'Accept': 'application/pdf'
+              'Accept': 'application/pdf',
+              'Content-Type': 'application/pdf'
             },
             credentials: 'omit',
             mode: 'cors'
@@ -164,10 +165,21 @@ const secureToolbarPluginInstance = toolbarPlugin({
             throw new Error(`HTTP ${pdfResponse.status}: ${pdfResponse.statusText}`);
           }
 
+          // Check content type to prevent binary downloads
+          const contentType = pdfResponse.headers.get('content-type');
+          if (contentType && !contentType.includes('application/pdf')) {
+            console.warn('[SecurePDFViewer] Unexpected content type:', contentType);
+            throw new Error(`Expected PDF but received: ${contentType}`);
+          }
+
           const pdfBlob = await pdfResponse.blob();
           // console.log('[SecurePDFViewer] PDF blob created, size:', pdfBlob.size, 'type:', pdfBlob.type);
 
-          // Ensure the blob has the correct MIME type
+          // Ensure the blob has the correct MIME type and is valid
+          if (pdfBlob.size === 0) {
+            throw new Error('Received empty PDF file');
+          }
+
           const correctedBlob = pdfBlob.type === 'application/pdf' ?
             pdfBlob :
             new Blob([pdfBlob], { type: 'application/pdf' });
@@ -181,8 +193,16 @@ const secureToolbarPluginInstance = toolbarPlugin({
 
         } catch (fetchError) {
           console.error('[SecurePDFViewer] Failed to fetch PDF content from proxy:', fetchError);
-          // Fallback to direct URL
-          // console.log('[SecurePDFViewer] Using direct proxy URL as fallback');
+          
+          // Check if this is a download trigger issue
+          if (fetchError.message.includes('content-type') || fetchError.message.includes('binary')) {
+            setError('PDF format not supported in viewer. Please try again.');
+            return;
+          }
+          
+          // Only use direct URL as last resort and with proper iframe handling
+          console.log('[SecurePDFViewer] Using iframe fallback for direct proxy URL');
+          setUseIframeFallback(true);
           setPdfUrl(response.data.viewUrl);
           setPdfInfo(response.data.pdf);
         }
@@ -508,6 +528,22 @@ const secureToolbarPluginInstance = toolbarPlugin({
                   Retry
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Iframe Fallback */}
+          {useIframeFallback && pdfUrl && !isLoading && !error && (
+            <div className="h-full">
+              <iframe
+                src={pdfUrl}
+                title="PDF Viewer"
+                className="w-full h-full border-0"
+                style={{ userSelect: 'none' }}
+                onError={(e) => {
+                  console.error('Iframe failed to load PDF:', e);
+                  setError('Failed to load PDF in viewer');
+                }}
+              />
             </div>
           )}
 

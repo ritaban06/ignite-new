@@ -79,7 +79,7 @@ function AppContent() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/landing" element={<DashboardPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/dashboard/folder/:folderName" element={<DashboardPage />} />
+        <Route path="/dashboard/folder/:folderId" element={<DashboardPage />} />
         {/* <Route path="/search" element={<SearchPage />} /> */}
         {/* <Route path="/gdrive-manager" element={<GoogleDrivePDFManager />} /> */}
           {/* Catch all other routes and redirect to dashboard for authenticated users */}

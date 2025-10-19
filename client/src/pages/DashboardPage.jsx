@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
@@ -69,6 +69,7 @@ const DashboardPage = () => {
   const [folderHierarchy, setFolderHierarchy] = useState([]);
   const [currentPath, setCurrentPath] = useState([]);
   const [accessibleFolders, setAccessibleFolders] = useState([]);
+  const isProgrammaticNavigation = useRef(false);
   
   let isLoadingDashboardData = false;
 
@@ -129,38 +130,35 @@ const DashboardPage = () => {
   }, [pagination.currentPage]);
 
   // Get URL params and location
-  const { folderName: urlFolderName } = useParams();
+  const { folderId } = useParams();
   const location = useLocation();
   
   // Load initial data and handle direct folder access from URL
   useEffect(() => {
-    if (urlFolderName) {
-      // If we have a folder name in the URL, wait for folder hierarchy to load first
+    if (folderId) {
+      // If we have a folder ID in the URL, wait for folder hierarchy to load first
       const loadFolderFromUrl = async () => {
         await loadDashboardData();
-        // Find the folder info from hierarchy by matching the URL-friendly name
-        const findFolderByUrlName = (folders) => {
+        // Find the folder info from hierarchy by matching the folder ID
+        const findFolderById = (folders, targetId) => {
           for (const folder of folders) {
-            const folderUrlName = folder.name
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/^-+|-+$/g, '');
-            if (folderUrlName === urlFolderName) {
+            if (folder.id === targetId) {
               return folder;
             }
             if (folder.children && folder.children.length > 0) {
-              const found = findFolderByUrlName(folder.children);
+              const found = findFolderById(folder.children, targetId);
               if (found) return found;
             }
           }
           return null;
         };
         
-        const folderInfo = findFolderByUrlName(folderHierarchy);
+        const folderInfo = findFolderById(folderHierarchy, folderId);
         if (folderInfo) {
           navigateToFolder(folderInfo.id, folderInfo.name);
         } else {
           // If folder not found, navigate back to dashboard
+          isProgrammaticNavigation.current = true;
           navigate('/dashboard');
         }
       };
@@ -168,7 +166,7 @@ const DashboardPage = () => {
     } else {
       loadDashboardData();
     }
-  }, [urlFolderName]);
+  }, [folderId]);
   
   // Set up socket.io listeners for real-time updates
   useEffect(() => {
@@ -205,64 +203,66 @@ const DashboardPage = () => {
   }, [loadFiles]);
 
   // Handle back/forward navigation
-  useEffect(() => {
-    const handleLocationChange = () => {
-      const path = location.pathname;
-      
-      if (path === '/dashboard') {
-        setSelectedFolder(null);
-        setFiles([]);
-        setCurrentPath([]);
-        loadDashboardData();
+  const handleLocationChange = useCallback(() => {
+      // If this is a programmatic navigation, reset the flag and don't process
+      if (isProgrammaticNavigation.current) {
+        isProgrammaticNavigation.current = false;
         return;
       }
       
-      if (path.startsWith('/dashboard/folder/') && folderHierarchy.length > 0) {
-        const urlSegments = path.split('/');
-        const urlFolderName = urlSegments[urlSegments.length - 1];
-        
-        // Don't update if we're already on this folder
-        const currentFolderUrlName = currentPath.length > 0 
-          ? currentPath[currentPath.length - 1].name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-          : '';
-          
-        if (urlFolderName === currentFolderUrlName) {
+      const path = location.pathname;
+      
+      if (path === '/dashboard') {
+        // Only update if we're not already at the root
+        if (selectedFolder !== null || currentPath.length > 0) {
+          setSelectedFolder(null);
+          setFiles([]);
+          setCurrentPath([]);
+          loadDashboardData();
+        }
+        return;
+      }
+      
+      if (path.startsWith('/dashboard/folder/')) {
+        // Make sure folder hierarchy is loaded
+        if (folderHierarchy.length === 0) {
           return;
         }
         
-        // Find folder and its complete path in hierarchy
-        const findFolderAndPath = (folders, targetName, currentPath = []) => {
+        // Extract the folder ID from URL
+        const urlFolderId = path.replace('/dashboard/folder/', '');
+        
+        // Don't update if we're already on this folder
+        if (urlFolderId === selectedFolder) {
+          return;
+        }
+        
+        // Find folder by ID and build path
+        const findFolderAndBuildPath = (folders, targetId, currentPath = []) => {
           for (const folder of folders) {
-            const folderUrlName = folder.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-            if (folderUrlName === targetName) {
-              return {
-                folder,
-                path: [...currentPath, { id: folder.id, name: folder.name }]
-              };
+            if (folder.id === targetId) {
+              return [...currentPath, { id: folder.id, name: folder.name }];
             }
-            if (folder.children?.length) {
-              const found = findFolderAndPath(
-                folder.children, 
-                targetName, 
-                [...currentPath, { id: folder.id, name: folder.name }]
-              );
-              if (found) return found;
+            if (folder.children && folder.children.length > 0) {
+              const path = findFolderAndBuildPath(folder.children, targetId, [...currentPath, { id: folder.id, name: folder.name }]);
+              if (path) return path;
             }
           }
           return null;
         };
         
-        const result = findFolderAndPath(folderHierarchy, urlFolderName);
-        if (result && result.folder.id !== selectedFolder) {
-          setSelectedFolder(result.folder.id);
-          setCurrentPath(result.path);
-          fetchFilesInFolder(result.folder.id);
+        const folderPath = findFolderAndBuildPath(folderHierarchy, urlFolderId);
+        if (folderPath) {
+          setSelectedFolder(urlFolderId);
+          setCurrentPath(folderPath);
+          fetchFilesInFolder(urlFolderId);
         }
       }
-    };
-    
+  }, [folderHierarchy, selectedFolder, currentPath, loadDashboardData]);
+
+  useEffect(() => {
     handleLocationChange();
-  }, [location.pathname]);
+  }, [location.pathname, handleLocationChange]);
 
         // Listen for refresh event from Header logo click
         useEffect(() => {
@@ -694,39 +694,24 @@ const DashboardPage = () => {
       return null;
     };
     
-    // If we're already in a folder, we need to check if the target folder is a child
-    // of the current folder to maintain proper path
-    if (selectedFolder) {
-      const currentSubfolders = getCurrentSubfolders();
-      const isDirectChild = currentSubfolders && currentSubfolders.some(f => f.id === folderId);
-      
-      if (isDirectChild) {
-        // It's a direct child, just add to the current path
-        const newPath = [...currentPath, { id: folderId, name: folderName }];
-        setCurrentPath(newPath);
-      } else {
-        // It's not a direct child, we need to find the complete path
-        const newPath = findFolderPath(folderHierarchy, folderId);
-        if (newPath) {
-          setCurrentPath(newPath);
-        } else {
-          // Fallback if path not found
-          setCurrentPath([{ id: folderId, name: folderName }]);
-        }
-      }
-    } else {
-      // We're at the root level
-      setCurrentPath([{ id: folderId, name: folderName }]);
-    }
+    // Always find the complete path from root to target folder
+    const completePath = findFolderPath(folderHierarchy, folderId);
     
-    setSelectedFolder(folderId);
-    // Update URL to reflect the current folder name only
-    const urlFriendlyName = folderName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-    navigate(`/dashboard/folder/${urlFriendlyName}`, { replace: true });
-    fetchFilesInFolder(folderId);
+    if (completePath) {
+      setCurrentPath(completePath);
+      setSelectedFolder(folderId);
+      isProgrammaticNavigation.current = true;
+      navigate(`/dashboard/folder/${folderId}`);
+      fetchFilesInFolder(folderId);
+    } else {
+      // Fallback for edge cases
+      const fallbackPath = [{ id: folderId, name: folderName }];
+      setCurrentPath(fallbackPath);
+      setSelectedFolder(folderId);
+      isProgrammaticNavigation.current = true;
+      navigate(`/dashboard/folder/${folderId}`);
+      fetchFilesInFolder(folderId);
+    }
   };
   
   // Navigate back in folder hierarchy
@@ -736,18 +721,17 @@ const DashboardPage = () => {
       const parentFolder = newPath[newPath.length - 1];
       setCurrentPath(newPath);
       setSelectedFolder(parentFolder.id);
-      const urlFriendlyName = parentFolder.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      navigate(`/dashboard/folder/${urlFriendlyName}`, { replace: true });
+      
+      isProgrammaticNavigation.current = true;
+      navigate(`/dashboard/folder/${parentFolder.id}`);
       fetchFilesInFolder(parentFolder.id);
     } else {
       // Go back to root (show all folders)
       setSelectedFolder(null);
       setFiles([]);
       setCurrentPath([]);
-      navigate('/dashboard', { replace: true });
+      isProgrammaticNavigation.current = true;
+      navigate('/dashboard');
       loadDashboardData();
     }
   };
@@ -933,6 +917,8 @@ const DashboardPage = () => {
                 setSelectedFolder(null);
                 setFiles([]);
                 setCurrentPath([]);
+                isProgrammaticNavigation.current = true;
+                navigate('/dashboard');
                 loadDashboardData();
               }}
               className="hover:text-white transition-colors flex-shrink-0"
@@ -948,11 +934,9 @@ const DashboardPage = () => {
                     const newPath = currentPath.slice(0, index + 1);
                     setCurrentPath(newPath);
                     setSelectedFolder(pathItem.id);
-                    const urlFriendlyName = pathItem.name
-                      .toLowerCase()
-                      .replace(/[^a-z0-9]+/g, '-')
-                      .replace(/^-+|-+$/g, '');
-                    navigate(`/dashboard/folder/${urlFriendlyName}`);
+                    
+                    isProgrammaticNavigation.current = true;
+                    navigate(`/dashboard/folder/${pathItem.id}`);
                     fetchFilesInFolder(pathItem.id);
                   }}
                   className={`hover:text-white transition-colors flex-shrink-0 ${

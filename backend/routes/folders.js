@@ -506,13 +506,33 @@ router.get('/with-metadata', authenticate, async (req, res) => {
 // Universal proxy route to securely stream any file type from Google Drive
 const jwt = require('jsonwebtoken');
 const { Readable } = require('stream');
-function getContentType(ext) {
-  if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext)) return `image/${ext === "jpg" ? "jpeg" : ext}`;
-  if (["pdf"].includes(ext)) return "application/pdf";
-  if (["doc", "docx"].includes(ext)) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-  if (["xls", "xlsx"].includes(ext)) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-  if (["ppt", "pptx"].includes(ext)) return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-  if (["txt"].includes(ext)) return "text/plain";
+function getContentType(ext, mimeType = null) {
+  // If we have a mimeType from Google Drive, use it for PDF files
+  if (mimeType === "application/pdf") return "application/pdf";
+  
+  // Handle other known mimeTypes
+  if (mimeType && mimeType.startsWith("image/")) return mimeType;
+  if (mimeType && mimeType.startsWith("text/")) return mimeType;
+  
+  // Extension-based detection (fallback or when no mimeType available)
+  if (ext && ["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext.toLowerCase())) {
+    return `image/${ext.toLowerCase() === "jpg" ? "jpeg" : ext.toLowerCase()}`;
+  }
+  if (ext && ["pdf"].includes(ext.toLowerCase())) return "application/pdf";
+  if (ext && ["doc", "docx"].includes(ext.toLowerCase())) {
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+  if (ext && ["xls", "xlsx"].includes(ext.toLowerCase())) {
+    return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  }
+  if (ext && ["ppt", "pptx"].includes(ext.toLowerCase())) {
+    return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+  }
+  if (ext && ["txt"].includes(ext.toLowerCase())) return "text/plain";
+  
+  // If we have a mimeType but don't know how to handle it, use it anyway
+  if (mimeType) return mimeType;
+  
   return "application/octet-stream";
 }
 
@@ -538,17 +558,37 @@ router.get('/proxy/:fileId', authenticate, async (req, res) => {
     credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (decoded.fileId !== req.params.fileId) return res.status(403).json({ error: 'Invalid token for this file' });
+    
     // Stream file from Google Drive
     const googleDriveService = new GoogleDriveService(
       credentials,
       null // folderId not needed for download
     );
+    
+    // First get file metadata to get the mimeType
+    let fileMimeType = null;
+    try {
+      const fileMetadata = await googleDriveService.drive.files.get({
+        fileId: req.params.fileId,
+        fields: 'mimeType, name'
+      });
+      fileMimeType = fileMetadata.data.mimeType;
+      console.log(`[PROXY] File ${req.params.fileId} has mimeType: ${fileMimeType}`);
+    } catch (error) {
+      console.warn(`[PROXY] Could not get file metadata for ${req.params.fileId}:`, error.message);
+    }
+    
     const driveResult = await googleDriveService.downloadPdf(req.params.fileId); // downloadPdf streams any file
     if (!driveResult.success) return res.status(500).json({ error: 'Failed to fetch file from Google Drive', message: driveResult.error });
+    
     // Set headers for secure inline viewing
     const ext = req.query.ext || '';
+    const contentType = getContentType(ext, fileMimeType);
+    
+    console.log(`[PROXY] File ${req.params.fileId}: ext="${ext}", mimeType="${fileMimeType}", contentType="${contentType}"`);
+    
     res.set({
-      'Content-Type': getContentType(ext),
+      'Content-Type': contentType,
       'Content-Disposition': `inline; filename="${req.params.fileId}.${ext}"`,
       'Cache-Control': 'private, no-cache, no-store, must-revalidate',
       'X-Content-Type-Options': 'nosniff',

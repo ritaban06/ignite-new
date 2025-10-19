@@ -1061,7 +1061,23 @@ const DashboardPage = () => {
                   .map((file) => {
                     // Determine file type and url
                     const fileName = file.fileName || file.name || file.title || "file";
-                    const fileType = fileName.split('.').pop().toLowerCase();
+                    
+                    // Use backend's fileType if available, otherwise extract from filename
+                    let fileType = file.fileType;
+                    if (!fileType && fileName.includes('.')) {
+                      fileType = fileName.split('.').pop().toLowerCase();
+                    }
+                    
+                    // For files without extensions, try to infer from mimeType
+                    if (!fileType && file.mimeType) {
+                      if (file.mimeType === 'application/pdf') fileType = 'pdf';
+                      else if (file.mimeType.startsWith('image/')) fileType = file.mimeType.split('/')[1];
+                      else if (file.mimeType.startsWith('text/')) fileType = 'txt';
+                    }
+                    
+                    // Default to 'unknown' if we still can't determine the type
+                    if (!fileType) fileType = 'unknown';
+                    
                     const fileUrl = file.url || file.fileUrl || file.downloadUrl || file.link || file.path;
                     return (
                       <PDFCard

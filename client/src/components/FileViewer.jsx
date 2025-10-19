@@ -7,6 +7,7 @@ const docExtensions = ['doc', 'docx', 'ppt', 'pptx'];
 const txtExtensions = ['txt'];
 
 function getExtension(filename) {
+  if (!filename || !filename.includes('.')) return '';
   return filename.split('.').pop().toLowerCase();
 }
 

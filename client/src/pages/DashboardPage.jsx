@@ -531,16 +531,16 @@ const DashboardPage = () => {
     const userYear = parseInt(user.year);
     const userSemester = parseInt(user.semester);
     if (isNaN(userYear) || userYear < 1 || userYear > 4) {
-      console.log(`Access DENIED: Year ${userYear} is not in allowed range 1-4.`);
+      // console.log(`Access DENIED: Year ${userYear} is not in allowed range 1-4.`);
       return false;
     }
     if (isNaN(userSemester) || userSemester < 1 || userSemester > 8) {
-      console.log(`Access DENIED: Semester ${userSemester} is not in allowed range 1-8.`);
+      // console.log(`Access DENIED: Semester ${userSemester} is not in allowed range 1-8.`);
       return false;
     }
     // Hide folders with no metadata
     if (!folderMetadata) {
-      console.log('Access DENIED: No metadata for folder');
+      // console.log('Access DENIED: No metadata for folder');
       return false;
     }
     // All three must match if metadata is present
@@ -550,14 +550,14 @@ const DashboardPage = () => {
     const hasSemesterRestrictions = folderMetadata.semesters && folderMetadata.semesters.length > 0;
     // If any restriction is missing, deny access
     if (!hasDepartmentRestrictions || !hasYearRestrictions || !hasSemesterRestrictions) {
-      console.log('Access DENIED: Missing department/year/semester restrictions in metadata');
+      // console.log('Access DENIED: Missing department/year/semester restrictions in metadata');
       return false;
     }
     // If year or semester is [0] (only 0, not mixed), do not show folder
     const onlyYearZero = folderMetadata.years.length === 1 && folderMetadata.years[0] === 0;
     const onlySemesterZero = folderMetadata.semesters.length === 1 && folderMetadata.semesters[0] === 0;
     if (onlyYearZero || onlySemesterZero) {
-      console.log('Access DENIED: Year or Semester is only 0 (do not show to any user)');
+      // console.log('Access DENIED: Year or Semester is only 0 (do not show to any user)');
       return false;
     }
     // Check department
@@ -565,7 +565,7 @@ const DashboardPage = () => {
       String(dept).trim().toLowerCase() === userDepartment.toLowerCase()
     );
     if (!departmentCheck) {
-      console.log('Access DENIED: Department does not match');
+      // console.log('Access DENIED: Department does not match');
       return false;
     }
     // Check year
@@ -576,7 +576,7 @@ const DashboardPage = () => {
       yearCheck = folderMetadata.years.includes(userYear);
     }
     if (!yearCheck) {
-      console.log('Access DENIED: Year does not match');
+      // console.log('Access DENIED: Year does not match');
       return false;
     }
     // Check semester
@@ -587,7 +587,7 @@ const DashboardPage = () => {
       semesterCheck = folderMetadata.semesters.includes(userSemester);
     }
     if (!semesterCheck) {
-      console.log('Access DENIED: Semester does not match');
+      // console.log('Access DENIED: Semester does not match');
       return false;
     }
     // Access tags (optional)
@@ -597,7 +597,7 @@ const DashboardPage = () => {
         user.accessTags.includes(tag)
       );
       if (!hasRequiredTag) {
-        console.log('Access DENIED: Access tag does not match');
+        // console.log('Access DENIED: Access tag does not match');
         return false;
       }
     }

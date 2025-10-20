@@ -22,6 +22,8 @@ const router = express.Router();
 const PDF = require('../models/PDF');
 
 // Utility route: Sync/caches all Google Drive folders into MongoDB
+// This route preserves existing metadata on folders and subfolders that already have custom metadata set.
+// Only folders without meaningful metadata will be updated with default or inherited values.
 router.post('/gdrive/cache', authenticate, async (req, res) => {
   try {
     // Only allow admin to trigger cache
@@ -163,77 +165,195 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       await Promise.all(folderCleanupPromises);
     }
     
-    // Process the folder hierarchy and save to MongoDB
-const processFolderHierarchy = async (folders, parentMetadata = null) => {
-  const processedFolders = [];
-
-  for (const folder of folders) {
-    // Skip duplicates
-    if (processedGdriveIds.has(folder.gdriveId)) {
-      console.log(`Skipping duplicate folder ${folder.name} (${folder.gdriveId}) - already processed`);
-      continue;
-    }
-
-    const parentGdriveId = folderParentMap.get(folder.gdriveId);
-    const isTopLevelFolder = parentGdriveId === null;
-
-    processedGdriveIds.add(folder.gdriveId);
-
-    // Build metadata (inherit from parent if needed)
-    const folderMetadata = {
-      name: folder.name,
-      gdriveId: folder.gdriveId,
-      description: folder.description || parentMetadata?.description || folder.name.toLowerCase(),
-      departments: folder.departments || parentMetadata?.departments || ['IT'],
-      years: folder.years || parentMetadata?.years || [0],
-      semesters: folder.semesters || parentMetadata?.semesters || [0],
-      tags: folder.tags || (parentMetadata?.tags ? [...parentMetadata.tags, folder.name.toLowerCase()] : [folder.name.toLowerCase()]),
-      accessControlTags: folder.accessControlTags || parentMetadata?.accessControlTags || [],
-      createdByName: folder.ownerName || 'Ignite Admin',
-      parent: parentGdriveId
+    // Helper function to check if a folder has existing meaningful metadata set
+    const hasExistingMetadata = (folder) => {
+      if (!folder) return false;
+      
+      // Check if folder has any meaningful metadata beyond defaults
+      const hasCustomDescription = folder.description && folder.description !== folder.name?.toLowerCase();
+      const hasCustomDepartments = folder.departments && folder.departments.length > 0 && !(folder.departments.length === 1 && folder.departments[0] === 'IT');
+      const hasCustomYears = folder.years && folder.years.length > 0 && !(folder.years.length === 1 && folder.years[0] === 0);
+      const hasCustomSemesters = folder.semesters && folder.semesters.length > 0 && !(folder.semesters.length === 1 && folder.semesters[0] === 0);
+      const hasCustomTags = folder.tags && folder.tags.length > 0 && !(folder.tags.length === 1 && folder.tags[0] === folder.name?.toLowerCase());
+      const hasAccessControlTags = folder.accessControlTags && folder.accessControlTags.length > 0;
+      
+      return hasCustomDescription || hasCustomDepartments || hasCustomYears || 
+             hasCustomSemesters || hasCustomTags || hasAccessControlTags;
     };
 
-    // Recursively process children
-    let processedChildren = [];
-    if (folder.children && folder.children.length > 0) {
-      processedChildren = await processFolderHierarchy(folder.children, folderMetadata);
-    }
-
-    // Each folder gets its children array filled
-    const folderWithChildren = { ...folderMetadata, children: processedChildren };
-
-    if (isTopLevelFolder) {
-      // Save top-level folder into Mongo
-      let existingFolder = await Folder.findOne({ gdriveId: folder.gdriveId });
-
-      if (!existingFolder) {
-        const newFolder = await Folder.create(folderWithChildren);
-        added++;
-        processedFolders.push(newFolder);
-      } else {
-        // Update existing
-        existingFolder.name = folderWithChildren.name;
-        existingFolder.description = existingFolder.description || folderWithChildren.description;
-        existingFolder.departments = existingFolder.departments?.length > 0 ? existingFolder.departments : folderWithChildren.departments;
-        existingFolder.years = existingFolder.years?.length > 0 ? existingFolder.years : folderWithChildren.years;
-        existingFolder.semesters = existingFolder.semesters?.length > 0 ? existingFolder.semesters : folderWithChildren.semesters;
-        existingFolder.tags = existingFolder.tags?.length > 0 ? existingFolder.tags : folderWithChildren.tags;
-        existingFolder.accessControlTags = existingFolder.accessControlTags?.length > 0 ? existingFolder.accessControlTags : folderWithChildren.accessControlTags;
-        existingFolder.createdByName = existingFolder.createdByName || folderWithChildren.createdByName;
-        existingFolder.children = folderWithChildren.children;
-
-        await existingFolder.save();
-        updated++;
-        processedFolders.push(existingFolder);
+    // Helper function to update nested children metadata recursively
+    const updateChildrenMetadata = (children, existingChildren, parentMetadata) => {
+      const updatedChildren = [];
+      
+      for (const child of children) {
+        // Find existing child by gdriveId
+        const existingChild = existingChildren?.find(ec => ec.gdriveId === child.gdriveId);
+        
+        let childMetadata;
+        if (existingChild && hasExistingMetadata(existingChild)) {
+          // Preserve existing metadata, only update structural fields
+          childMetadata = {
+            ...existingChild,
+            name: child.name, // Always update name from Google Drive
+            gdriveId: child.gdriveId,
+            children: [] // Will be filled below
+          };
+          console.log(`Preserving existing metadata for subfolder: ${child.name} (${child.gdriveId})`);
+        } else {
+          // Use inherited or default metadata
+          childMetadata = {
+            name: child.name,
+            gdriveId: child.gdriveId,
+            description: child.description || parentMetadata?.description || child.name.toLowerCase(),
+            departments: child.departments || parentMetadata?.departments || ['IT'],
+            years: child.years || parentMetadata?.years || [0],
+            semesters: child.semesters || parentMetadata?.semesters || [0],
+            tags: child.tags || (parentMetadata?.tags ? [...parentMetadata.tags, child.name.toLowerCase()] : [child.name.toLowerCase()]),
+            accessControlTags: child.accessControlTags || parentMetadata?.accessControlTags || [],
+          };
+          console.log(`Using inherited/default metadata for subfolder: ${child.name} (${child.gdriveId})`);
+        }
+        
+        // Recursively handle nested children
+        if (child.children && child.children.length > 0) {
+          childMetadata.children = updateChildrenMetadata(
+            child.children, 
+            existingChild?.children || [], 
+            childMetadata
+          );
+        } else {
+          childMetadata.children = [];
+        }
+        
+        updatedChildren.push(childMetadata);
       }
-    } else {
-      // Subfolders are only returned, not saved separately
-      processedFolders.push(folderWithChildren);
-    }
-  }
+      
+      return updatedChildren;
+    };
 
-  return processedFolders;
-};
+    // Process the folder hierarchy and save to MongoDB
+    const processFolderHierarchy = async (folders, parentMetadata = null) => {
+      const processedFolders = [];
+
+      for (const folder of folders) {
+        // Skip duplicates
+        if (processedGdriveIds.has(folder.gdriveId)) {
+          console.log(`Skipping duplicate folder ${folder.name} (${folder.gdriveId}) - already processed`);
+          continue;
+        }
+
+        const parentGdriveId = folderParentMap.get(folder.gdriveId);
+        const isTopLevelFolder = parentGdriveId === null;
+
+        processedGdriveIds.add(folder.gdriveId);
+
+        if (isTopLevelFolder) {
+          // Check if folder already exists in database
+          let existingFolder = await Folder.findOne({ gdriveId: folder.gdriveId });
+
+          if (!existingFolder) {
+            // Create new folder with default metadata
+            const folderMetadata = {
+              name: folder.name,
+              gdriveId: folder.gdriveId,
+              description: folder.description || folder.name.toLowerCase(),
+              departments: folder.departments || ['IT'],
+              years: folder.years || [0],
+              semesters: folder.semesters || [0],
+              tags: folder.tags || [folder.name.toLowerCase()],
+              accessControlTags: folder.accessControlTags || [],
+              createdByName: folder.ownerName || 'Ignite Admin',
+              parent: parentGdriveId,
+              children: []
+            };
+
+            // Recursively process children with new metadata
+            if (folder.children && folder.children.length > 0) {
+              folderMetadata.children = updateChildrenMetadata(folder.children, [], folderMetadata);
+            }
+
+            const newFolder = await Folder.create(folderMetadata);
+            added++;
+            processedFolders.push(newFolder);
+            console.log(`Created new folder: ${folder.name} (${folder.gdriveId}) with default metadata`);
+          } else {
+            // Update existing folder
+            let metadataToUse;
+            
+            if (hasExistingMetadata(existingFolder)) {
+              // Preserve existing metadata, only update structural fields
+              metadataToUse = {
+                description: existingFolder.description,
+                departments: existingFolder.departments,
+                years: existingFolder.years,
+                semesters: existingFolder.semesters,
+                tags: existingFolder.tags,
+                accessControlTags: existingFolder.accessControlTags,
+              };
+              console.log(`Preserving existing metadata for folder: ${folder.name} (${folder.gdriveId})`);
+            } else {
+              // Use default metadata since no meaningful metadata exists
+              metadataToUse = {
+                description: folder.description || folder.name.toLowerCase(),
+                departments: folder.departments || ['IT'],
+                years: folder.years || [0],
+                semesters: folder.semesters || [0],
+                tags: folder.tags || [folder.name.toLowerCase()],
+                accessControlTags: folder.accessControlTags || [],
+              };
+              console.log(`Updating folder with default metadata: ${folder.name} (${folder.gdriveId})`);
+            }
+
+            // Always update name and structural fields
+            existingFolder.name = folder.name;
+            existingFolder.description = metadataToUse.description;
+            existingFolder.departments = metadataToUse.departments;
+            existingFolder.years = metadataToUse.years;
+            existingFolder.semesters = metadataToUse.semesters;
+            existingFolder.tags = metadataToUse.tags;
+            existingFolder.accessControlTags = metadataToUse.accessControlTags;
+            existingFolder.createdByName = existingFolder.createdByName || folder.ownerName || 'Ignite Admin';
+
+            // Update children hierarchy
+            if (folder.children && folder.children.length > 0) {
+              existingFolder.children = updateChildrenMetadata(
+                folder.children, 
+                existingFolder.children || [], 
+                metadataToUse
+              );
+            } else {
+              existingFolder.children = [];
+            }
+
+            await existingFolder.save();
+            updated++;
+            processedFolders.push(existingFolder);
+          }
+        } else {
+          // For subfolders (not saved directly to DB), create metadata structure
+          const folderMetadata = {
+            name: folder.name,
+            gdriveId: folder.gdriveId,
+            description: folder.description || parentMetadata?.description || folder.name.toLowerCase(),
+            departments: folder.departments || parentMetadata?.departments || ['IT'],
+            years: folder.years || parentMetadata?.years || [0],
+            semesters: folder.semesters || parentMetadata?.semesters || [0],
+            tags: folder.tags || (parentMetadata?.tags ? [...parentMetadata.tags, folder.name.toLowerCase()] : [folder.name.toLowerCase()]),
+            accessControlTags: folder.accessControlTags || parentMetadata?.accessControlTags || [],
+            children: []
+          };
+
+          // Recursively process children
+          if (folder.children && folder.children.length > 0) {
+            folderMetadata.children = updateChildrenMetadata(folder.children, [], folderMetadata);
+          }
+
+          processedFolders.push(folderMetadata);
+        }
+      }
+
+      return processedFolders;
+    };
 
     
     // Process the entire hierarchy

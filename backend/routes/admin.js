@@ -606,11 +606,18 @@ router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
       errors: 0
     };
     
+    let skippedDetails = [];
+    
     for (const sheetUser of users) {
       try {
         // Skip if missing required fields
         if (!sheetUser.email || !sheetUser.name) {
           importStats.skipped++;
+          skippedDetails.push({
+            email: sheetUser.email || 'MISSING',
+            name: sheetUser.name || 'MISSING',
+            reason: 'Missing required fields (email or name)'
+          });
           continue;
         }
         
@@ -649,9 +656,19 @@ router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
               importStats.updated++;
             } else {
               importStats.skipped++;
+              skippedDetails.push({
+                email: sheetUser.email,
+                name: sheetUser.name,
+                reason: 'No changes detected - user data already up to date'
+              });
             }
           } else {
             importStats.skipped++; // Skip admin accounts
+            skippedDetails.push({
+              email: sheetUser.email,
+              name: sheetUser.name,
+              reason: 'Admin account - skipped for safety'
+            });
           }
         } else {
           // Create new user
@@ -672,6 +689,11 @@ router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
       } catch (userError) {
         console.error(`Error processing user ${sheetUser.email}:`, userError);
         importStats.errors++;
+        skippedDetails.push({
+          email: sheetUser.email || 'UNKNOWN',
+          name: sheetUser.name || 'UNKNOWN',
+          reason: `Processing error: ${userError.message}`
+        });
       }
     }
     
@@ -681,12 +703,21 @@ router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
     // Log sync action to console for admin audit trail
     console.log(`Admin ${req.user.username} synced Google Sheets - Added: ${importStats.added}, Updated: ${importStats.updated}, Skipped: ${importStats.skipped}, Errors: ${importStats.errors}`);
     
+    // Log details of skipped users
+    if (skippedDetails.length > 0) {
+      // console.log('Skipped users details:');
+      // skippedDetails.forEach((detail, index) => {
+      //   console.log(`  ${index + 1}. ${detail.email} (${detail.name}) - ${detail.reason}`);
+      // });
+    }
+    
     res.json({ 
       success: true,
       message: `Successfully synced ${users.length} users from Google Sheets. Added: ${importStats.added}, Updated: ${importStats.updated}, Skipped: ${importStats.skipped}, Errors: ${importStats.errors}`,
       data: {
         sheetsUsersCount: users.length,
         importStats,
+        skippedUsers: skippedDetails.slice(0, 10), // Only return first 10 for response size
         cacheStatus,
         syncTime: new Date().toISOString()
       }

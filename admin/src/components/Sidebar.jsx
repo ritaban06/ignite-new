@@ -48,11 +48,12 @@ export default function Sidebar() {
     setSyncStatus(null);
     try {
       const response = await userAPI.syncSheets();
+      const { sheetsUsersCount, importStats } = response.data.data;
       setSyncStatus({
         type: 'success',
-        message: `Sync successful! ${response.data.data.usersCount} users loaded.`
+        message: `Sync successful! ${sheetsUsersCount} users from sheets. Added: ${importStats.added}, Updated: ${importStats.updated}, Skipped: ${importStats.skipped}, Errors: ${importStats.errors}`
       });
-      setTimeout(() => setSyncStatus(null), 3000);
+      setTimeout(() => setSyncStatus(null), 5000); // Show longer for more detail
     } catch (error) {
       console.error('Sync failed:', error);
       setSyncStatus({

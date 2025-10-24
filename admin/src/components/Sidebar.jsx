@@ -199,6 +199,21 @@ export default function Sidebar() {
               <Folder className="mr-3 h-5 w-5 text-green-300" />
               Open Google Drive Root
             </button>
+            {/* Open Google Sheets Button */}
+            <button
+              onClick={() => {
+                const sheetsUrl = import.meta.env.VITE_APPROVED_USERS_SHEET_URL;
+                if (sheetsUrl) {
+                  window.open(sheetsUrl, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-black bg-yellow-300 hover:bg-yellow-600"
+              title="Open approved users Google Sheet in a new tab"
+              disabled={!import.meta.env.VITE_APPROVED_USERS_SHEET_URL}
+            >
+              <FileText className="mr-3 h-5 w-5 text-black" />
+              Open Google Sheets
+            </button>
             {/* Status Message for Folder Sync */}
             {cacheResult && (
               <div className={`mt-2 px-3 py-2 text-xs rounded-md ${

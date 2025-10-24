@@ -598,14 +598,95 @@ router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
     // Fetch fresh data from Google Sheets
     const users = await googleSheetsService.fetchApprovedUsers();
     
+    // Import/upsert users into database
+    let importStats = {
+      added: 0,
+      updated: 0,
+      skipped: 0,
+      errors: 0
+    };
+    
+    for (const sheetUser of users) {
+      try {
+        // Skip if missing required fields
+        if (!sheetUser.email || !sheetUser.name) {
+          importStats.skipped++;
+          continue;
+        }
+        
+        // Find existing user by email
+        const existingUser = await User.findOne({ 
+          email: sheetUser.email.toLowerCase().trim() 
+        });
+        
+        if (existingUser) {
+          // Update existing user (but don't change admin accounts)
+          if (existingUser.role !== 'admin') {
+            let hasChanges = false;
+            
+            if (existingUser.name !== sheetUser.name?.trim()) {
+              existingUser.name = sheetUser.name.trim();
+              hasChanges = true;
+            }
+            
+            if (existingUser.department !== sheetUser.department?.trim()) {
+              existingUser.department = sheetUser.department?.trim() || existingUser.department;
+              hasChanges = true;
+            }
+            
+            if (existingUser.year !== parseInt(sheetUser.year) && !isNaN(parseInt(sheetUser.year))) {
+              existingUser.year = parseInt(sheetUser.year);
+              hasChanges = true;
+            }
+            
+            if (!existingUser.isActive) {
+              existingUser.isActive = true;
+              hasChanges = true;
+            }
+            
+            if (hasChanges) {
+              await existingUser.save();
+              importStats.updated++;
+            } else {
+              importStats.skipped++;
+            }
+          } else {
+            importStats.skipped++; // Skip admin accounts
+          }
+        } else {
+          // Create new user
+          const newUser = new User({
+            email: sheetUser.email.toLowerCase().trim(),
+            name: sheetUser.name.trim(),
+            department: sheetUser.department?.trim() || 'CSE',
+            year: parseInt(sheetUser.year) || 1,
+            role: 'client',
+            isActive: true,
+            // Generate a temporary password - user will need to reset
+            password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
+          });
+          
+          await newUser.save();
+          importStats.added++;
+        }
+      } catch (userError) {
+        console.error(`Error processing user ${sheetUser.email}:`, userError);
+        importStats.errors++;
+      }
+    }
+    
     // Get cache status for response
     const cacheStatus = googleSheetsService.getCacheStatus();
     
+    // Log sync action to console for admin audit trail
+    console.log(`Admin ${req.user.username} synced Google Sheets - Added: ${importStats.added}, Updated: ${importStats.updated}, Skipped: ${importStats.skipped}, Errors: ${importStats.errors}`);
+    
     res.json({ 
       success: true,
-      message: 'Successfully synced from Google Sheets',
+      message: `Successfully synced ${users.length} users from Google Sheets. Added: ${importStats.added}, Updated: ${importStats.updated}, Skipped: ${importStats.skipped}, Errors: ${importStats.errors}`,
       data: {
-        usersCount: users.length,
+        sheetsUsersCount: users.length,
+        importStats,
         cacheStatus,
         syncTime: new Date().toISOString()
       }

@@ -338,6 +338,7 @@ router.get('/users', [
   query('role').optional().isIn(['client', 'admin']),
   query('department').optional().isIn(['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']),
   query('year').optional().isInt({ min: 1, max: 4 }),
+  query('semester').optional().isInt({ min: 1, max: 8 }),
   query('isActive').optional().isBoolean(),
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 100 }).toInt()
@@ -355,6 +356,7 @@ router.get('/users', [
       role, 
       department, 
       year, 
+      semester,
       isActive = true,
       page = 1, 
       limit = 50,
@@ -366,6 +368,7 @@ router.get('/users', [
     if (role) query.role = role;
     if (department) query.department = department;
     if (year) query.year = parseInt(year);
+    if (semester) query.semester = parseInt(semester);
     if (isActive !== undefined) query.isActive = isActive;
     if (search && typeof search === 'string' && search.trim().length > 0) {
       query.$or = [
@@ -394,7 +397,7 @@ router.get('/users', [
         hasNext: page * limit < totalCount,
         hasPrev: page > 1
       },
-      filters: { role, department, year, isActive }
+      filters: { role, department, year, semester, isActive }
     });
   } catch (error) {
     console.error('Get users error:', error);
@@ -413,6 +416,7 @@ router.put('/users/:userId', [
   body('name').optional().trim().isLength({ min: 2, max: 50 }),
   body('department').optional().isIn(['CSE', 'CSBS', 'AIML', 'CSDS', 'IT', 'CSCS', 'ECE', 'EIE', 'IOT', 'ECS', 'EE', 'CE', 'FT', 'ME', 'BCA', 'BBA', 'BHM', 'BMS']),
   body('year').optional().isInt({ min: 1, max: 4 }),
+  body('semester').optional().isInt({ min: 1, max: 8 }),
   body('accessTags').optional().isArray(),
   body('accessTags.*').optional().isString().trim().isLength({ min: 1, max: 50 })
 ], async (req, res) => {
@@ -437,7 +441,7 @@ router.put('/users/:userId', [
       });
     }
 
-    const allowedUpdates = ['isActive', 'name', 'department', 'year', 'accessTags'];
+    const allowedUpdates = ['isActive', 'name', 'department', 'year', 'semester', 'accessTags'];
     const updates = {};
 
     allowedUpdates.forEach(field => {
@@ -646,6 +650,11 @@ router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
               hasChanges = true;
             }
             
+            if (existingUser.semester !== parseInt(sheetUser.semester) && !isNaN(parseInt(sheetUser.semester))) {
+              existingUser.semester = parseInt(sheetUser.semester);
+              hasChanges = true;
+            }
+            
             if (!existingUser.isActive) {
               existingUser.isActive = true;
               hasChanges = true;
@@ -677,6 +686,7 @@ router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
             name: sheetUser.name.trim(),
             department: sheetUser.department?.trim() || 'CSE',
             year: parseInt(sheetUser.year) || 1,
+            semester: parseInt(sheetUser.semester) || 1,
             role: 'client',
             isActive: true,
             // Generate a temporary password - user will need to reset

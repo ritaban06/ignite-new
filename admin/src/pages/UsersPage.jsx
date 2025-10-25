@@ -355,27 +355,126 @@ export default function UsersPage() {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Intelligent Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-gray-700">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-white">
+              <div className="text-sm text-gray-300">
                 Page {currentPage} of {totalPages}
               </div>
-              <div className="flex space-x-2">
+              <div className="flex items-center space-x-2">
+                {/* First Page Button */}
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-md text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="First Page"
+                >
+                  First
+                </button>
+                
+                {/* Previous Page Button */}
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-md text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Previous Page"
                 >
                   Previous
                 </button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {(() => {
+                    const pages = [];
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    
+                    // Adjust start page if we're near the end
+                    if (endPage - startPage + 1 < maxVisiblePages) {
+                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                    }
+
+                    // Add ellipsis at the beginning if needed
+                    if (startPage > 1) {
+                      pages.push(
+                        <button
+                          key="1"
+                          onClick={() => setCurrentPage(1)}
+                          className="px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-md text-white hover:bg-gray-600 transition-colors"
+                        >
+                          1
+                        </button>
+                      );
+                      if (startPage > 2) {
+                        pages.push(
+                          <span key="start-ellipsis" className="px-2 text-gray-400">
+                            ...
+                          </span>
+                        );
+                      }
+                    }
+
+                    // Add visible page numbers
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => setCurrentPage(i)}
+                          className={`px-3 py-2 text-sm border rounded-md transition-colors font-medium ${
+                            currentPage === i
+                              ? 'bg-primary-600 border-primary-500 text-white shadow-lg ring-2 ring-primary-300 ring-opacity-50 scale-105 transform'
+                              : 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600 hover:border-gray-500'
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+
+                    // Add ellipsis at the end if needed
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pages.push(
+                          <span key="end-ellipsis" className="px-2 text-gray-400">
+                            ...
+                          </span>
+                        );
+                      }
+                      pages.push(
+                        <button
+                          key={totalPages}
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-md text-white hover:bg-gray-600 transition-colors"
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+
+                    return pages;
+                  })()}
+                </div>
+
+                {/* Next Page Button */}
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-md text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Next Page"
                 >
                   Next
+                </button>
+                
+                {/* Last Page Button */}
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-md text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Last Page"
+                >
+                  Last
                 </button>
               </div>
             </div>

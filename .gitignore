@@ -117,3 +117,4 @@ google-services.json
 .gradle/
 *.b64
 *.jks
+user-comparison-report.json

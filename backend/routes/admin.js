@@ -591,7 +591,7 @@ router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
 });
 
 
-// Sync from Google Sheets
+// Sync from Google Sheets (Authenticated)
 router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
   try {
     console.log('Admin initiated Google Sheets sync');
@@ -712,6 +712,168 @@ router.post('/sync-sheets', authenticate, requireAdmin, async (req, res) => {
     
     // Log sync action to console for admin audit trail
     console.log(`Admin ${req.user.username} synced Google Sheets - Added: ${importStats.added}, Updated: ${importStats.updated}, Skipped: ${importStats.skipped}, Errors: ${importStats.errors}`);
+    
+    // Log details of skipped users
+    if (skippedDetails.length > 0) {
+      // console.log('Skipped users details:');
+      // skippedDetails.forEach((detail, index) => {
+      //   console.log(`  ${index + 1}. ${detail.email} (${detail.name}) - ${detail.reason}`);
+      // });
+    }
+    
+    res.json({ 
+      success: true,
+      message: `Successfully synced ${users.length} users from Google Sheets. Added: ${importStats.added}, Updated: ${importStats.updated}, Skipped: ${importStats.skipped}, Errors: ${importStats.errors}`,
+      data: {
+        sheetsUsersCount: users.length,
+        importStats,
+        skippedUsers: skippedDetails.slice(0, 10), // Only return first 10 for response size
+        cacheStatus,
+        syncTime: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Google Sheets sync error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to sync from Google Sheets', 
+      message: error.message 
+    });
+  }
+});
+
+// Cron job endpoint for sync-sheets (No authentication required)
+router.post('/cron-sync-sheets', async (req, res) => {
+  try {
+    // Basic security: check for a simple secret key in headers or query
+    const cronSecret = req.headers['x-cron-secret'] || req.query.secret;
+    const expectedSecret = process.env.CRON_SECRET || 'ignite-cron-2026';
+    
+    if (cronSecret !== expectedSecret) {
+      return res.status(403).json({
+        error: 'Invalid cron secret',
+        message: 'Unauthorized cron job access'
+      });
+    }
+    
+    console.log('Cron job initiated Google Sheets sync');
+    
+    // Clear cache to force fresh fetch
+    googleSheetsService.clearCache();
+    
+    // Fetch fresh data from Google Sheets
+    const users = await googleSheetsService.fetchApprovedUsers();
+    
+    // Import/upsert users into database
+    let importStats = {
+      added: 0,
+      updated: 0,
+      skipped: 0,
+      errors: 0
+    };
+    
+    let skippedDetails = [];
+    
+    for (const sheetUser of users) {
+      try {
+        // Skip if missing required fields
+        if (!sheetUser.email || !sheetUser.name) {
+          importStats.skipped++;
+          skippedDetails.push({
+            email: sheetUser.email || 'MISSING',
+            name: sheetUser.name || 'MISSING',
+            reason: 'Missing required fields (email or name)'
+          });
+          continue;
+        }
+        
+        // Find existing user by email
+        const existingUser = await User.findOne({ 
+          email: sheetUser.email.toLowerCase().trim() 
+        });
+        
+        if (existingUser) {
+          // Update existing user (but don't change admin accounts)
+          if (existingUser.role !== 'admin') {
+            let hasChanges = false;
+            
+            if (existingUser.name !== sheetUser.name?.trim()) {
+              existingUser.name = sheetUser.name.trim();
+              hasChanges = true;
+            }
+            
+            if (existingUser.department !== sheetUser.department?.trim()) {
+              existingUser.department = sheetUser.department?.trim() || existingUser.department;
+              hasChanges = true;
+            }
+            
+            if (existingUser.year !== parseInt(sheetUser.year) && !isNaN(parseInt(sheetUser.year))) {
+              existingUser.year = parseInt(sheetUser.year);
+              hasChanges = true;
+            }
+            
+            if (existingUser.semester !== parseInt(sheetUser.semester) && !isNaN(parseInt(sheetUser.semester))) {
+              existingUser.semester = parseInt(sheetUser.semester);
+              hasChanges = true;
+            }
+            
+            if (!existingUser.isActive) {
+              existingUser.isActive = true;
+              hasChanges = true;
+            }
+            
+            if (hasChanges) {
+              await existingUser.save();
+              importStats.updated++;
+            } else {
+              importStats.skipped++;
+              skippedDetails.push({
+                email: sheetUser.email,
+                name: sheetUser.name,
+                reason: 'No changes detected - user data already up to date'
+              });
+            }
+          } else {
+            importStats.skipped++; // Skip admin accounts
+            skippedDetails.push({
+              email: sheetUser.email,
+              name: sheetUser.name,
+              reason: 'Admin account - skipped for safety'
+            });
+          }
+        } else {
+          // Create new user
+          const newUser = new User({
+            email: sheetUser.email.toLowerCase().trim(),
+            name: sheetUser.name.trim(),
+            department: sheetUser.department?.trim() || 'CSE',
+            year: parseInt(sheetUser.year) || 1,
+            semester: parseInt(sheetUser.semester) || 1,
+            role: 'client',
+            isActive: true,
+            // Generate a temporary password - user will need to reset
+            password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
+          });
+          
+          await newUser.save();
+          importStats.added++;
+        }
+      } catch (userError) {
+        console.error(`Error processing user ${sheetUser.email}:`, userError);
+        importStats.errors++;
+        skippedDetails.push({
+          email: sheetUser.email || 'UNKNOWN',
+          name: sheetUser.name || 'UNKNOWN',
+          reason: `Processing error: ${userError.message}`
+        });
+      }
+    }
+    
+    // Get cache status for response
+    const cacheStatus = googleSheetsService.getCacheStatus();
+    
+    // Log sync action to console for admin audit trail
+    console.log(`Cron job synced Google Sheets - Added: ${importStats.added}, Updated: ${importStats.updated}, Skipped: ${importStats.skipped}, Errors: ${importStats.errors}`);
     
     // Log details of skipped users
     if (skippedDetails.length > 0) {
@@ -1128,5 +1290,4 @@ router.post('/fix-orphaned-uploaders', [
     });
   }
 });
-
 module.exports = router;

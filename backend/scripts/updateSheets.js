@@ -14,31 +14,36 @@ class SheetsUpdater {
   }
 
   /**
-   * Update specific cells M3 and N3
+   * Update a range of cells with provided values
+   * @param {string} range - Range in A1 notation (e.g., 'M3:N3', 'A1:C5')
+   * @param {Array[]} values - 2D array of values matching the range dimensions
+   * @param {string} gid - Optional sheet GID, uses default if not provided
+   */
+  async updateRangeValues(range, values, gid = null) {
+    try {
+      console.log(`Updating range ${range}...`);
+      console.log('Values:', values);
+
+      const result = await this.sheetsService.updateSheetData(range, values, gid);
+      
+      console.log(`✅ Successfully updated range ${range}`);
+      console.log(`Updated ${result.updatedCells} cells`);
+      
+      return result;
+    } catch (error) {
+      console.error(`❌ Error updating range ${range}:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Update specific cells M3 and N3 (legacy method for backward compatibility)
    * @param {string} m3Value - Value for cell M3
    * @param {string} n3Value - Value for cell N3
    * @param {string} gid - Optional sheet GID, uses default if not provided
    */
   async updateM3N3(m3Value, n3Value, gid = null) {
-    try {
-      console.log('Updating cells M3 and N3...');
-      console.log(`M3: ${m3Value}`);
-      console.log(`N3: ${n3Value}`);
-
-      // Update M3 and N3 in a single operation
-      const range = 'M3:N3';
-      const values = [[m3Value, n3Value]];
-
-      const result = await this.sheetsService.updateSheetData(range, values, gid);
-      
-      console.log('✅ Successfully updated cells M3 and N3');
-      console.log(`Updated ${result.updatedCells} cells`);
-      
-      return result;
-    } catch (error) {
-      console.error('❌ Error updating M3 and N3:', error.message);
-      throw error;
-    }
+    return this.updateRangeValues('M3:N3', [[m3Value, n3Value]], gid);
   }
 
   /**
@@ -134,6 +139,30 @@ async function main() {
   
   if (args.length === 0) {
     console.log(`
+📊 Google Sheets Updater Script
+
+Usage:
+  node updateSheets.js <command> [arguments]
+
+Commands:
+  m3n3 <m3_value> <n3_value> [gid]         Update M3 and N3 cells (legacy)
+  cell <cell> <value> [gid]                Update single cell
+  range <range> <values_json> [gid]        Update range of cells
+  update-range <range> <values_json> [gid] Update range of cells (alias)
+  append <row_data_json> [gid]             Append new row
+  cache                                    Show cache info
+  clear                                    Clear cache
+  help                                     Show this help message
+
+Examples:
+  # Single row range update
+  node updateSheets.js range M3:N3 '[["Status","Active"]]'
+  
+  # Multiple row range update
+  node updateSheets.js range A1:C3 '[["Name","Age","City"],["John","25","NYC"],["Jane","30","LA"]]'
+  
+  # Single cell update
+  node updateSheets.js cell M3 "Updated Value"
         `);
     return;
   }
@@ -161,7 +190,16 @@ async function main() {
           throw new Error('Range and values JSON are required');
         }
         const values = JSON.parse(args[2]);
-        await updater.updateRange(args[1], values, args[3]);
+        await updater.updateRangeValues(args[1], values, args[3]);
+        break;
+
+      case 'update-range':
+        // Alias for 'range' command for clarity
+        if (args.length < 3) {
+          throw new Error('Range and values JSON are required');
+        }
+        const rangeValues = JSON.parse(args[2]);
+        await updater.updateRangeValues(args[1], rangeValues, args[3]);
         break;
 
       case 'append':
@@ -197,15 +235,28 @@ if (require.main === module) {
   main();
 }
 //  Usage:
-//       node updateSheets.js m3n3 <m3_value> <n3_value> [gid]     # Update M3 and N3
-//       node updateSheets.js cell <cell> <value> [gid]            # Update single cell
-//       node updateSheets.js range <range> <values_json> [gid]    # Update range
-//       node updateSheets.js append <row_data_json> [gid]         # Append row
-//       node updateSheets.js cache                                # Show cache info
-//       node updateSheets.js clear                                # Clear cache
+//       node updateSheets.js m3n3 <m3_value> <n3_value> [gid]         # Update M3 and N3 (legacy)
+//       node updateSheets.js cell <cell> <value> [gid]                # Update single cell
+//       node updateSheets.js range <range> <values_json> [gid]        # Update range of cells
+//       node updateSheets.js update-range <range> <values_json> [gid] # Update range of cells (alias)
+//       node updateSheets.js append <row_data_json> [gid]             # Append row
+//       node updateSheets.js cache                                    # Show cache info
+//       node updateSheets.js clear                                    # Clear cache
     
 //     Examples:
+//       # Legacy M3/N3 update
 //       node updateSheets.js m3n3 "Status" "Active"
+//       
+//       # Single cell update
 //       node updateSheets.js cell M3 "Updated Value"
-//       node updateSheets.js range A1:B2 '[["Name","Age"],["John","25"]]'
+//       
+//       # Range updates (single row)
+//       node updateSheets.js range M3:N3 '[["Status","Active"]]'
+//       node updateSheets.js range A1:E1 '[["Name","Email","Age","City","Status"]]'
+//       
+//       # Range updates (multiple rows)
+//       node updateSheets.js range A1:C3 '[["Name","Age","City"],["John","25","NYC"],["Jane","30","LA"]]'
+//       node updateSheets.js range M3:N5 '[["Status","Date"],["Active","2024-10-27"],["Pending","2024-10-28"]]'
+//       
+//       # Append new row
 //       node updateSheets.js append '["New User","email@example.com","2024"]'

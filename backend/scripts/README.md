@@ -1,6 +1,11 @@
-# Google Sheets Update Script
+# Google Sheets Scripts
 
-This script allows you to update Google Sheets data programmatically using the Google Sheets API.
+This directory contains scripts for managing Google Sheets data programmatically using the Google Sheets API.
+
+## Available Scripts
+
+1. **updateSheets.js** - Update cells, ranges, and append rows to Google Sheets
+2. **deleteRows.js** - Delete single or multiple rows from Google Sheets
 
 ## Prerequisites
 
@@ -47,6 +52,64 @@ node updateSheets.js range A1:C1 '[["Name","Email","Status"]]'
 ```
 
 #### Append new row:
+```bash
+node updateSheets.js append '["New User","email@example.com","2024"]'
+node updateSheets.js append '["John Doe","john@example.com","Active","2024-10-27"]'
+```
+
+## Delete Rows Script (deleteRows.js)
+
+### Usage
+
+#### Delete single row:
+```bash
+node deleteRows.js 5                    # Delete row 5
+node deleteRows.js 10                   # Delete row 10
+```
+
+#### Delete range of rows:
+```bash
+node deleteRows.js 5:8                  # Delete rows 5 through 8 (inclusive)
+node deleteRows.js 2:4                  # Delete rows 2, 3, and 4
+```
+
+#### Delete multiple specific rows:
+```bash
+node deleteRows.js 5,7,9                # Delete rows 5, 7, and 9
+node deleteRows.js 2,5,8,12             # Delete rows 2, 5, 8, and 12
+```
+
+#### Delete from specific sheet (using GID):
+```bash
+node deleteRows.js 5 123456789          # Delete row 5 from sheet with GID 123456789
+node deleteRows.js 5:8 987654321        # Delete rows 5-8 from sheet with GID 987654321
+```
+
+### Safety Features
+
+- **Warning messages** before deletion
+- **Cannot be undone** - deletions are permanent
+- **Row numbers are 1-based** (row 1 is the first row)
+- **Automatic sorting** when deleting multiple rows to prevent index shifting
+
+### Examples:
+```bash
+# Delete single row
+node deleteRows.js 3                    # Deletes the 3rd row
+
+# Delete multiple consecutive rows  
+node deleteRows.js 5:10                 # Deletes rows 5, 6, 7, 8, 9, 10
+
+# Delete specific non-consecutive rows
+node deleteRows.js 2,5,8                # Deletes rows 2, 5, and 8
+
+# Delete from specific sheet
+node deleteRows.js 7 123456789          # Deletes row 7 from sheet with GID 123456789
+```
+
+## Update Rows Script (updateSheets.js)
+
+### Examples:
 ```bash
 node updateSheets.js append '["New User","user@example.com","Active","2024"]'
 ```
@@ -105,6 +168,42 @@ updateData();
 - `appendRow(rowData, gid?)` - Append a new row
 - `getCacheInfo()` - Get cache status
 - `clearCache()` - Clear cached data
+
+### SheetsRowDeleter Methods
+
+- `deleteRow(rowIndex, gid?)` - Delete a single row (0-based index)
+- `deleteRows(startRow, endRow, gid?)` - Delete a range of rows (0-based)
+- `deleteRowsByNumbers(rowNumbers, gid?)` - Delete rows by row numbers (1-based)
+- `deleteRowRange(range, gid?)` - Delete rows using range string format
+
+### Programmatic Usage (Delete Rows)
+
+```javascript
+const SheetsRowDeleter = require('./deleteRows');
+
+async function deleteData() {
+  const deleter = new SheetsRowDeleter();
+
+  try {
+    // Delete single row (1-based)
+    await deleter.deleteRowRange('5');
+
+    // Delete range of rows
+    await deleter.deleteRowRange('5:8');
+
+    // Delete multiple specific rows
+    await deleter.deleteRowRange('2,5,8,12');
+
+    // Delete from specific sheet
+    await deleter.deleteRowRange('10', '123456789');
+
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+deleteData();
+```
 
 ### Parameters
 

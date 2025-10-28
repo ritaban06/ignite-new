@@ -128,6 +128,73 @@ class SheetsUpdater {
     this.sheetsService.clearCache();
     console.log('✅ Cache cleared');
   }
+
+  /**
+   * Generate and update a large range with similar/patterned values
+   * @param {string} range - Range in A1 notation (e.g., 'A3:O529')
+   * @param {string|Function} valuePattern - Either a single value or a function that generates values
+   * @param {string} gid - Optional sheet GID
+   */
+  async updateLargeRange(range, valuePattern, gid = null) {
+    try {
+      console.log(`Generating data for large range ${range}...`);
+      
+      // Parse the range to determine dimensions
+      const [start, end] = range.split(':');
+      const startCol = start.match(/[A-Z]+/)[0];
+      const startRow = parseInt(start.match(/\d+/)[0]);
+      const endCol = end.match(/[A-Z]+/)[0];
+      const endRow = parseInt(end.match(/\d+/)[0]);
+      
+      // Convert column letters to numbers
+      const colToNum = (col) => {
+        let result = 0;
+        for (let i = 0; i < col.length; i++) {
+          result = result * 26 + (col.charCodeAt(i) - 64);
+        }
+        return result;
+      };
+      
+      const startColNum = colToNum(startCol);
+      const endColNum = colToNum(endCol);
+      const numCols = endColNum - startColNum + 1;
+      const numRows = endRow - startRow + 1;
+      
+      console.log(`Range dimensions: ${numRows} rows × ${numCols} columns = ${numRows * numCols} cells`);
+      
+      // Generate the 2D array of values
+      const values = [];
+      
+      for (let row = 0; row < numRows; row++) {
+        const rowData = [];
+        for (let col = 0; col < numCols; col++) {
+          if (typeof valuePattern === 'function') {
+            // Use function to generate value based on position
+            rowData.push(valuePattern(row + startRow, col + startColNum, row, col));
+          } else {
+            // Use static value
+            rowData.push(valuePattern);
+          }
+        }
+        values.push(rowData);
+      }
+      
+      console.log('Sample of generated data (first 3 rows):');
+      values.slice(0, 3).forEach((row, idx) => {
+        console.log(`Row ${idx + startRow}:`, row.slice(0, Math.min(5, row.length)), row.length > 5 ? '...' : '');
+      });
+      
+      const result = await this.sheetsService.updateSheetData(range, values, gid);
+      
+      console.log(`✅ Successfully updated large range ${range}`);
+      console.log(`Updated ${result.updatedCells} cells`);
+      
+      return result;
+    } catch (error) {
+      console.error(`❌ Error updating large range ${range}:`, error.message);
+      throw error;
+    }
+  }
 }
 
 // CLI functionality
@@ -149,6 +216,7 @@ Commands:
   cell <cell> <value> [gid]                Update single cell
   range <range> <values_json> [gid]        Update range of cells
   update-range <range> <values_json> [gid] Update range of cells (alias)
+  large-range <range> <pattern> [gid]      Update large range with pattern
   append <row_data_json> [gid]             Append new row
   cache                                    Show cache info
   clear                                    Clear cache
@@ -163,6 +231,12 @@ Examples:
   
   # Single cell update
   node updateSheets.js cell M3 "Updated Value"
+  
+  # Large range with same value
+  node updateSheets.js large-range A3:O529 "DefaultValue"
+  
+  # Large range with pattern (row numbers)
+  node updateSheets.js large-range A3:O529 "ROW_NUM"
         `);
     return;
   }
@@ -200,6 +274,26 @@ Examples:
         }
         const rangeValues = JSON.parse(args[2]);
         await updater.updateRangeValues(args[1], rangeValues, args[3]);
+        break;
+
+      case 'large-range':
+        if (args.length < 3) {
+          throw new Error('Range and pattern are required');
+        }
+        let pattern = args[2];
+        
+        // Handle special patterns
+        if (pattern === 'ROW_NUM') {
+          pattern = (absoluteRow, absoluteCol, relativeRow, relativeCol) => `Row${absoluteRow}`;
+        } else if (pattern === 'COL_NUM') {
+          pattern = (absoluteRow, absoluteCol, relativeRow, relativeCol) => `Col${absoluteCol}`;
+        } else if (pattern === 'COORD') {
+          pattern = (absoluteRow, absoluteCol, relativeRow, relativeCol) => `${String.fromCharCode(64 + absoluteCol)}${absoluteRow}`;
+        } else if (pattern === 'INDEX') {
+          pattern = (absoluteRow, absoluteCol, relativeRow, relativeCol) => relativeRow * 15 + relativeCol + 1;
+        }
+        
+        await updater.updateLargeRange(args[1], pattern, args[3]);
         break;
 
       case 'append':

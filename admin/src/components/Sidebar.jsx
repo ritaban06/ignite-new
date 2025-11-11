@@ -31,16 +31,40 @@ export default function Sidebar() {
   const [cacheLoading, setCacheLoading] = useState(false);
   const [cacheResult, setCacheResult] = useState(null);
 
-  // Google Drive base folder from admin env
-  const driveBaseFolderId = import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID;
+  // Parse multiple Google Drive base folder IDs
+  const getBaseFolderIds = () => {
+    const baseFolderIds = [];
+    
+    // Primary folder ID (supports comma-separated values)
+    if (import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID) {
+      const primaryIds = import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID
+        .split(',')
+        .map(id => id.trim())
+        .filter(id => id.length > 0);
+      baseFolderIds.push(...primaryIds);
+    }
+    
+    // Additional folder IDs via separate env vars
+    if (import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID_2) {
+      baseFolderIds.push(import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID_2.trim());
+    }
+    if (import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID_3) {
+      baseFolderIds.push(import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID_3.trim());
+    }
+    
+    // Remove duplicates
+    return [...new Set(baseFolderIds)].filter(id => id.length > 0);
+  };
+
+  const baseFolderIds = getBaseFolderIds();
+  const driveBaseFolderId = baseFolderIds[0]; // For backward compatibility
   const GOOGLE_DRIVE_FOLDER_URL = driveBaseFolderId
     ? `https://drive.google.com/drive/folders/${driveBaseFolderId}`
     : null;
 
-  const handleOpenDriveRoot = () => {
-    if (GOOGLE_DRIVE_FOLDER_URL) {
-      window.open(GOOGLE_DRIVE_FOLDER_URL, '_blank', 'noopener,noreferrer');
-    }
+  const handleOpenDriveRoot = (folderId, index = 0) => {
+    const driveUrl = `https://drive.google.com/drive/folders/${folderId}`;
+    window.open(driveUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleSyncSheets = async () => {
@@ -106,15 +130,6 @@ export default function Sidebar() {
         error: errorMessage,
         details: err?.response?.data?.details || ''
       });
-                {/* Open Google Drive Root Button */}
-                <button
-                  onClick={handleOpenDriveRoot}
-                  className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-green-700 hover:bg-green-600"
-                  title="Open Google Drive root folder in a new tab"
-                >
-                  <Folder className="mr-3 h-5 w-5 text-green-300" />
-                  Open Google Drive Root
-                </button>
       
       // Show errors for longer (8 seconds)
       setTimeout(() => setCacheResult(null), 8000);
@@ -189,16 +204,35 @@ export default function Sidebar() {
               <Download className={`mr-3 h-5 w-5 text-yellow-300 ${cacheLoading ? 'animate-pulse' : ''}`} />
               {cacheLoading ? 'Synchronizing Folders...' : 'Sync Folders from Google Drive'}
             </button>
-            {/* Open Google Drive Root Button */}
-            <button
-              onClick={handleOpenDriveRoot}
-              className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-green-700 hover:bg-green-600"
-              title="Open Google Drive root folder in a new tab"
-              disabled={!GOOGLE_DRIVE_FOLDER_URL}
-            >
-              <Folder className="mr-3 h-5 w-5 text-green-300" />
-              Open Google Drive Root
-            </button>
+            {/* Open Google Drive Root Button(s) */}
+            {baseFolderIds.length === 1 ? (
+              // Single folder - show one button
+              <button
+                onClick={() => handleOpenDriveRoot(baseFolderIds[0])}
+                className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-green-700 hover:bg-green-600"
+                title="Open Google Drive root folder in a new tab"
+                disabled={baseFolderIds.length === 0}
+              >
+                <Folder className="mr-3 h-5 w-5 text-green-300" />
+                Open Google Drive Root
+              </button>
+            ) : baseFolderIds.length > 1 ? (
+              // Multiple folders - show separate buttons
+              baseFolderIds.map((folderId, index) => (
+                <button
+                  key={folderId}
+                  onClick={() => handleOpenDriveRoot(folderId, index)}
+                  className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-md transition-colors text-gray-300 bg-green-700 hover:bg-green-600"
+                  title={`Open Google Drive folder ${index + 1} in a new tab`}
+                >
+                  <Folder className="mr-3 h-5 w-5 text-green-300" />
+                  Drive Folder {index + 1}
+                  <span className="ml-auto text-xs text-green-200">
+                    {folderId.substring(0, 8)}...
+                  </span>
+                </button>
+              ))
+            ) : null}
             {/* Open Google Sheets Button */}
             <button
               onClick={() => {

@@ -4,12 +4,13 @@ const { body, query, validationResult } = require('express-validator');
 const PDF = require('../models/PDF');
 const AccessLog = require('../models/AccessLog');
 const GoogleDriveService = require('../services/googleDriveService');
+const { getPrimaryBaseFolderId } = require('../utils/gdriveConfig');
 
 const credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
 
 const googleDriveService = new GoogleDriveService(
   credentials,
-  process.env.GDRIVE_BASE_FOLDER_ID
+  getPrimaryBaseFolderId()
 );
 const { 
   authenticate, 

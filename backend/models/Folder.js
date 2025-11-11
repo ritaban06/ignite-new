@@ -12,6 +12,11 @@ const subfolderSchema = new mongoose.Schema({
     trim: true,
     required: false
   },
+  baseFolderId: {
+    type: String,
+    trim: true,
+    required: false
+  },
   description: {
     type: String,
     trim: true,
@@ -73,6 +78,12 @@ const folderSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
     required: false
+  },
+  baseFolderId: {
+    type: String,
+    trim: true,
+    required: false,
+    index: true // Index for faster queries by base folder
   },
   description: {
     type: String,

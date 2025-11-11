@@ -196,6 +196,7 @@ const validatePdfAccess = async (req, res, next) => {
   try {
     const PDF = require('../models/PDF');
     const GoogleDriveService = require('../services/googleDriveService');
+    const { getPrimaryBaseFolderId } = require('../utils/gdriveConfig');
     const pdfId = req.params.pdfId || req.params.id;
     
     if (!pdfId) {
@@ -215,7 +216,7 @@ const validatePdfAccess = async (req, res, next) => {
         const credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
       const googleDriveService = new GoogleDriveService(
         credentials,
-        process.env.GDRIVE_BASE_FOLDER_ID
+        getPrimaryBaseFolderId()
       );
         
         // Get file metadata from Google Drive to verify it exists

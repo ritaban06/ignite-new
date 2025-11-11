@@ -224,7 +224,14 @@ ADMIN_USERNAME=your-admin-username-here
 ADMIN_PASSWORD=your-secure-admin-password-here
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+# Google Drive Configuration - Multiple Base Folders Support
+# Option 1: Single folder
 GDRIVE_BASE_FOLDER_ID=your-google-drive-base-folder-id-here
+# Option 2: Multiple folders (comma-separated)
+# GDRIVE_BASE_FOLDER_ID=folder1-id,folder2-id,folder3-id
+# Option 3: Separate environment variables
+# GDRIVE_BASE_FOLDER_ID_2=your-second-folder-id
+# GDRIVE_BASE_FOLDER_ID_3=your-third-folder-id
 GDRIVE_CREDENTIALS=your-google-drive-credentials-json-content-here
 ```
 
@@ -238,7 +245,9 @@ VITE_SECURE_GLOBAL_DISABLE=true
 **Admin (.env)**
 ```env
 VITE_API_URL=http://localhost:5000/api
+# Multiple Google Drive base folders support
 VITE_GDRIVE_BASE_FOLDER_ID=your-gdrive-base-folder-id
+# or multiple: VITE_GDRIVE_BASE_FOLDER_ID=folder1-id,folder2-id,folder3-id
 ```
 
 ## 🚀 Production Deployment

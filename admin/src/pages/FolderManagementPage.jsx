@@ -8,6 +8,7 @@ import { folderAPI, pdfAPI, accessTagAPI } from '../api';
 import { gdriveAPI } from '../api';
 import toast from 'react-hot-toast';
 import socketService from '../services/socketService';
+import MultipleFoldersInfo from '../components/MultipleFoldersInfo';
 
 // Use GDRIVE_BASE_FOLDER_ID from admin env
 const GDRIVE_BASE_FOLDER_ID = import.meta.env.VITE_GDRIVE_BASE_FOLDER_ID;
@@ -741,6 +742,10 @@ export default function FolderManagementPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-white mb-6">Manage Folders</h1>
+      
+      {/* Multiple Base Folders Info */}
+      <MultipleFoldersInfo />
+      
       <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6 mb-6">
         <div className="mb-4 flex justify-between items-start">
           <div>

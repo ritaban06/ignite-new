@@ -118,3 +118,4 @@ google-services.json
 *.b64
 *.jks
 user-comparison-report.json
+.env.samarth

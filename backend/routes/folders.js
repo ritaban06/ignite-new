@@ -5,6 +5,7 @@ const Folder = require('../models/Folder');
 const AccessLog = require('../models/AccessLog');
 const { authenticate } = require('../middleware/auth');
 const { emitFolderUpdate } = require('../utils/socketEvents');
+const { getBaseFolderIds, getPrimaryBaseFolderId } = require('../utils/gdriveConfig');
 
 // Load Google Drive credentials from environment variable
 let credentials;
@@ -31,13 +32,21 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
     const credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
-    const googleDriveService = new GoogleDriveService(
-      credentials,
-      process.env.GDRIVE_BASE_FOLDER_ID
-    );
     
-    // Build a folder hierarchy from Google Drive
-    const buildFolderHierarchy = async (folderId, parentGdriveId = null) => {
+    // Support multiple base folder IDs
+    const baseFolderIds = getBaseFolderIds();
+    
+    if (baseFolderIds.length === 0) {
+      return res.status(400).json({ error: 'No Google Drive base folder IDs configured' });
+    }
+    
+    // Build a folder hierarchy from Google Drive for each base folder
+    const buildFolderHierarchy = async (folderId, parentGdriveId = null, baseFolderId = null) => {
+      const googleDriveService = new GoogleDriveService(
+        credentials,
+        folderId
+      );
+      
       const subfoldersRes = await googleDriveService.drive.files.list({
         q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
         fields: 'files(id, name, parents, owners)',
@@ -54,12 +63,13 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           name: folder.name,
           gdriveId: folder.id,
           parent: parentGdriveId, // This is the parent's Google Drive ID
+          baseFolderId: baseFolderId || folderId, // Track which base folder this belongs to
           ownerName: ownerName,
           children: []
         };
         
         // Recursively get children
-        folderObj.children = await buildFolderHierarchy(folder.id, folder.id);
+        folderObj.children = await buildFolderHierarchy(folder.id, folder.id, baseFolderId || folderId);
         
         result.push(folderObj);
       }
@@ -67,8 +77,13 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       return result;
     };
     
-    const rootId = process.env.GDRIVE_BASE_FOLDER_ID;
-    const folderHierarchy = await buildFolderHierarchy(rootId, null);
+    // Process all base folders
+    let allFolderHierarchies = [];
+    for (const rootId of baseFolderIds) {
+      console.log(`Processing base folder: ${rootId}`);
+      const folderHierarchy = await buildFolderHierarchy(rootId, null, rootId);
+      allFolderHierarchies = allFolderHierarchies.concat(folderHierarchy);
+    }
     
     // Collect all Google Drive IDs for cleanup
     const collectAllGdriveIds = (folders) => {
@@ -87,7 +102,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       return ids;
     };
     
-    const allDriveIds = collectAllGdriveIds(folderHierarchy);
+    const allDriveIds = collectAllGdriveIds(allFolderHierarchies);
     let added = 0, updated = 0, removed = 0;
 
     // Find all folders in DB that have a gdriveId
@@ -117,8 +132,8 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       }
     };
     
-    // Build the parent map
-    buildFolderParentMap(folderHierarchy);
+    // Build the parent map for all hierarchies
+    buildFolderParentMap(allFolderHierarchies);
 
     // Clean up duplicate entries where a folder exists both as top-level and as a child
     // This fixes any historical data issues
@@ -196,6 +211,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
             ...existingChild,
             name: child.name, // Always update name from Google Drive
             gdriveId: child.gdriveId,
+            baseFolderId: child.baseFolderId || existingChild.baseFolderId || parentMetadata?.baseFolderId, // Preserve or inherit baseFolderId
             children: [] // Will be filled below
           };
           console.log(`Preserving existing metadata for subfolder: ${child.name} (${child.gdriveId})`);
@@ -204,6 +220,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           childMetadata = {
             name: child.name,
             gdriveId: child.gdriveId,
+            baseFolderId: child.baseFolderId || parentMetadata?.baseFolderId, // Inherit baseFolderId from parent
             description: child.description || parentMetadata?.description || child.name.toLowerCase(),
             departments: child.departments || parentMetadata?.departments || ['IT'],
             years: child.years || parentMetadata?.years || [0],
@@ -256,6 +273,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
             const folderMetadata = {
               name: folder.name,
               gdriveId: folder.gdriveId,
+              baseFolderId: folder.baseFolderId, // Track which base folder this belongs to
               description: folder.description || folder.name.toLowerCase(),
               departments: folder.departments || ['IT'],
               years: folder.years || [0],
@@ -306,6 +324,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
 
             // Always update name and structural fields
             existingFolder.name = folder.name;
+            existingFolder.baseFolderId = folder.baseFolderId || existingFolder.baseFolderId; // Update or preserve baseFolderId
             existingFolder.description = metadataToUse.description;
             existingFolder.departments = metadataToUse.departments;
             existingFolder.years = metadataToUse.years;
@@ -334,6 +353,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
           const folderMetadata = {
             name: folder.name,
             gdriveId: folder.gdriveId,
+            baseFolderId: folder.baseFolderId || parentMetadata?.baseFolderId, // Inherit baseFolderId
             description: folder.description || parentMetadata?.description || folder.name.toLowerCase(),
             departments: folder.departments || parentMetadata?.departments || ['IT'],
             years: folder.years || parentMetadata?.years || [0],
@@ -356,8 +376,8 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
     };
 
     
-    // Process the entire hierarchy
-    await processFolderHierarchy(folderHierarchy);
+    // Process the entire hierarchy from all base folders
+    await processFolderHierarchy(allFolderHierarchies);
     
     // Count total folders processed
     const countFolders = (folders) => {
@@ -370,7 +390,7 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
       return count;
     };
     
-    const totalFolders = countFolders(folderHierarchy);
+    const totalFolders = countFolders(allFolderHierarchies);
     res.json({
       message: `Sync complete: ${added} added, ${updated} updated, ${removed} removed. Total scanned: ${totalFolders}.`,
       total: totalFolders,
@@ -385,9 +405,16 @@ router.post('/gdrive/cache', authenticate, async (req, res) => {
 });
 
 
-// Expose Google Drive base folder ID
+// Expose Google Drive base folder IDs
 router.get('/gdrive-base-id', (req, res) => {
-  res.json({ baseFolderId: process.env.GDRIVE_BASE_FOLDER_ID });
+  const baseFolderIds = getBaseFolderIds();
+  const primaryId = getPrimaryBaseFolderId();
+  
+  res.json({ 
+    baseFolderIds: baseFolderIds,
+    // Keep backward compatibility
+    baseFolderId: primaryId 
+  });
 });
 
 // List Google Drive folders and subfolders with hierarchy
@@ -492,7 +519,15 @@ router.post('/', [
 // Get all folders (optionally nested)
 router.get('/', authenticate, async (req, res) => {
   try {
-    const folders = await Folder.find().populate('parent').lean();
+    const { baseFolderId } = req.query;
+    let query = {};
+    
+    // Filter by specific base folder if requested
+    if (baseFolderId) {
+      query.baseFolderId = baseFolderId;
+    }
+    
+    const folders = await Folder.find(query).populate('parent').lean();
     res.json(folders);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch folders', details: err.message });
@@ -617,6 +652,71 @@ router.get('/with-metadata', authenticate, async (req, res) => {
     res.json(allFoldersFlat);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch folders with metadata', details: err.message });
+  }
+});
+
+// Get folders grouped by base folder ID
+router.get('/by-base-folder', authenticate, async (req, res) => {
+  try {
+    // Only allow admin to access this endpoint
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const baseFolderIds = getBaseFolderIds();
+    const result = {};
+    
+    for (const baseFolderId of baseFolderIds) {
+      const folders = await Folder.find({ 
+        parent: null, 
+        baseFolderId: baseFolderId 
+      }).lean();
+      
+      result[baseFolderId] = folders.map(folder => {
+        return {
+          gdriveId: folder.gdriveId,
+          id: folder.gdriveId,
+          _id: folder._id,
+          name: folder.name,
+          baseFolderId: folder.baseFolderId,
+          parent: null,
+          description: folder.description,
+          departments: folder.departments || [],
+          years: folder.years || [],
+          semesters: folder.semesters || [],
+          tags: folder.tags || [],
+          accessControlTags: folder.accessControlTags || [],
+          children: transformChildren(folder.children || [])
+        };
+      });
+    }
+    
+    // Helper function to transform nested children
+    function transformChildren(children) {
+      return children.map(child => {
+        return {
+          id: child.gdriveId,
+          gdriveId: child.gdriveId,
+          name: child.name,
+          parent: child.parent,
+          baseFolderId: child.baseFolderId,
+          description: child.description || '',
+          departments: child.departments || [],
+          years: child.years || [],
+          semesters: child.semesters || [],
+          tags: child.tags || [],
+          accessControlTags: child.accessControlTags || [],
+          children: child.children && child.children.length > 0 ? transformChildren(child.children) : []
+        };
+      });
+    }
+    
+    res.json({
+      baseFolderIds,
+      foldersByBaseId: result
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch folders by base folder', details: err.message });
   }
 });
 
@@ -1126,8 +1226,12 @@ router.get('/search', authenticate, async (req, res) => {
         throw new Error('Google Drive credentials are not properly configured');
       }
 
-      // Initialize Google Drive service
-      const googleDriveService = new GoogleDriveService(credentials, process.env.GDRIVE_BASE_FOLDER_ID || null);
+      // Initialize Google Drive service with the first base folder ID for search
+      // TODO: Enhance this to search across all base folders
+      const baseFolderIds = getBaseFolderIds();
+      const primaryId = getPrimaryBaseFolderId();
+      
+      const googleDriveService = new GoogleDriveService(credentials, primaryId);
       
       // Get all matching files
       let results = await searchFilesInFolders(rootFolders, user, searchTerm, googleDriveService);
